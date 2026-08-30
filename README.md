@@ -157,6 +157,16 @@ narrowed to fit whatever the numbers turn out to be.
 
 **Out of scope for this submission:**
 
+- **No per-test kill attribution for arms A and B.** Arm C targets one
+  mutant per call, so one generated test maps to one kill outcome. Arms A
+  and B are scored per batch — a whole target's generated tests are
+  appended once and scored once against every reachable survivor — so there
+  is no record of which individual test in a multi-test batch caused which
+  mutant to die. For A and B this submission reports the taxonomy
+  distribution (what shape of test the arm wrote) and the kill count (how
+  many mutants died) side by side, but not "which class of test did the
+  killing" — that mapping doesn't exist for these two arms, and attributing
+  a batch's outcome to every test in it would silently overcount.
 - **No held-out-mutant transfer control.** Two designs (by mutation
   operator, by position) were built and abandoned before Task 3 — neither
   had a large enough denominator to support a rate; see CLAUDE.md's

@@ -313,6 +313,25 @@ gate-passing tests will be `none` or `existence`, meaning the gate selects
 differential probes rather than specifications. If the data contradicts
 this, say so plainly rather than reframing the hypothesis after the fact.
 
+**Limitation, binding on how arm A/B taxonomy numbers can be read: the
+classification unit and the scoring unit are not the same for arms A and
+B.** Arm C targets one mutant per call, so one generated test maps to one
+kill outcome — its taxonomy category can be cross-referenced against
+whether that specific test killed anything. Arms A and B are scored per
+*batch* (§Clean-pass failures, above): a whole target's generated tests are
+appended once and the batch is scored once against every reachable
+survivor. There is no record of which individual test inside a
+multi-test batch caused which mutant to die. For arms A and B this means:
+report the taxonomy distribution (what shape of test the arm wrote) and
+report the kill count (how many mutants died), both fine on their own — but
+do not report "which class of test did the killing" for A or B, because
+that mapping does not exist and attributing a batch's outcome to every test
+in it would silently overcount. `scripts/classify_tests.py` enforces this:
+its `gate_would_keep` breakdown is only computed for a batch that split into
+exactly one test (true by construction for arm C, true incidentally for any
+A/B target whose whole batch happened to be a single test), and is reported
+as explicitly not computable otherwise.
+
 ### If the result is positive
 
 Everything written above anticipates a null, which was the honest bet given

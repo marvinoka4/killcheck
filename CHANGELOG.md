@@ -461,3 +461,51 @@ generated tests were fine; one wrong Unicode literal zeroed the target.
 Table 1 carries a `clean_pass` column per arm and a per-arm count of targets
 that failed it, so this shows up as a count, not something inferred from a
 zero.
+
+## Classifier was about to be run on batched rows -- caught before the first classification, not after
+
+Before running `scripts/classify_tests.py` over the real arm A/B results,
+checked the data it would actually read against the classifier's own
+documented unit. `classify_test()`'s docstring says "for a single test
+function's source" and returns exactly one category per row it's given,
+by walking every `assert` in the row and taking the highest-priority match
+(`value > mock > exception > existence > none`). But `killcheck/baseline.py`
+logs one row **per target**, not per test -- `test_source` on that row is
+the arm's entire generated batch, because clean-pass/kill scoring for arms A
+and B happens once per batch, not once per test. Real numbers from this run:
+arm A's `toolz-dicttoolz` row alone held 99 test functions in one row.
+
+**The direction of the error matters: it would have flattered both arms, not
+penalized them.** Running the classifier unmodified would have reported
+`n=10` for arm A ("all generated") instead of the true 556, and each of
+those 10 classifications would have been won by whichever single test in a
+batch of up to 99 happened to contain a value-comparison assert -- a batch
+of 1 strong test and 68 weak ones would classify identically to a batch of
+69 strong tests. An error that inflates a result you're about to publish is
+exactly the kind of thing that doesn't announce itself; this one was caught
+by checking the classifier's documented input shape against the actual
+logged data before running it once, not by noticing a suspicious number
+after the fact.
+
+**Fix:** `scripts/classify_tests.py` now splits each row's `test_source`
+into its individual test functions/methods before classifying (`ast.walk`
+over the whole tree, matching both `def` and `async def`, not just
+top-level statements). Two more real shapes turned up doing this, also
+checked rather than assumed: `tenacity-stop`'s arm A tests were organised as
+methods on ~12 `TestXxx` classes (a top-level-only check would have missed
+all 62), and every `aiofiles-temptypes` test was `async def` (a bare
+`FunctionDef` check would have missed all 31). Verified the fix against
+every row's raw `def test_`/`async def test_` count before trusting the
+output: exact match on all 20 rows across both arms (arm A: 556 tests
+pooled; arm B: 53).
+
+**This fixes the classification unit, not the scoring unit, and cannot --
+recorded as a limitation in CLAUDE.md and README rather than glossed over.**
+Arms A and B are still scored per batch; there is no record of which
+individual test in a multi-test batch caused which mutant to die. So
+`gate_would_keep` -- the taxonomy of tests that would clear the kill gate --
+is only computed for a batch that split into exactly one test (arm C by
+construction; incidentally, any A/B target whose whole batch happened to be
+a single test, like arm B's `slugify-special`). For every multi-test batch
+it's reported as explicitly not computable, not guessed at by attributing
+the batch's outcome to every test inside it.
