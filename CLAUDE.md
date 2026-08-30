@@ -37,12 +37,48 @@ These define the experiment. Do not change them to make results look better.
 
 ## Metrics
 
-- **Primary:** kill score = killed / total_mutants, before vs after.
-- **Secondary:** line coverage before vs after (expected to move much less than
-  kill score for the baseline arm — this is the "coverage lies" evidence).
-- **Cost:** tokens and wall-clock per target.
-- **Waste rate:** generated tests discarded by the kill gate. Agent-only metric;
-  a useful signal about how often the model writes vacuous tests.
+- **Primary:** survivor kill rate = (survivors killed) / (survivors available),
+  before vs after. Scoped to exactly the mutants a suite was blind to before
+  the intervention — the thing the tool actually claims to do.
+- **Secondary:** mean kill score across targets, before vs after.
+- **Also:** line coverage delta before vs after (expected to move much less
+  than kill score for the baseline arm — this is the "coverage lies"
+  evidence); tokens per target; wall-clock per target; and, agent arm only,
+  waste rate = tests discarded by the kill gate — a signal of how often the
+  model writes vacuous tests.
+
+**Why survivor kill rate is primary and mean kill score is secondary, not the
+reverse:** mean kill score is dominated by whichever module happens to have
+the most mutants, and a target already at 0.97 has almost no headroom left to
+move no matter how good an intervention is. Averaging that together with a
+target starting at 0.27 understates or overstates the effect depending on
+which targets happen to be in the mix that run. Survivor kill rate is scoped
+to exactly the population the tool is meant to act on.
+
+This ordering was decided and committed before either baseline arm was run,
+so it could not have been picked after seeing a result it needed to flatter.
+
+### Kill outcome breakdown
+
+`runner.py` counts three outcomes as a kill: the suite actually failed
+(`killed`), the suite hung and was cut off (`timeout`), or the mutant broke
+collection entirely (`error`). All three count toward kill score and
+survivor kill rate — a mutation the suite hung on or couldn't even import is
+still a mutation the suite noticed, and treating it as a survivor would be
+wrong.
+
+They are not equally strong evidence, though. `killed` means some test's
+assertion caught a real behavioral difference. `error` usually means the
+mutant produced something that doesn't even import — a much weaker signal
+about test quality than an assertion actually firing. `timeout` sits in
+between and should be rare in this eval set (no target's mutation surface
+involves real concurrency or unbounded loops).
+
+Every report of kill score or survivor kill rate must show the
+killed/timeout/error breakdown alongside it, as counts and as a fraction of
+total mutants. If `error` accounts for more than half of a target's kills,
+say so explicitly — do not let a healthy-looking aggregate hide that most of
+it came from mutants that never ran a single assertion.
 
 ## Architecture
 
