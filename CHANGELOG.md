@@ -47,3 +47,24 @@ targets pass the canary as of this entry.
 target added later must pass it before its kill score is trusted. Cost is
 one extra subprocess run per target (~0.2s each) -- negligible next to the
 mutation runs themselves.
+
+## Kill outcome breakdown: no target's baseline is error-propped
+
+**What:** added killed/timeout/error disaggregation to
+`scripts/verify_targets.py` (see CLAUDE.md's Kill outcome breakdown section
+for why `error` is weaker evidence than `killed`) and wrote
+`results/target_verification.json` with the same breakdown per target.
+
+**Result:** across all 12 targets, pre-agent kill outcomes are 99.8% `killed`
+and 0.2% `timeout` (one mutant in slugify-special), and exactly 0 `error`
+outcomes anywhere. None of the 12 pre-agent kill scores are error-dominant.
+This means the baseline numbers recorded so far reflect real test assertions
+catching real behavioral changes, not mutants that happened to break at
+import time -- worth stating plainly rather than assuming, since it bears on
+whether the eval set's headroom (0.27-0.97) is a fair reflection of test
+quality or an artifact of how mutants happen to fail.
+
+**Decision:** no action needed now. Re-run this check after the agent and
+both baseline arms produce their own mutant sets (the agent writes new
+tests, but the *mutants* are unchanged and still frozen-runner-generated,
+so this is mainly a re-confirmation, not expected to change).

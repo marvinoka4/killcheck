@@ -1,0 +1,242 @@
+[
+  {
+    "name": "cachetools-func",
+    "total_mutants": 51,
+    "kill_score": 0.7843,
+    "counts": {
+      "killed": 40,
+      "timeout": 0,
+      "error": 0,
+      "survived": 11
+    },
+    "fractions": {
+      "killed": 0.7843,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.2157
+    },
+    "killed_total": 40,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "validators-card",
+    "total_mutants": 60,
+    "kill_score": 0.9167,
+    "counts": {
+      "killed": 55,
+      "timeout": 0,
+      "error": 0,
+      "survived": 5
+    },
+    "fractions": {
+      "killed": 0.9167,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.0833
+    },
+    "killed_total": 55,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "natsort-ns-enum",
+    "total_mutants": 20,
+    "kill_score": 0.9,
+    "counts": {
+      "killed": 18,
+      "timeout": 0,
+      "error": 0,
+      "survived": 2
+    },
+    "fractions": {
+      "killed": 0.9,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.1
+    },
+    "killed_total": 18,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "dictdiffer-resolve",
+    "total_mutants": 19,
+    "kill_score": 0.7895,
+    "counts": {
+      "killed": 15,
+      "timeout": 0,
+      "error": 0,
+      "survived": 4
+    },
+    "fractions": {
+      "killed": 0.7895,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.2105
+    },
+    "killed_total": 15,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "toolz-dicttoolz",
+    "total_mutants": 50,
+    "kill_score": 0.86,
+    "counts": {
+      "killed": 43,
+      "timeout": 0,
+      "error": 0,
+      "survived": 7
+    },
+    "fractions": {
+      "killed": 0.86,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.14
+    },
+    "killed_total": 43,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "voluptuous-error",
+    "total_mutants": 51,
+    "kill_score": 0.549,
+    "counts": {
+      "killed": 28,
+      "timeout": 0,
+      "error": 0,
+      "survived": 23
+    },
+    "fractions": {
+      "killed": 0.549,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.451
+    },
+    "killed_total": 28,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "slugify-special",
+    "total_mutants": 39,
+    "kill_score": 0.9744,
+    "counts": {
+      "killed": 37,
+      "timeout": 1,
+      "error": 0,
+      "survived": 1
+    },
+    "fractions": {
+      "killed": 0.9487,
+      "timeout": 0.0256,
+      "error": 0.0,
+      "survived": 0.0256
+    },
+    "killed_total": 38,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "dotenv-variables",
+    "total_mutants": 30,
+    "kill_score": 0.3667,
+    "counts": {
+      "killed": 11,
+      "timeout": 0,
+      "error": 0,
+      "survived": 19
+    },
+    "fractions": {
+      "killed": 0.3667,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.6333
+    },
+    "killed_total": 11,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "shortuuid-main",
+    "total_mutants": 48,
+    "kill_score": 0.7917,
+    "counts": {
+      "killed": 38,
+      "timeout": 0,
+      "error": 0,
+      "survived": 10
+    },
+    "fractions": {
+      "killed": 0.7917,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.2083
+    },
+    "killed_total": 38,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "boltons-typeutils",
+    "total_mutants": 26,
+    "kill_score": 0.3462,
+    "counts": {
+      "killed": 9,
+      "timeout": 0,
+      "error": 0,
+      "survived": 17
+    },
+    "fractions": {
+      "killed": 0.3462,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.6538
+    },
+    "killed_total": 9,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "aiofiles-temptypes",
+    "total_mutants": 26,
+    "kill_score": 0.2692,
+    "counts": {
+      "killed": 7,
+      "timeout": 0,
+      "error": 0,
+      "survived": 19
+    },
+    "fractions": {
+      "killed": 0.2692,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.7308
+    },
+    "killed_total": 7,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  },
+  {
+    "name": "tenacity-stop",
+    "total_mutants": 35,
+    "kill_score": 0.4286,
+    "counts": {
+      "killed": 15,
+      "timeout": 0,
+      "error": 0,
+      "survived": 20
+    },
+    "fractions": {
+      "killed": 0.4286,
+      "timeout": 0.0,
+      "error": 0.0,
+      "survived": 0.5714
+    },
+    "killed_total": 15,
+    "error_share_of_kills": 0.0,
+    "error_dominant": false
+  }
+]
