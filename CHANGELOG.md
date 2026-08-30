@@ -333,3 +333,51 @@ target" claim drafted since the 2b widening pass is provisional until
 re-derived under `workers=1`. Retracted and replaced in CLAUDE.md, README,
 and this file -- see the following entries, committed separately from this
 one so the instrument fix and what it changed can be reviewed independently.
+
+## Baseline arm picker guessed the wrong existing-test file for the eval set's hardest target
+
+`killcheck/baseline.py`'s `existing_test_source()` picks the test file arms
+A and B are shown as "existing tests," and where their generated tests get
+appended. Before running either arm, its choice was audited by hand against
+all 12 targets rather than trusted from reading the code.
+
+Ten of twelve were fine: either the test command names exactly one file, or
+a candidate's name contains the module's own stem (`card.py` ->
+`test_card.py`). `aiofiles-temptypes` (module `tempfile/temptypes.py`, test
+command runs the whole `tests/` directory, 9 candidate files) was not: no
+filename contains `temptypes`, so the picker fell back to its last resort --
+largest file in scope -- and chose `tests/test_os.py` (16.8 KB). That file
+exercises `aiofiles.os`. The module actually being mutated is exercised by
+`tests/test_tempfile.py` (5.0 KB, imports `from aiofiles import tempfile`,
+tests `TemporaryDirectory` and `AsyncSpooledTemporaryFile` -- the classes
+`temptypes.py` defines).
+
+Consequence had this shipped uncaught: both baseline arms would have been
+shown irrelevant existing tests on the eval set's designated hard case (the
+one target required to be async/I/O-heavy per the eval-set rules), and
+their generated tests would have landed in the wrong file. Scoring itself
+would not have broken -- the test command runs the whole `tests/` directory
+regardless of which file new tests land in -- but the fairness of what the
+model saw would have been degraded silently, on exactly the target most
+likely to need every advantage a fair prompt gives it.
+
+**Found by auditing the picker's actual choice across all 12 targets before
+running anything, not by reading the code.** The same failure class as the
+two harness bugs above: a plausible-looking heuristic that is wrong on
+exactly one case you have to go looking for.
+
+**Fix:** added a second tier between exact-stem match and the largest-file
+fallback -- match on the module's immediate parent directory name
+(`tempfile/temptypes.py`'s parent is `tempfile`, which is in
+`test_tempfile.py`). Verified this changes only `aiofiles-temptypes`'s pick
+across all 12 targets; the ten already-correct picks are unaffected, and the
+two single-candidate targets (`voluptuous-error`, `slugify-special`) have
+nothing else to choose among either way.
+
+**Also added:** the largest-file fallback now prints a warning naming the
+target and the chosen file whenever it fires with more than one real
+candidate to choose among -- a degraded pick should announce itself instead
+of requiring a hand audit to find, same principle as the canary and
+determinism checks. Single-candidate targets are exempted: when a test
+command names exactly one file, there is nothing to guess among and nothing
+to warn about.
