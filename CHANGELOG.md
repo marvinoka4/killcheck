@@ -135,3 +135,66 @@ results. Committed as one changeset alongside the CLAUDE.md and README
 updates, before `killcheck/baseline.py` (arms A and B) is written -- the
 commit ordering is itself part of the evidence that none of this was shaped
 by a result it needed to explain.
+
+## Frozen core reopened a second time: parallel mutant execution was corrupting one target's ground truth
+
+**What happened:** re-verifying the 2b table before committing it (per this
+project's own "re-verify, then commit" discipline) found one cell that
+didn't reproduce: `aiofiles-temptypes` came back with a different
+reachable-survivor count than the run that had already been drafted into
+CLAUDE.md, README, and CHANGELOG text. Investigated rather than re-run until
+it matched.
+
+**How it was found:** ran `aiofiles-temptypes`'s full mutation scoring four
+times at the original `workers=4`: kill scores of 0.7308, 0.7308, 0.7692,
+0.7308, with *different survivor sets*, not just different counts. Ran it
+twice more at `workers=1`: 0.2692 both times, identical survivor set both
+times -- and identical to the target's own pre-widening number. Checked
+three other targets (`dotenv-variables`, `boltons-typeutils`,
+`tenacity-stop`) the same way: `workers=4` and `workers=1` matched exactly
+on all three. The problem is isolated to the one target running real async
+I/O against real temp files under concurrent subprocess execution --
+`_evaluate_one` already isolates each mutant in its own tempdir and its own
+subprocess, so this is not a general isolation-strategy bug, but four
+concurrent pytest-asyncio processes touching the real filesystem
+simultaneously are enough to spuriously fail tests that would otherwise
+pass, and `runner.py` cannot distinguish "the mutation broke it" from
+"concurrent execution broke it."
+
+**Why this matters more than one target:** the corruption is not neutral
+noise. A spurious concurrent failure is read by the runner as a kill, and
+kill count is the exact quantity every arm in this project exists to
+increase. Non-determinism in this specific harness does not average out
+across runs -- it systematically flatters whatever is being measured, in
+the one direction that would make an intervention look better than it is.
+Fixing only the one target caught behaving badly would have left every
+other number carrying the same unquantified doubt, just without visible
+symptoms.
+
+**Fix:** `killcheck/runner.py`'s `score_target()` default changed from
+`workers=4` to `workers=1`. This reopens the frozen measurement core for the
+second time (first was the src-layout `pythonpath` fix during eval-set
+construction). Per CLAUDE.md's invariant 5, changing the measuring
+instrument after establishing a baseline requires re-running both arms and
+noting it in the changelog -- this change lands here, before either arm has
+run for the first time, so no re-run is owed yet, but the instrument is
+different from what every number in this document up to this entry was
+computed with.
+
+**Also worth recording honestly:** the edit that added this explanation to
+`runner.py`'s module docstring initially dropped the docstring's closing
+`"""`, breaking the file outright (a `SyntaxError` on import). Caught
+immediately by the first thing that imports `runner.py` -- both
+`scripts_demo.py` (the fixture sanity check) and the verification run
+itself failed loudly rather than silently. Fixed and re-verified
+`scripts_demo.py` still reports kill_score=0.0952 on `fixture/bank.py`,
+identical to the value recorded before any of this session's changes,
+before re-running anything at scale. A frozen file being edited at all,
+twice now, for correctness reasons, is exactly the situation this project's
+own sanity checks exist for.
+
+**Decision:** every reachability number and every "widening helped this
+target" claim drafted since the 2b widening pass is provisional until
+re-derived under `workers=1`. Retracted and replaced in CLAUDE.md, README,
+and this file -- see the following entries, committed separately from this
+one so the instrument fix and what it changed can be reviewed independently.

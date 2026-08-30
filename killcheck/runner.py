@@ -10,6 +10,21 @@ Ground truth definition, fixed before any agent work begins:
                 same reason, but reported separately so it can be audited.
 
 Kill score = killed / total_mutants.
+
+score_target()'s default is workers=1 (serial). This was workers=4 originally;
+changed after a real-world target (aiofiles-temptypes, which runs real async
+I/O against real temp files) produced a different survivor SET on every
+concurrent run -- confirmed by running it 4x at workers=4 (three different
+kill scores) and 2x at workers=1 (identical survivor set both times). Three
+other targets showed no difference between workers=4 and workers=1, so this
+is not a general correctness bug in the isolation strategy (_evaluate_one
+already runs each mutant in its own tempdir copy and subprocess) -- it is a
+real target doing concurrent async I/O against a shared filesystem, and
+runner.py has no way to tell "the mutation broke it" apart from "concurrent
+execution broke it." The bias runs one direction only: a spurious concurrent
+failure reads as a kill, and kill counts are the quantity every arm in this
+project is trying to increase. Non-determinism here does not average out; it
+flatters. See CHANGELOG.md for how this was found and what it changed.
 """
 
 from __future__ import annotations
@@ -127,7 +142,7 @@ def _evaluate_one(target: Target, mutant: Mutant, timeout: int) -> MutantResult:
 def score_target(
     target: Target,
     timeout: int = 60,
-    workers: int = 4,
+    workers: int = 1,
     check_clean: bool = True,
 ) -> dict:
     if check_clean:
