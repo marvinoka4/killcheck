@@ -136,6 +136,141 @@ updates, before `killcheck/baseline.py` (arms A and B) is written -- the
 commit ordering is itself part of the evidence that none of this was shaped
 by a result it needed to explain.
 
+## Task 2b: widened test scope to fix the denominator -- it didn't work, and that's the finding
+
+54 reachable survivors pooled across 12 targets (2 at zero) was flagged as
+too thin before Task 3 could proceed. Working hypothesis: test commands
+were narrowly scoped (often one test file per target), so most of each
+module's code never ran and its mutants landed in `unreachable` rather than
+`reachable survivor`. If true, widening scope should move mutants from the
+former bucket to the latter.
+
+**What was done:** every target's `test_command` in `targets.json` was
+widened to the broadest scope that still runs clean and fast -- full
+`tests/` directories in place of single files, where a `tests/` directory
+existed at all. Three needed narrow exclusions, each confirmed by hand, not
+assumed to be safe:
+
+- `validators-card`: `--ignore=tests/crypto_addresses` -- 17 tests
+  `ImportError` on `validators[crypto-eth-addresses]`, an optional extra
+  unrelated to `card.py`.
+- `natsort-ns-enum`: added `pytest-mock` to `extra_requirements` -- the
+  wider suite uses the `mocker` fixture, which isn't a locale problem as
+  the first error message suggested; read the traceback fully before
+  guessing.
+- `dotenv-variables`: `--ignore=tests/test_cli.py` -- one test shells out to
+  the system `printenv --version`, which fails on macOS's BSD `printenv`
+  ("illegal option"). A platform bug in the test, not in `variables.py`.
+
+`voluptuous-error` and `slugify-special` were already at their repos'
+widest possible scope; left unchanged. All widened suites re-verified clean
+and re-passed the canary. Runtime per target (single suite run, not the
+full mutation sweep): 0.4s-4.8s across all 12, comfortably under the 60s
+ceiling -- none needed to revert on a runtime basis.
+
+**Result:**
+
+```
+target                 before(unreach/reach/kill)   after(unreach/reach/kill)
+cachetools-func          0/11/40                      0/11/40   (unchanged)
+validators-card          3/ 2/55                      3/ 2/55   (unchanged)
+natsort-ns-enum          0/ 2/18                      0/ 2/18   (unchanged)
+dictdiffer-resolve       2/ 2/15                      2/ 2/15   (unchanged)
+toolz-dicttoolz          3/ 4/43                      3/ 4/43   (unchanged)
+voluptuous-error        23/ 0/28                     23/ 0/28   (unchanged)
+slugify-special          0/ 1/38                      0/ 1/38   (unchanged)
+dotenv-variables        19/ 0/11                     15/ 0/15   (4 unreachable->killed)
+shortuuid-main           3/ 7/38                      3/ 7/38   (unchanged)
+boltons-typeutils       14/ 3/ 9                     14/ 2/10   (1 reachable-survivor->killed)
+aiofiles-temptypes      11/ 8/ 7                     11/ 8/ 7   (unchanged)
+tenacity-stop            6/14/15                      6/14/15   (unchanged)
+
+POOLED reachable-survivor: 54 -> 53
+```
+
+**Correction, made before this entry was ever committed:** the `after` row
+for `aiofiles-temptypes` originally read `1/5/20`, with a claimed kill-score
+jump of 0.27->0.77, and the pooled total below it originally read 50, not
+53. Both were concurrency noise -- see "Frozen core reopened a second time"
+below for how this was found. `aiofiles-temptypes` runs real async I/O
+against real temp files, and concurrent mutant scoring (the default at the
+time) produced a different survivor set on almost every run. Re-scored
+serially, three times, with an identical survivor set every time,
+`aiofiles-temptypes` shows *no* movement under widening at all -- its
+"after" row equals its "before" row. That changes twelve of twelve targets'
+verdicts to "unchanged or converted-to-killed, never contaminated," and
+moves the pooled figure from the drafted-but-wrong 50 up to the
+serially-verified 53. The table above is the corrected version; nothing
+in this entry was drafted from the bad number.
+
+The hypothesis was wrong about the *shape* of the fix, not just its scale.
+Widening ran 6x-40x more tests per target and meaningfully improved one
+kill score (`dotenv-variables` 0.37->0.50), but almost entirely by
+converting `unreachable` mutants straight into `killed`, not into
+`reachable survivor` -- the same broader test run that newly executes a
+line usually also happens to assert something about it. The "covered but
+too weakly asserted to kill" state the hypothesis was banking on turned out
+to be the rare case, not the common one. Ten of twelve targets showed no
+movement at all: their other test files simply exercise different code, not
+more of the same module.
+
+**Decision, per the reframe recorded in CLAUDE.md and README.md:** this is
+a finding about the shape of undetected faults in well-tested open-source
+Python, not a defect in the eval set to be engineered away. Pooled 53
+reachable survivors, reported honestly with the table above, is the number
+Task 3 proceeds with.
+
+**Two ways to make the number bigger were considered and rejected, on
+principle, before Task 3 -- an abandoned option with a stated reason is
+evidence of judgment, logged the same as an abandoned design:**
+
+- **Swap `voluptuous-error` and `dotenv-variables` for denser targets.**
+  Rejected: choosing eval-set targets *after* seeing which ones produced
+  thin denominators is case selection on the outcome. It would mean the
+  eval set was tuned to flatter the metric it's supposed to be judged
+  against. Both targets stay, contributing their honest 0/0.
+- **Push widening further** (work around the `dotenv` `printenv`
+  incompatibility instead of excluding `test_cli.py`; pull in whole-repo
+  suites beyond `tests/` for the remaining weak targets). Rejected on the
+  evidence just gathered, not on principle: 10 of 12 targets showed zero
+  movement even at full within-repo test scope. 53 is not an artifact of
+  narrow test commands -- it is the real reachability of these modules
+  under the suites their own maintainers run. There is no reason to expect
+  chasing scope further changes that.
+
+## Task 2b: holdout transfer control abandoned outright
+
+The operator-based holdout (`boolop`/`unary_not` excluded from the work
+queue, scored anyway) built during the first adversarial-review pass was
+re-examined once the denominator problem turned out to be general, not
+specific to two targets. The numbers, unaffected by the widening above
+(operator population is a source-code property, not a test-scope one):
+across all 12 targets, exactly 24 mutants total are `boolop`/`unary_not` of
+any outcome; 5 of the 12 targets have *zero*; and only 1 of those 24 was
+ever both a survivor and reachable (`boltons-typeutils`). A rate needs a
+denominator larger than 1.
+
+A second design was considered as a replacement -- hold out a fixed
+fraction of reachable survivors by position rather than by operator type,
+which would scale with each target's own count instead of being capped by
+how rare `and`/`or`/`not` are in the source. Also rejected: per-target
+reachable-survivor counts are themselves single digits to low teens even
+pooled at 53 (see the widening entry above), so a fixed fraction of a small
+number is still a small number -- most targets would still hold out 0 or 1
+mutant. It also answers a weaker question than intended: a test that
+transfers to a same-operator mutant a few lines away says less about
+generalization than a test that transfers to an undisclosed *type* of
+mutation, which was the actual point.
+
+**Decision:** no holdout control ships, in either form. Code reverted --
+`HELD_OUT_OPERATORS` remains defined in `killcheck/logs.py` only as a
+historical record with a comment pointing here; nothing reads it for
+scoring. `scripts/verify_targets.py` no longer computes a held-out
+partition; `scripts/ablate.py`'s work-queue denominator is now simply "all
+reachable survivors." Anti-circularity rests on the assertion taxonomy
+instead -- recorded as a real, narrower guarantee in CLAUDE.md and
+README.md, not papered over as equivalent.
+
 ## Frozen core reopened a second time: parallel mutant execution was corrupting one target's ground truth
 
 **What happened:** re-verifying the 2b table before committing it (per this

@@ -17,6 +17,21 @@ measures the thing that actually matters, but it has never gone mainstream
 because it hands you a wall of surviving mutants and no path to fixing them.
 The agent closes that loop.
 
+That was the premise going in, and it was partially wrong -- forced by data,
+not revised after the fact. Before the agent wrote a single test, the eval
+set's 12 targets were checked for how many of their surviving mutants sit on
+a line their own test suite even executes (see Denominator below). Pooled
+across all 12, only 53 of 455 total mutants (133 of which survive at all)
+sit on a line that's reachable by the broadest suite each project's own
+maintainers run. Widening every target's test scope 6x-40x did not raise
+that number -- see "Widening the suites" below for the full before/after
+table. Where this eval set's suites fail, most of the time they fail by
+never executing the mutated code at all, not by executing it and failing to
+check the result. The agent this project builds only ever operates on the
+minority case -- the reachable survivor, where code ran and nothing
+asserted on it. That is still a real and worthwhile problem to close the
+loop on; it is not the whole problem the opening paragraph implied it was.
+
 ## Non-negotiable invariants
 
 These define the experiment. Do not change them to make results look better.

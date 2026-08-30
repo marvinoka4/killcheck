@@ -1,0 +1,8 @@
+# Core: mutation engine, runner, and target verification.
+pytest
+coverage
+
+# Needed by killcheck/baseline.py and killcheck/agent.py (arms not yet run —
+# see README's Reproducing section).
+anthropic
+python-dotenv
