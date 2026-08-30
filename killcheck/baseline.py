@@ -23,6 +23,7 @@ compounding credit as its suite grows, which is a confound.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
@@ -40,7 +41,13 @@ from killcheck.logs import log_generated_test, log_trajectory
 from killcheck.runner import Target, _evaluate_one, _run
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 2000
+# 8000, not the original 2000: recorded in CLAUDE.md as the per-call
+# max_tokens for all three arms (invariant 3 requires the same budget across
+# arms, so agent.py must match this when it exists). 2000 was a placeholder
+# that turned out to be wrong -- Arm A's prompt asks for "as many tests as
+# warranted" and then capped the response below what that takes, truncating
+# mid-fence. See CHANGELOG.md.
+MAX_TOKENS = 8000
 CALL_CAP = 25
 REPO = Path(__file__).resolve().parent.parent
 
@@ -61,8 +68,14 @@ def _client():
     return Anthropic(api_key=key)
 
 
-def call_model(client, prompt: str) -> tuple[str, int, int]:
-    """One call. Returns (text, prompt_tokens, completion_tokens).
+def call_model(client, prompt: str) -> tuple[str, int, int, bool]:
+    """One call. Returns (text, prompt_tokens, completion_tokens, truncated).
+
+    `truncated` is true when completion_tokens == MAX_TOKENS -- the response
+    was cut off by the ceiling, not finished on its own. This is a real
+    failure mode expected to recur in arm C across its ~53 generate calls,
+    so it is surfaced as its own signal rather than left to show up only as
+    a mysterious clean-pass failure downstream.
 
     Retries only on transport/rate-limit errors, which is not the arm-level
     retry the gate uses -- arms A and B never retry on content.
@@ -76,7 +89,8 @@ def call_model(client, prompt: str) -> tuple[str, int, int]:
                 messages=[{"role": "user", "content": prompt}],
             )
             text = "".join(b.text for b in resp.content if b.type == "text")
-            return text, resp.usage.input_tokens, resp.usage.output_tokens
+            pout = resp.usage.output_tokens
+            return text, resp.usage.input_tokens, pout, pout == MAX_TOKENS
         except Exception as exc:  # transport, rate limit, overload
             last = exc
             time.sleep(2**attempt)
@@ -88,19 +102,63 @@ def call_model(client, prompt: str) -> tuple[str, int, int]:
 # ---------------------------------------------------------------------------
 
 _FENCE = re.compile(r"```(?:python)?\n(.*?)```", re.DOTALL)
+_OPEN_FENCE = re.compile(r"```(?:python)?\n")
+
+
+def _salvage_parseable_prefix(blob: str) -> str:
+    """Strip trailing lines one at a time until `blob` parses as valid
+    Python, or nothing is left.
+
+    A response truncated mid-statement should cost that one incomplete
+    statement, not every complete test that came before it in the same
+    call -- which is what injecting the raw, unparseable tail used to do:
+    one bad line turned "the file doesn't parse" and destroyed the whole
+    batch, complete tests included.
+    """
+    lines = blob.rstrip().splitlines()
+    while lines:
+        candidate = "\n".join(lines)
+        try:
+            ast.parse(candidate)
+            return candidate
+        except SyntaxError:
+            lines.pop()
+    return ""
 
 
 def extract_code(text: str) -> str:
-    """Pull python out of fences; fall back to the raw text.
+    """Pull python out of fences, salvaging what's parseable from a response
+    truncated mid-fence rather than discarding it or injecting it raw.
 
-    Deliberately permissive. A response we cannot parse is recorded as a test
-    that fails on clean source, not silently dropped -- an arm that emits
-    unusable output should be penalised for it, not rescued.
+    Closed ```...``` blocks are taken whole -- these are known-complete.
+    Anything after the last closed block (or the whole response, if there
+    were no closed blocks) that still has an unmatched opening fence is a
+    truncated tail: everything after that opening fence is AST-salvaged via
+    `_salvage_parseable_prefix` rather than kept as raw text. A response with
+    no fences at all gets the same salvage treatment directly, so a plain
+    (unfenced) truncated response is handled the same way instead of being
+    injected unvalidated.
+
+    If nothing parses, returns "" -- an empty contribution from this call,
+    not a corrupted file. The caller records the call's `truncated` status
+    separately (see call_model), so this failure mode is visible as itself
+    rather than only showing up as an unexplained clean-pass failure.
     """
-    blocks = _FENCE.findall(text)
-    if blocks:
-        return "\n\n".join(b.strip() for b in blocks)
-    return text.strip()
+    matches = list(_FENCE.finditer(text))
+    pieces = [m.group(1).strip() for m in matches]
+
+    tail = text[matches[-1].end():] if matches else text
+    open_match = _OPEN_FENCE.search(tail)
+    if open_match:
+        salvaged = _salvage_parseable_prefix(tail[open_match.end():])
+        if salvaged:
+            pieces.append(salvaged)
+    elif not matches:
+        salvaged = _salvage_parseable_prefix(text)
+        if salvaged:
+            pieces.append(salvaged)
+
+    return "\n\n".join(pieces)
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +377,7 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
 
     started = time.monotonic()
     tokens_in = tokens_out = 0
+    truncated_calls = 0
     pieces: list[str] = []
 
     if not survivors:
@@ -356,9 +415,11 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
                 RULES=RULES,
             )
 
-        text, pin, pout = call_model(client, prompt)
+        text, pin, pout, truncated = call_model(client, prompt)
         tokens_in += pin
         tokens_out += pout
+        if truncated:
+            truncated_calls += 1
         code = extract_code(text)
         pieces.append(code)
 
@@ -372,11 +433,13 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
             completion_tokens=pout,
             content=code,
             outcome="generated",
+            truncated=truncated,
         )
+        flag = " TRUNCATED" if truncated else ""
         print(f"  [{arm}] {target.name} call {i+1}/{n_calls} "
-              f"({pin}+{pout} tok)", flush=True)
+              f"({pin}+{pout} tok){flag}", flush=True)
 
-    added = "\n\n".join(pieces)
+    added = "\n\n".join(p for p in pieces if p)
     scored = score_with_added_tests(target, test_file, added, survivors)
 
     killed = [mid for mid, out in scored["kills"].items() if out != "survived"]
@@ -402,6 +465,7 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
         "target": target.name,
         "reachable_survivors": len(survivors),
         "calls": n_calls,
+        "truncated_calls": truncated_calls,
         "clean_pass": scored["clean_pass"],
         "clean_output": scored["clean_output"],
         "killed_ids": killed,
@@ -444,16 +508,22 @@ def main() -> None:
     denom = sum(r["reachable_survivors"] for r in scored)
     num = sum(r["killed"] for r in scored)
 
+    total_calls = sum(r["calls"] for r in scored)
+    truncated_calls = sum(r["truncated_calls"] for r in scored)
+
     summary = {
         "arm": args.arm,
         "run_id": run_id,
         "model": MODEL,
+        "max_tokens": MAX_TOKENS,
         "call_cap": CALL_CAP,
         "pooled_reachable_survivors": denom,
         "pooled_killed": num,
         "pooled_skr": round(num / denom, 4) if denom else None,
         "tokens_in": sum(r["tokens_in"] for r in scored),
         "tokens_out": sum(r["tokens_out"] for r in scored),
+        "total_calls": total_calls,
+        "truncated_calls": truncated_calls,
         "clean_pass_failures": [r["target"] for r in scored
                                 if not r["clean_pass"]],
         "targets": out,
@@ -466,6 +536,7 @@ def main() -> None:
     print(f"\narm {args.arm}: killed {num} of {denom} reachable survivors "
           f"(pooled SKR {summary['pooled_skr']})")
     print(f"tokens in={summary['tokens_in']} out={summary['tokens_out']}")
+    print(f"truncated calls: {truncated_calls} of {total_calls}")
     if summary["clean_pass_failures"]:
         print(f"CLEAN-PASS FAILURES: {summary['clean_pass_failures']}")
     print(f"wrote {path}")

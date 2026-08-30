@@ -110,10 +110,16 @@ def log_trajectory(
     completion_tokens: int,
     content: str,
     outcome: str,
+    truncated: bool = False,
 ) -> None:
     """Append one row to trajectories/<run_id>.jsonl. Schema is CLAUDE.md's
     Logging section verbatim; this just adds the timestamp and does the
-    append-and-flush."""
+    append-and-flush.
+
+    `truncated` is true when a "generate" call's completion_tokens hit the
+    call's max_tokens ceiling -- the response was cut off, not finished.
+    Defaults false since it only applies to generate-phase calls; gate and
+    decision phases don't call the model and never truncate."""
     import time
 
     append_jsonl(
@@ -127,5 +133,6 @@ def log_trajectory(
             "completion_tokens": completion_tokens,
             "content": content,
             "outcome": outcome,
+            "truncated": truncated,
         },
     )

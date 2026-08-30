@@ -381,3 +381,83 @@ of requiring a hand audit to find, same principle as the canary and
 determinism checks. Single-candidate targets are exempted: when a test
 command names exactly one file, there is nothing to guess among and nothing
 to warn about.
+
+## Smoke test caught a truncation bug, then surfaced a real Arm A failure that isn't one
+
+The `killcheck/baseline.py --arm A --target slugify-special` smoke test
+failed clean-pass twice in a row, for two unrelated reasons -- one a harness
+bug, fixed before either arm ran; the other real Arm A data, not touched.
+
+**First failure: a truncated response corrupted the whole batch.**
+`MAX_TOKENS` was 2000, a placeholder never checked against what the prompt
+actually asks for. Arm A's prompt says "write as many tests as you think are
+warranted" -- open-ended -- then gave the model 2000 tokens to do it in. On
+`slugify-special` the response was cut off mid-statement with no closing
+fence (`completion_tokens` landed on exactly 2000). `extract_code()`'s fence
+regex found no closed block and fell back to the raw text, which put a
+literal ` ```python ` line into `test.py`, turning one incomplete test into
+a `SyntaxError` that failed collection for all 20 complete tests generated
+alongside it.
+
+**Decision: raise the budget, not bound the prompt.** `MAX_TOKENS` is now
+8000, recorded in CLAUDE.md as the per-call figure for **all three arms** --
+invariant 3 requires the same budget across arms, so `killcheck/agent.py`
+must use the same number when it's built. Weakening Arm A's "as many as
+warranted" ask to fit an arbitrary ceiling would have made it a strawman,
+which is exactly the failure mode this design is supposed to avoid. Set
+before any arm produced a result.
+
+**`extract_code()` fixed to salvage, not inject or discard.** A truncated
+response's tail is now AST-parsed with trailing lines stripped one at a time
+until it parses or nothing is left, instead of being kept raw. Verified
+against the actual truncated `slugify-special` response: recovers all 20
+complete test functions, drops only the one incomplete final statement.
+Garbage input still returns `""` rather than being injected. One residual,
+accepted edge case: a truncation that happens to land on a syntactically
+complete but semantically wrong line (e.g. `assert some_name` where the
+model meant to reference a different name) will be salvaged as-is -- it can
+still fail at runtime, but it costs one test's outcome, not the whole
+batch's collection, which is the actual goal.
+
+**Added: a `truncated` flag per call**, true when `completion_tokens ==
+MAX_TOKENS`, logged to the trajectory and rolled up into a per-arm count in
+`results/baseline_arm_*.json` and Table 1. Truncation is expected to recur
+in arm C across its ~53 generate calls; it needs to be visible as itself,
+not discoverable only by noticing a mysterious clean-pass failure downstream.
+
+**Second failure, after the fix: real, and left alone.** Re-run, zero
+truncated calls, 20 clean parses -- and `clean_pass` was still `False`.
+Cause: the model wrote
+
+```python
+def test_pre_translations_exact_value():
+    expected = [('Ю', 'U'), ..., ('Ϋ́', 'Y'), ...]  # 30 hand-copied tuples
+    assert PRE_TRANSLATIONS == expected
+```
+
+and got one entry wrong -- `'Ϋ́'` at index 18 is a different Unicode form
+(precomposed vs. combining-character sequence) from the real value, visually
+identical, byte-different. A snapshot assertion against a hand-transcribed
+literal is exactly the kind of thing the `RULES` prompt's "assert on
+observable behaviour, not implementation details" instruction was meant to
+discourage, and didn't. This is not a harness defect -- nothing in
+`baseline.py` needed fixing -- it's Arm A actually failing, which is real
+data about single-call unguided generation, kept as-is.
+
+**Decision, binding on all three arms (recorded in CLAUDE.md):** a
+generated test that fails on clean source is the arm producing a wrong test.
+It is never dropped and never repaired -- hand-fixing a broken assertion
+before scoring would erase the exact difference the comparison exists to
+measure. It is retried according to each arm's own design and no further:
+arm C gets exactly one retry with real pytest output fed back; arms A and B
+get none, by design, not oversight.
+
+**The consequence is asymmetric and is not left for a reader to find in the
+JSON:** clean-pass is evaluated per batch. One broken test in arm A's
+(or arm B's) batch fails collection for every other test generated alongside
+it, scoring the target zero no matter how many of the batch's other tests
+were good. `slugify-special` is the concrete illustration: 19 of 20
+generated tests were fine; one wrong Unicode literal zeroed the target.
+Table 1 carries a `clean_pass` column per arm and a per-arm count of targets
+that failed it, so this shows up as a count, not something inferred from a
+zero.

@@ -364,6 +364,36 @@ Batching multiple survivors into one call is worth trying and is expected to
 degrade quality. If it does, keep it in the changelog as a removed experiment
 rather than deleting it silently — the brief explicitly asks for one.
 
+### Clean-pass failures: never repaired, never dropped
+
+A generated test that fails on clean source is the arm producing a wrong
+test. This rule binds on all three arms, not just the one with a gate:
+
+- **It is never dropped.** A test that can't be parsed or fails clean isn't
+  quietly excluded from what the arm "really" produced -- it's what the arm
+  produced.
+- **It is never repaired.** Nobody hand-fixes a broken assertion, corrects a
+  wrong literal, or patches a bad import before scoring. That would erase
+  the exact difference the comparison exists to measure.
+- **It is retried according to each arm's own design, and no further.** Arm
+  C gets exactly one retry, with the real pytest failure fed back, per the
+  agent loop contract above. Arms A and B get none -- that absence is the
+  point of comparing them to C, not an oversight to smooth over.
+
+**The consequence is asymmetric and must be stated wherever an arm's numbers
+appear, not left for a reader to find in the JSON.** Clean-pass is evaluated
+per batch: arm A's whole test set is appended once and scored once; arm B's
+accumulated set the same way (see Metrics' note on batch vs incremental
+scoring). One broken test in that batch fails the whole suite's collection,
+which fails clean-pass for every other test generated alongside it, which
+scores the target zero regardless of how many of the other tests in that
+same batch were good. A single bad literal can erase an otherwise-strong
+showing. This is real, not a scoring artifact to correct for -- an arm that
+produces one unparseable or wrong test per target has a real reliability
+problem, and burying that inside a silent zero would hide it rather than
+report it. Table 1 carries a `clean_pass` column and a per-arm count of
+targets that failed it for exactly this reason.
+
 ## Eval set rules
 
 12 targets from permissively licensed public repos (MIT/Apache/BSD only), plus
