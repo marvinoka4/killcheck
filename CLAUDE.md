@@ -37,29 +37,41 @@ These define the experiment. Do not change them to make results look better.
 
 ## Metrics
 
-This section reached its final form after an adversarial review found three
-threats to the primary metric while it still had zero results to protect:
-mutants that no suite could ever reach regardless of test quality, the
-agent being scored on exactly the mutants it was told about (no transfer
-evidence), and a kill gate that proves sensitivity to one mutation without
-proving the test specifies anything. All three are addressed below, and all
-three were fixed before any arm ran.
+This section reached its final form after two rounds of adversarial review,
+both completed while it still had zero results to protect. Round one found
+three threats: mutants that no suite could ever reach regardless of test
+quality, the agent being scored on exactly the mutants it was told about
+(no transfer evidence), and a kill gate that proves sensitivity to one
+mutation without proving the test specifies anything. Round two found that
+the fix for the reachability problem exposed a new one: several targets'
+reachable-survivor counts were too small to support a rate at all, which
+also killed the held-out-operator transfer-rate design outright (see
+Abandoned: holdout transfer control below). All resolved before any arm ran.
 
-- **PRIMARY:** survivor kill rate over REACHABLE survivors = (reachable
-  survivors killed) / (reachable survivors available), computed over the
-  agent's work queue (reachable survivors minus held-out-operator mutants —
-  see Held-out operators below), before vs after.
+- **PRIMARY:** pooled survivor kill rate over REACHABLE survivors = (sum
+  across all targets of reachable survivors killed) / (sum across all
+  targets of reachable survivors available), before vs after. Pooled, not
+  averaged per-target and not reported per-target as a rate -- see Why
+  pooled, not per-target below.
 - **REPORT ALSO, every time PRIMARY is reported:**
+  - per-target reachable survivors killed, as raw counts (X of Y), never as
+    a percentage -- see Why pooled, not per-target below.
   - raw SKR (same formula, denominator = ALL survivors, unreachable
     included) — so the curated primary number is never presented without
     the uncurated one next to it.
   - kill-outcome breakdown: killed / timeout / error, as counts and
     fractions of total mutants (see Kill outcome breakdown below).
   - assertion taxonomy per arm (see Assertion taxonomy below).
-  - transfer rate on held-out operators (see Held-out operators below).
   - tokens in and out per arm.
   - wall clock per target and per arm.
   - waste rate: tests discarded by the kill gate (agent arm only).
+
+There is no transfer-rate metric. A held-out-mutant anti-circularity control
+was designed and built, then abandoned when the numbers came in too small to
+support any rate -- see Abandoned: holdout transfer control below.
+Anti-circularity instead rests on the assertion taxonomy: an arm cannot
+inflate its apparent effectiveness by writing vacuous tests, because the
+taxonomy reports exactly how many of its gate-passing tests are vacuous.
 
 **Why survivor kill rate over reachable survivors, not mean kill score, is
 primary:** mean kill score is dominated by whichever module happens to have
@@ -71,6 +83,16 @@ exactly the population the tool is meant to act on — and "reachable" scopes
 it further to mutants a test could conceivably kill at all, so the agent is
 never blamed for source lines its own test suite structurally cannot see
 (see Denominator below).
+
+**Why pooled, not per-target:** most targets' reachable-survivor counts are
+single digits to low teens even after widening test scope (see Denominator
+below). "Killed 1 of 2" is not a rate, it is an anecdote wearing a
+percentage sign -- the next mutant flips it to 50% or 100% with zero
+underlying change in test quality. Pooling across all 12 targets is what
+gives the denominator enough size for a rate to mean anything. Per-target
+numbers are still reported, in full, as raw counts -- never suppressed,
+never converted to a percentage that implies more precision than a
+single-digit denominator can support.
 
 This ordering was decided and committed before either baseline arm was run,
 so it could not have been picked after seeing a result it needed to flatter.
@@ -135,27 +157,128 @@ could plausibly have caught). Two targets — `voluptuous-error` and
 `dotenv-variables` — have 0 reachable survivors as of the eval-set
 verification run; for `voluptuous-error` this is entirely the docstring
 artifact (all 23 survivors are docstring constants), for `dotenv-variables`
-it is genuine (the scoped test file never exercises `__repr__`/`__hash__`/
-`resolve` on the classes it tests — confirmed by grep, not assumed). Both
-targets therefore contribute 0/0 to the primary metric and must be excluded
-from the pooled calculation, not silently treated as 0%.
+it is because its 15 remaining survivors sit on lines only exercised by
+`tests/test_cli.py`, the one file excluded from its widened suite (below)
+for a platform reason unrelated to the module. Both targets therefore
+contribute 0/0 to the primary metric and must be excluded from the pooled
+calculation, not silently treated as 0%.
 
-### Held-out operators
+**Widening the suites, and what that turned out to mean.** The first
+reachability pass (single narrow test file per target) put pooled reachable
+survivors at 54 of 138 -- too thin a denominator to trust. The working
+hypothesis was that this was a scoping artifact: narrow test commands, so
+most of each module never runs. Every target's `test_command` was widened
+to the broadest scope that still runs clean in well under the 20s ceiling
+(full `tests/` directories in place of single files; three needed narrow,
+unrelated exclusions -- an optional-dependency subtree in `validators`, a
+missing `pytest-mock` fixture in `natsort`, and one platform-incompatible
+CLI test in `dotenv` -- each confirmed by hand, not assumed). Test counts
+run per target went up 6x to 40x.
 
-`boolop` and `unary_not` survivors are excluded from every arm's work queue
-— no arm is ever told about them, gated against them, or asked to target
-them — but they are still scored, across every operator, in the full kill
-report. This is the anti-circularity control: an arm cannot inflate its
-apparent effectiveness by being handed exactly the mutants it will be
-graded on. If a held-out survivor dies anyway once an arm's tests are added,
-it died because some test written for a different, disclosed mutant
-happened to also exercise that code path differently — real evidence the
-test generalizes, not evidence the arm gamed its own scoring.
+Widening did not move the number much, and it did not move it up. Pooled
+reachable survivors under the widened suites, confirmed by a 3x-serial
+determinism check across all 12 targets with zero quarantined (see "Frozen
+core reopened a second time" in CHANGELOG.md for why that check exists at
+all), land at **53** of 455 total mutants -- 133 of 455 survive at all. One
+of the twelve per-target figures drafted along the way to that number was
+wrong: `aiofiles-temptypes` runs real async I/O against real temp files,
+and concurrent mutant scoring (the harness's default at the time) gave it a
+different survivor set on almost every run, drafting its widened figure at
+1 unreachable / 5 reachable-survivor / 20 killed -- a large apparent
+improvement that was concurrency noise, not a widening effect. Re-scored
+serially, three times, with an identical survivor set every time, it shows
+*no* movement under widening at all (11/8/7, matching its own pre-widening
+figure exactly). With that correction, ten of the twelve targets showed no
+change at all -- their non-`tests/test_X.py` files simply exercise
+different code, not more of the same module. Where widening did move the
+needle (`dotenv-variables`, `boltons-typeutils`), it worked almost entirely
+by converting `unreachable` mutants directly to `killed`, not into
+`reachable survivor`: the same broader test run that newly executes a line
+usually also happens to assert something about it. The middle state the
+hypothesis was banking on -- covered, but too weakly asserted to kill --
+turned out to be the rare case, not the common one.
 
-Report this as **transfer rate** = (held-out reachable survivors killed) /
-(held-out reachable survivors available), computed the same way as the
-primary metric but scoped to the held-out set instead of the work queue.
-Report it separately from the primary metric; do not fold it in.
+**This is the finding, not a limitation to work around:** across 12 widely
+used, well-maintained Python libraries, running the broadest test scope
+their own maintainers run, only 53 of 455 total mutants (12%) sit on a line
+that executes under this suite but goes unasserted -- 133 of 455 (29%)
+survive at all, the rest unreachable by this suite. The majority of
+undetected faults in these modules are undetected because nothing runs that
+code, not because the assertions that do run are weak. A tool that only
+ever writes tests for reachable survivors -- this one included -- is
+addressing the minority of the undetected-fault problem in code that looks
+like this. That is worth stating plainly rather than narrowing the eval set
+until the number looks better: two considered ways to make the number look
+bigger were rejected on that exact principle (see Rejected:
+reachable-survivor workarounds below).
+
+Two targets have exactly 0 reachable survivors and there was no attempt to
+make that not true. 53 pooled, reported honestly with the table above, is
+the number.
+
+### Rejected: reachable-survivor workarounds
+
+Two ways to grow the pooled-53 denominator were considered and rejected
+before Task 3, both on principle rather than because they were tried and
+failed:
+
+**Swap the worst targets for denser ones.** `voluptuous-error` and
+`dotenv-variables` contribute 0 reachable survivors each. Replacing them
+with modules chosen for denser existing assertion coverage would raise the
+pooled number. Rejected: choosing eval-set targets *after* seeing which ones
+produced thin denominators is case selection on the outcome -- it would
+mean the eval set was tuned to flatter the metric it's supposed to be
+measured against. The two weak targets stay.
+
+**Push widening further.** Try harder specifically on the weak targets --
+work around the `dotenv` `printenv` incompatibility instead of excluding
+`test_cli.py`, pull in whole-repo suites beyond `tests/` for the others.
+Rejected on the evidence just gathered, not on principle: 10 of 12 targets
+showed *zero* movement even at full within-repo test scope, which means 53
+is not an artifact of narrow test commands -- it is the real reachability
+of these modules under the suites their maintainers actually run. There is
+no reason to expect chasing scope further changes that.
+
+### Abandoned: holdout transfer control
+
+Two designs for an anti-circularity control were built and then abandoned,
+both for the same root cause: an insufficient denominator. Recorded here
+rather than deleted quietly, per CLAUDE.md's own style rule that a removed
+experiment with a stated reason is evidence of judgment, not a gap.
+
+**Design 1: operator-based holdout.** Exclude `boolop`/`unary_not` survivors
+from every arm's work queue, score them anyway, report transfer rate =
+held-out reachable survivors killed / held-out reachable survivors
+available. Killed by the numbers: across all 12 targets, only 24 mutants
+total are `boolop`/`unary_not` (of any outcome), 5 of the 12 targets have
+*zero* such mutants at all, and only 1 of those 24 was ever both a survivor
+and reachable. A rate needs a denominator; 1 pooled and 0 for most
+individual targets is not one. This is not a reachability-widening problem
+— `and`/`or`/`not` are just rare constructs relative to comparisons,
+arithmetic, and returns in this eval set's source, so no amount of test-suite
+widening changes how many of these mutants engine.py generates in the first
+place.
+
+**Design 2: positional holdout.** Instead of holding out by operator type,
+hold out a fixed fraction of reachable survivors by position/index,
+independent of operator. This gives a denominator proportional to each
+target's total, which is a real improvement on paper — but per-target
+reachable-survivor counts are themselves single digits to low teens even
+after widening (see Denominator above), so a fixed fraction of a small
+number is still a small number: most targets would still hold out 0 or 1
+mutant. It also measures a different, weaker claim than intended: a test
+that transfers to a same-operator mutant a few lines away is much less
+informative about generalization than a test that transfers to an
+undisclosed *type* of mutation, which was the actual point of a holdout.
+Abandoned for both reasons.
+
+**Decision:** no holdout control ships. Anti-circularity rests on the
+assertion taxonomy instead: an arm cannot inflate its apparent
+effectiveness with vacuous tests, because the taxonomy reports exactly how
+many of its gate-passing tests are vacuous. This is a narrower guarantee
+than a true held-out-mutant transfer signal would have been, and the
+Limitations section says so plainly rather than implying the taxonomy is a
+full substitute.
 
 ### Assertion taxonomy
 
@@ -175,22 +298,34 @@ gate-passing tests will be `none` or `existence`, meaning the gate selects
 differential probes rather than specifications. If the data contradicts
 this, say so plainly rather than reframing the hypothesis after the fact.
 
+### If the result is positive
+
+Everything written above anticipates a null, which was the honest bet given
+where the evidence pointed going in. But if Arm C's gate-passing taxonomy
+comes back mostly `value` class, with real kills against reachable
+survivors, that is a genuine positive and it must not get hedged into mush
+by the caution accumulated everywhere else in this document. State it now,
+before the numbers exist, with the same discipline used to lock the metric:
+if that is what the data shows, the honest claim is that the gate selects
+for specification, not merely sensitivity, in this corpus, at this scale,
+with the residual-equivalence caveat (see Limitations) still intact.
+
 ## Architecture
 
 ```
 targets.json               eval set: 12 (project, module, test command) cases
 killcheck/engine.py        AST mutation operators -> deterministic Mutant list   [FROZEN]
 killcheck/runner.py        isolated execution, kill/survive ground truth         [FROZEN]
-killcheck/logs.py          shared JSONL append helpers + HELD_OUT_OPERATORS
+killcheck/logs.py          shared JSONL append helpers (HELD_OUT_OPERATORS: abandoned, unused)
 killcheck/agent.py         the loop: survivor -> context -> test -> gate -> keep
 killcheck/baseline.py      arm A (single prompt) and arm B (budget-matched)
 killcheck/report.py        results table, markdown output
-scripts/verify_targets.py  canary + baseline scoring + reachability + held-out split
+scripts/verify_targets.py  canary + widened baseline scoring + reachability
 scripts/ablate.py          arm C's log -> what gate/retry each individually bought
 scripts/classify_tests.py  deterministic AST assertion taxonomy per arm
 trajectories/              one JSONL per run, every turn appended live
 results/generated_tests.jsonl   every generated test, every arm, every attempt
-results/target_verification.json denominator manifest: per-mutant reachability + held-out
+results/target_verification.json denominator manifest: per-mutant reachability
 ```
 
 ## Agent loop contract

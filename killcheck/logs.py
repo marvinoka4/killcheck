@@ -13,12 +13,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Mutation operators withheld from every arm's work queue (see CLAUDE.md's
-# Held-out operators section). Held-out survivors are never targeted by a
-# generated test; they are only used afterward to measure transfer rate --
-# whether tests written for something else happen to also kill them. This is
-# the anti-circularity control: an arm cannot inflate its transfer rate by
-# targeting the mutants it's being scored on.
+# ABANDONED (Task 2b) -- kept only as a historical record, no longer used to
+# filter any arm's work queue. This was meant to withhold boolop/unary_not
+# survivors as a held-out transfer-rate control. Killed by the numbers: see
+# CHANGELOG.md's "Abandoned: holdout transfer control" entry -- across all 12
+# targets, the held-out-and-reachable population was too small (single
+# digits) to support a rate at all, before or after widening reachability.
+# Anti-circularity now rests on the assertion taxonomy instead (CLAUDE.md).
+# Nothing in this codebase reads this constant for scoring; it is not
+# imported by verify_targets.py or ablate.py.
 HELD_OUT_OPERATORS = frozenset({"boolop", "unary_not"})
 
 

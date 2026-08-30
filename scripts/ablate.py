@@ -14,9 +14,8 @@ Four conditions, from the actual design down to its stripped components:
 
 For each condition we report two different things:
   kept_count  how many tests would ship under that design.
-  skr         survivor kill rate over the work-queue reachable survivors
-              (CLAUDE.md's primary metric denominator: reachable, not
-              held-out).
+  skr         survivor kill rate over all reachable survivors (CLAUDE.md's
+              primary metric denominator; there is no held-out exclusion).
 
 skr(C) == skr(C_minus_gate) is a true structural identity, not a bug: C's
 inclusion rule (passed_on_clean AND killed_target) is a strict subset of
@@ -73,9 +72,11 @@ def _in_condition(record: dict, condition: str) -> bool:
 
 
 def load_work_queue_denominator(verification: list[dict]) -> dict[str, set[str]]:
-    """target name -> set of mutant_ids that are reachable survivors and not
-    held-out. This is what the agent's work queue is actually drawn from, so
-    it's the correct SKR denominator for these ablations."""
+    """target name -> set of mutant_ids that are reachable survivors. This is
+    what the agent's work queue is drawn from (all of it -- there is no
+    held-out exclusion; that control was designed and then abandoned, see
+    CLAUDE.md's "Abandoned: holdout transfer control" section), so it's the
+    correct SKR denominator for these ablations."""
     denom = {}
     for entry in verification:
         if "mutants" not in entry:
@@ -83,7 +84,7 @@ def load_work_queue_denominator(verification: list[dict]) -> dict[str, set[str]]
         denom[entry["name"]] = {
             m["mutant_id"]
             for m in entry["mutants"]
-            if m["outcome"] == "survived" and m["reachable"] and not m["held_out"]
+            if m["outcome"] == "survived" and m["reachable"]
         }
     return denom
 

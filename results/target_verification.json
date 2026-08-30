@@ -23,419 +23,363 @@
       "unknown_reachability_survivor": 0,
       "killed": 40
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 11,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 0
-    },
     "mutants": [
       {
         "mutant_id": "M-00bf45e5",
         "operator": "constant",
         "lineno": 3,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7bda0d1a",
         "operator": "constant",
         "lineno": 3,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f35ac122",
         "operator": "constant",
         "lineno": 3,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f082e6c3",
         "operator": "constant",
         "lineno": 3,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3e39f1e1",
         "operator": "constant",
         "lineno": 3,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-cec01f30",
         "operator": "constant",
         "lineno": 28,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6c0c53e7",
         "operator": "constant",
         "lineno": 29,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4d57aed6",
         "operator": "constant",
         "lineno": 29,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7569ee68",
         "operator": "return_none",
         "lineno": 30,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1b4967a3",
         "operator": "return_none",
         "lineno": 32,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c662a811",
         "operator": "constant",
         "lineno": 35,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d84688a6",
         "operator": "constant",
         "lineno": 35,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c14d59d4",
         "operator": "compare",
         "lineno": 41,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2eede3c1",
         "operator": "return_none",
         "lineno": 42,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4d1147bb",
         "operator": "return_none",
         "lineno": 44,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-58a1fd81",
         "operator": "constant",
         "lineno": 44,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ff213077",
         "operator": "constant",
         "lineno": 44,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f102bc85",
         "operator": "return_none",
         "lineno": 46,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d92d6ba3",
         "operator": "constant",
         "lineno": 49,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9d620700",
         "operator": "constant",
         "lineno": 49,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-46058892",
         "operator": "compare",
         "lineno": 55,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d5f8e0b7",
         "operator": "return_none",
         "lineno": 56,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-96d6b651",
         "operator": "return_none",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-645557dd",
         "operator": "constant",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-179de8d5",
         "operator": "constant",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d7684cb8",
         "operator": "return_none",
         "lineno": 60,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-090696dc",
         "operator": "constant",
         "lineno": 63,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fee58b7c",
         "operator": "constant",
         "lineno": 63,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ebdcebff",
         "operator": "compare",
         "lineno": 69,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9961f41b",
         "operator": "return_none",
         "lineno": 70,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-45fabd1d",
         "operator": "return_none",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-293a7af9",
         "operator": "constant",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-04d136e5",
         "operator": "constant",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-eef65623",
         "operator": "return_none",
         "lineno": 74,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7c947327",
         "operator": "constant",
         "lineno": 77,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2932f9eb",
         "operator": "constant",
         "lineno": 77,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4b3ee62c",
         "operator": "compare",
         "lineno": 83,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-beb779be",
         "operator": "return_none",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f865b0b2",
         "operator": "return_none",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ca6dec87",
         "operator": "constant",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-365f4680",
         "operator": "constant",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-944c8fde",
         "operator": "return_none",
         "lineno": 88,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-57411849",
         "operator": "constant",
         "lineno": 91,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9c428e15",
         "operator": "constant",
         "lineno": 91,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6f1c2b10",
         "operator": "constant",
         "lineno": 91,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9a913604",
         "operator": "compare",
         "lineno": 97,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9bf8eef9",
         "operator": "return_none",
         "lineno": 98,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d0717b2e",
         "operator": "return_none",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1d571b10",
         "operator": "constant",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-967e11ae",
         "operator": "constant",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-936dcafb",
         "operator": "return_none",
         "lineno": 102,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -463,491 +407,426 @@
       "unknown_reachability_survivor": 0,
       "killed": 55
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 2,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 9
-    },
     "mutants": [
       {
         "mutant_id": "M-c3639a02",
         "operator": "constant",
         "lineno": 1,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e545a13f",
         "operator": "unary_not",
         "lineno": 32,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-29cbebae",
         "operator": "return_none",
         "lineno": 33,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-2f837111",
         "operator": "constant",
         "lineno": 33,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e5e372d6",
         "operator": "constant",
         "lineno": 36,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d320bd40",
         "operator": "constant",
         "lineno": 36,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-543c2aa3",
         "operator": "binop",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e66c55cf",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-60b53184",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fed1b630",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b2989c59",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f71e2cf7",
         "operator": "return_none",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-42655dad",
         "operator": "binop",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fd360d29",
         "operator": "compare",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6ed8b5f1",
         "operator": "binop",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-09304799",
         "operator": "constant",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-81ce6e2c",
         "operator": "constant",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8e984385",
         "operator": "return_none",
         "lineno": 40,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bba73905",
         "operator": "constant",
         "lineno": 40,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2535d84e",
         "operator": "constant",
         "lineno": 61,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-258583a7",
         "operator": "return_none",
         "lineno": 62,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a9f07c05",
         "operator": "boolop",
         "lineno": 62,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-c4c49a4a",
         "operator": "compare",
         "lineno": 62,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-84010984",
         "operator": "constant",
         "lineno": 62,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-889ccbc0",
         "operator": "constant",
         "lineno": 83,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7c39d52c",
         "operator": "return_none",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fead18c6",
         "operator": "boolop",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-f1f8c173",
         "operator": "compare",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6f96e12b",
         "operator": "constant",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bb4463a5",
         "operator": "constant",
         "lineno": 105,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1bc82a76",
         "operator": "return_none",
         "lineno": 106,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-992e80e1",
         "operator": "boolop",
         "lineno": 106,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-8877da59",
         "operator": "compare",
         "lineno": 106,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8e4e16f1",
         "operator": "constant",
         "lineno": 106,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-35c1f55f",
         "operator": "constant",
         "lineno": 127,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b1660415",
         "operator": "return_none",
         "lineno": 128,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-521d8f99",
         "operator": "boolop",
         "lineno": 128,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-53bc99ee",
         "operator": "compare",
         "lineno": 128,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-974aa5bb",
         "operator": "constant",
         "lineno": 128,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-45836847",
         "operator": "constant",
         "lineno": 149,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c5a3129e",
         "operator": "return_none",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-65ed82ac",
         "operator": "boolop",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-f4e80c82",
         "operator": "compare",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-202eecad",
         "operator": "constant",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-feb51333",
         "operator": "constant",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-47b96a81",
         "operator": "constant",
         "lineno": 171,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e22ee2be",
         "operator": "return_none",
         "lineno": 172,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e471f670",
         "operator": "boolop",
         "lineno": 172,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-bddd2546",
         "operator": "compare",
         "lineno": 172,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-89f10b17",
         "operator": "constant",
         "lineno": 172,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d2ea8490",
         "operator": "constant",
         "lineno": 193,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-91cb5587",
         "operator": "return_none",
         "lineno": 194,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e14803e4",
         "operator": "boolop",
         "lineno": 194,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-79d87896",
         "operator": "compare",
         "lineno": 194,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c28dd4dc",
         "operator": "constant",
         "lineno": 194,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a303cd14",
         "operator": "constant",
         "lineno": 215,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e230adfd",
         "operator": "return_none",
         "lineno": 216,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5caae905",
         "operator": "boolop",
         "lineno": 216,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-805cb74d",
         "operator": "compare",
         "lineno": 216,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fc6cd369",
         "operator": "constant",
         "lineno": 216,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -975,171 +854,146 @@
       "unknown_reachability_survivor": 0,
       "killed": 18
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 2,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 0
-    },
     "mutants": [
       {
         "mutant_id": "M-29dcaa58",
         "operator": "constant",
         "lineno": 9,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-573f387a",
         "operator": "constant",
         "lineno": 138,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2822e734",
         "operator": "constant",
         "lineno": 139,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a08a469d",
         "operator": "constant",
         "lineno": 140,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-56dbc47f",
         "operator": "constant",
         "lineno": 141,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8401f89b",
         "operator": "constant",
         "lineno": 142,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2b7575da",
         "operator": "constant",
         "lineno": 143,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a1f7e4a1",
         "operator": "constant",
         "lineno": 144,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d5481007",
         "operator": "constant",
         "lineno": 145,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-65195421",
         "operator": "constant",
         "lineno": 146,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-44ba7923",
         "operator": "constant",
         "lineno": 147,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d595652a",
         "operator": "constant",
         "lineno": 148,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-11e9c1b8",
         "operator": "constant",
         "lineno": 149,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c208ae19",
         "operator": "constant",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e771e8b9",
         "operator": "constant",
         "lineno": 151,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-55731225",
         "operator": "constant",
         "lineno": 154,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4bbc3c8a",
         "operator": "constant",
         "lineno": 155,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-257c46cf",
         "operator": "constant",
         "lineno": 156,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f7a92676",
         "operator": "constant",
         "lineno": 164,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ed2efb0a",
         "operator": "constant",
         "lineno": 164,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -1167,163 +1021,139 @@
       "unknown_reachability_survivor": 0,
       "killed": 15
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 2,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 0
-    },
     "mutants": [
       {
         "mutant_id": "M-6a49896d",
         "operator": "constant",
         "lineno": 30,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-a4222334",
         "operator": "return_none",
         "lineno": 31,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-56752103",
         "operator": "constant",
         "lineno": 34,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-59b453ee",
         "operator": "return_none",
         "lineno": 35,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c786ee36",
         "operator": "compare",
         "lineno": 73,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e26f84e9",
         "operator": "constant",
         "lineno": 74,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-444b8bb6",
         "operator": "return_none",
         "lineno": 75,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e43787bb",
         "operator": "constant",
         "lineno": 75,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-34078ff3",
         "operator": "return_none",
         "lineno": 76,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-577f728e",
         "operator": "constant",
         "lineno": 76,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d1ed4d56",
         "operator": "return_none",
         "lineno": 84,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b93de388",
         "operator": "compare",
         "lineno": 84,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-007456c4",
         "operator": "return_none",
         "lineno": 93,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1e1a831d",
         "operator": "constant",
         "lineno": 93,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-51082721",
         "operator": "binop",
         "lineno": 93,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-82f6e469",
         "operator": "constant",
         "lineno": 93,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f0bfbfd0",
         "operator": "raise_removed",
         "lineno": 130,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1d624774",
         "operator": "compare",
         "lineno": 142,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4b43e305",
         "operator": "raise_removed",
         "lineno": 143,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -1351,411 +1181,356 @@
       "unknown_reachability_survivor": 0,
       "killed": 43
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 4,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 4
-    },
     "mutants": [
       {
         "mutant_id": "M-03bd3ef9",
         "operator": "constant",
         "lineno": 6,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-09f8ce8d",
         "operator": "constant",
         "lineno": 6,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-215c77e5",
         "operator": "constant",
         "lineno": 6,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-054fd936",
         "operator": "constant",
         "lineno": 6,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c8addbab",
         "operator": "constant",
         "lineno": 6,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-43fb3695",
         "operator": "constant",
         "lineno": 7,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-9f8746b9",
         "operator": "constant",
         "lineno": 7,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0d9d7d7e",
         "operator": "constant",
         "lineno": 7,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-2c970238",
         "operator": "constant",
         "lineno": 8,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c1ec3202",
         "operator": "constant",
         "lineno": 8,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-39ea40e6",
         "operator": "constant",
         "lineno": 8,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-dcef7b23",
         "operator": "constant",
         "lineno": 8,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-a83ead8a",
         "operator": "constant",
         "lineno": 8,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-3b41dd96",
         "operator": "constant",
         "lineno": 12,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8438ff27",
         "operator": "raise_removed",
         "lineno": 14,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3004a7c7",
         "operator": "constant",
         "lineno": 15,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-d44aed9f",
         "operator": "return_none",
         "lineno": 16,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2623bea0",
         "operator": "boolop",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-ee92dc94",
         "operator": "compare",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9b410844",
         "operator": "constant",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-599f3b50",
         "operator": "unary_not",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-9d4d1463",
         "operator": "constant",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-afd99907",
         "operator": "constant",
         "lineno": 34,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f69001c4",
         "operator": "return_none",
         "lineno": 40,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d37d25e4",
         "operator": "boolop",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-4dbb5835",
         "operator": "compare",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2e84ce39",
         "operator": "constant",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bfdd886c",
         "operator": "unary_not",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-7c4b5bad",
         "operator": "constant",
         "lineno": 58,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a239ee4c",
         "operator": "constant",
         "lineno": 59,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9280eb66",
         "operator": "return_none",
         "lineno": 70,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-0240b970",
         "operator": "return_none",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bcef04f8",
         "operator": "return_none",
         "lineno": 102,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3771d0d3",
         "operator": "return_none",
         "lineno": 118,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-17efef59",
         "operator": "return_none",
         "lineno": 138,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7a091167",
         "operator": "return_none",
         "lineno": 158,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-78e4233f",
         "operator": "return_none",
         "lineno": 182,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2c6cf15a",
         "operator": "return_none",
         "lineno": 198,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8a4fd6d0",
         "operator": "compare",
         "lineno": 217,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2492a308",
         "operator": "binop",
         "lineno": 217,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-917ca6a1",
         "operator": "constant",
         "lineno": 217,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1ddb6503",
         "operator": "compare",
         "lineno": 220,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c2bb05e5",
         "operator": "return_none",
         "lineno": 227,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d1b4045a",
         "operator": "return_none",
         "lineno": 242,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a8e283ed",
         "operator": "compare",
         "lineno": 286,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4eb9b434",
         "operator": "compare",
         "lineno": 296,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-99dfe4e2",
         "operator": "return_none",
         "lineno": 300,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1360ba68",
         "operator": "constant",
         "lineno": 303,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5da9204c",
         "operator": "return_none",
         "lineno": 335,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-6db1b0a3",
         "operator": "return_none",
         "lineno": 339,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       }
     ]
   },
@@ -1783,419 +1558,363 @@
       "unknown_reachability_survivor": 0,
       "killed": 28
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 0,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 2
-    },
     "mutants": [
       {
         "mutant_id": "M-0aa44a2f",
         "operator": "constant",
         "lineno": 8,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-eddb165d",
         "operator": "constant",
         "lineno": 12,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-6b060b82",
         "operator": "boolop",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-ede38390",
         "operator": "boolop",
         "lineno": 34,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-2d77f164",
         "operator": "return_none",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1fa1b3e1",
         "operator": "constant",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c7da4799",
         "operator": "return_none",
         "lineno": 43,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-662229fc",
         "operator": "return_none",
         "lineno": 47,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-cb6563f4",
         "operator": "binop",
         "lineno": 50,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b12aacb5",
         "operator": "constant",
         "lineno": 50,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c726a2d6",
         "operator": "constant",
         "lineno": 50,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-725cf84a",
         "operator": "binop",
         "lineno": 53,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c8f4e367",
         "operator": "constant",
         "lineno": 53,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ef6a23f1",
         "operator": "return_none",
         "lineno": 54,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-064c1cfe",
         "operator": "binop",
         "lineno": 54,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-06622f3f",
         "operator": "return_none",
         "lineno": 57,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b597406d",
         "operator": "binop",
         "lineno": 57,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-45d1951b",
         "operator": "constant",
         "lineno": 57,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4f8e99a2",
         "operator": "binop",
         "lineno": 60,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-0f7f6ef7",
         "operator": "return_none",
         "lineno": 68,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5423f2fe",
         "operator": "binop",
         "lineno": 68,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a490f661",
         "operator": "constant",
         "lineno": 68,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-deab5196",
         "operator": "return_none",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ac5a98d0",
         "operator": "constant",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d7404ea3",
         "operator": "return_none",
         "lineno": 76,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bde41914",
         "operator": "constant",
         "lineno": 76,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-aa9fe53a",
         "operator": "return_none",
         "lineno": 80,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5d0c5a23",
         "operator": "constant",
         "lineno": 80,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2b1fb1fb",
         "operator": "return_none",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-0a983d0f",
         "operator": "constant",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1c3db63e",
         "operator": "constant",
         "lineno": 94,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-af06b7e0",
         "operator": "constant",
         "lineno": 98,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c3622534",
         "operator": "constant",
         "lineno": 102,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-2e02ea09",
         "operator": "constant",
         "lineno": 110,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-7bef3f41",
         "operator": "constant",
         "lineno": 114,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-ab1a6028",
         "operator": "constant",
         "lineno": 118,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-76ea8bb5",
         "operator": "constant",
         "lineno": 126,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-de225225",
         "operator": "constant",
         "lineno": 130,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-81a76357",
         "operator": "constant",
         "lineno": 134,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-dd8542d9",
         "operator": "constant",
         "lineno": 138,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e1554766",
         "operator": "constant",
         "lineno": 142,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-9ad8bd70",
         "operator": "constant",
         "lineno": 150,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-02436a52",
         "operator": "constant",
         "lineno": 154,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-296cdc15",
         "operator": "constant",
         "lineno": 158,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-8753c390",
         "operator": "constant",
         "lineno": 162,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-58c68535",
         "operator": "constant",
         "lineno": 166,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-056e801c",
         "operator": "constant",
         "lineno": 170,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-f321a1e1",
         "operator": "constant",
         "lineno": 174,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-10828c78",
         "operator": "constant",
         "lineno": 178,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-b33a65de",
         "operator": "constant",
         "lineno": 182,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-d2c5e025",
         "operator": "constant",
         "lineno": 186,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       }
     ]
   },
@@ -2223,354 +1942,305 @@
       "unknown_reachability_survivor": 0,
       "killed": 38
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 1,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 1
-    },
     "mutants": [
       {
         "mutant_id": "M-5b52f1ab",
         "operator": "boolop",
         "lineno": 10,
         "outcome": "timeout",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-1ab2dd8e",
         "operator": "compare",
         "lineno": 10,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1ec1595b",
         "operator": "compare",
         "lineno": 10,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d7a7be4c",
         "operator": "constant",
         "lineno": 10,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-eb7c3515",
         "operator": "constant",
         "lineno": 11,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3177ff5c",
         "operator": "return_none",
         "lineno": 12,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3ec6cda2",
         "operator": "constant",
         "lineno": 19,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-87757e12",
         "operator": "constant",
         "lineno": 19,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-b4af24d3",
         "operator": "constant",
         "lineno": 20,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0ed9d16a",
         "operator": "constant",
         "lineno": 20,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-9f01d968",
         "operator": "constant",
         "lineno": 21,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-bbe9bb9a",
         "operator": "constant",
         "lineno": 21,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-2993f3e5",
         "operator": "constant",
         "lineno": 22,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-90952f59",
         "operator": "constant",
         "lineno": 22,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-7a7ecbb7",
         "operator": "constant",
         "lineno": 23,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-76811d91",
         "operator": "constant",
         "lineno": 23,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-89b6d1f5",
         "operator": "constant",
         "lineno": 24,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-b4bca9e5",
         "operator": "constant",
         "lineno": 24,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-1d908683",
         "operator": "constant",
         "lineno": 29,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-8df36c37",
         "operator": "constant",
         "lineno": 29,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e0bd5443",
         "operator": "constant",
         "lineno": 30,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-cdeec8c0",
         "operator": "constant",
         "lineno": 30,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e77d0705",
         "operator": "constant",
         "lineno": 31,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-51e6aa87",
         "operator": "constant",
         "lineno": 31,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-5266bd80",
         "operator": "constant",
         "lineno": 36,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-ff5350bb",
         "operator": "constant",
         "lineno": 36,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-6290292f",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-35dc3621",
         "operator": "constant",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-8e785dcb",
         "operator": "constant",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-d149c7a6",
         "operator": "constant",
         "lineno": 38,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-3e0f6b3a",
         "operator": "constant",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0f171144",
         "operator": "constant",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c07a67d9",
         "operator": "constant",
         "lineno": 40,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-34ab53fa",
         "operator": "constant",
         "lineno": 40,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-636c5a98",
         "operator": "constant",
         "lineno": 41,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-b4a61568",
         "operator": "constant",
         "lineno": 41,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-97c741de",
         "operator": "constant",
         "lineno": 42,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-f0d81b77",
         "operator": "constant",
         "lineno": 42,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-1ab9c567",
         "operator": "binop",
         "lineno": 47,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
   {
     "name": "dotenv-variables",
     "total_mutants": 30,
-    "kill_score": 0.3667,
+    "kill_score": 0.5,
     "outcome_counts": {
-      "killed": 11,
+      "killed": 15,
       "timeout": 0,
       "error": 0,
-      "survived": 19
+      "survived": 15
     },
     "outcome_fractions": {
-      "killed": 0.3667,
+      "killed": 0.5,
       "timeout": 0.0,
       "error": 0.0,
-      "survived": 0.6333
+      "survived": 0.5
     },
     "error_share_of_kills": 0.0,
     "error_dominant": false,
     "reachability_counts": {
-      "unreachable": 19,
+      "unreachable": 15,
       "reachable_survivor": 0,
       "unknown_reachability_survivor": 0,
-      "killed": 11
-    },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 0,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 3
+      "killed": 15
     },
     "mutants": [
       {
@@ -2578,240 +2248,210 @@
         "operator": "compare",
         "lineno": 21,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0897da7b",
         "operator": "return_none",
         "lineno": 22,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-01176a88",
         "operator": "return_none",
         "lineno": 23,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-9f5ac99b",
         "operator": "unary_not",
         "lineno": 23,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": true
+        "reachable": false
       },
       {
         "mutant_id": "M-acb5b736",
         "operator": "return_none",
         "lineno": 34,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-170d0a28",
         "operator": "constant",
         "lineno": 34,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-83d965e2",
         "operator": "constant",
         "lineno": 34,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-5d75b0d5",
         "operator": "unary_not",
         "lineno": 37,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-6e8813e4",
         "operator": "return_none",
         "lineno": 38,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-69faa1f2",
         "operator": "return_none",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bfeee2d4",
         "operator": "compare",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b3a93937",
         "operator": "return_none",
         "lineno": 42,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-d65951a1",
         "operator": "return_none",
         "lineno": 45,
-        "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "outcome": "killed",
+        "reachable": true
       },
       {
         "mutant_id": "M-0f450d2f",
         "operator": "return_none",
         "lineno": 54,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0ba2244a",
         "operator": "constant",
         "lineno": 54,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-6756f2db",
         "operator": "constant",
         "lineno": 54,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-4ea52909",
         "operator": "constant",
         "lineno": 54,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-13eb1141",
         "operator": "unary_not",
         "lineno": 57,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-e62f8234",
         "operator": "return_none",
         "lineno": 58,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e3333516",
         "operator": "return_none",
         "lineno": 59,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-979dd86d",
         "operator": "compare",
         "lineno": 59,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8ea71522",
         "operator": "return_none",
         "lineno": 62,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-7869b163",
         "operator": "compare",
         "lineno": 65,
-        "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "outcome": "killed",
+        "reachable": true
       },
       {
         "mutant_id": "M-9e8fecc5",
         "operator": "return_none",
         "lineno": 67,
-        "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "outcome": "killed",
+        "reachable": true
       },
       {
         "mutant_id": "M-d543f7b2",
         "operator": "compare",
         "lineno": 67,
-        "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "outcome": "killed",
+        "reachable": true
       },
       {
         "mutant_id": "M-6916e80a",
         "operator": "constant",
         "lineno": 71,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bcefecd8",
         "operator": "constant",
         "lineno": 75,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9b3a3bfa",
         "operator": "constant",
         "lineno": 76,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-0f18c0c4",
         "operator": "compare",
         "lineno": 78,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9914208c",
         "operator": "compare",
         "lineno": 85,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -2839,426 +2479,368 @@
       "unknown_reachability_survivor": 0,
       "killed": 38
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 7,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 2
-    },
     "mutants": [
       {
         "mutant_id": "M-7b66becc",
         "operator": "constant",
         "lineno": 1,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-13e9df52",
         "operator": "binop",
         "lineno": 25,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9e0c5fb0",
         "operator": "constant",
         "lineno": 25,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9dbac133",
         "operator": "binop",
         "lineno": 26,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-96b6bf18",
         "operator": "binop",
         "lineno": 26,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5fb0f715",
         "operator": "constant",
         "lineno": 26,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7d13bfea",
         "operator": "return_none",
         "lineno": 27,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b4b28e42",
         "operator": "constant",
         "lineno": 27,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4e47b64c",
         "operator": "compare",
         "lineno": 45,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-58171792",
         "operator": "constant",
         "lineno": 47,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-203e8b4e",
         "operator": "binop",
         "lineno": 53,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d2f206b2",
         "operator": "raise_removed",
         "lineno": 55,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2343fbe2",
         "operator": "constant",
         "lineno": 55,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6b8f7601",
         "operator": "return_none",
         "lineno": 56,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-053c14e8",
         "operator": "constant",
         "lineno": 61,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-231b71e6",
         "operator": "compare",
         "lineno": 63,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fb1db887",
         "operator": "return_none",
         "lineno": 71,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2c923cc8",
         "operator": "binop",
         "lineno": 71,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f533dc94",
         "operator": "constant",
         "lineno": 71,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9beae2b3",
         "operator": "constant",
         "lineno": 71,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2de4e253",
         "operator": "unary_not",
         "lineno": 79,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-61615df0",
         "operator": "raise_removed",
         "lineno": 80,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-bc325ca4",
         "operator": "constant",
         "lineno": 80,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-cd0d0856",
         "operator": "compare",
         "lineno": 81,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ea499201",
         "operator": "return_none",
         "lineno": 83,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7b70ced1",
         "operator": "constant",
         "lineno": 85,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-06e8acbe",
         "operator": "unary_not",
         "lineno": 96,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-150ebaea",
         "operator": "raise_removed",
         "lineno": 97,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2aade299",
         "operator": "constant",
         "lineno": 97,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-4a1bf9f9",
         "operator": "constant",
         "lineno": 99,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c42d954c",
         "operator": "return_none",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2537e138",
         "operator": "compare",
         "lineno": 109,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e364770e",
         "operator": "compare",
         "lineno": 113,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-433759d7",
         "operator": "constant",
         "lineno": 115,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-28e7b1e8",
         "operator": "constant",
         "lineno": 115,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-277db572",
         "operator": "return_none",
         "lineno": 119,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-377fb32c",
         "operator": "compare",
         "lineno": 123,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3389f9f0",
         "operator": "return_none",
         "lineno": 126,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c58105cb",
         "operator": "return_none",
         "lineno": 130,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c9b0a273",
         "operator": "constant",
         "lineno": 132,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-606a7e75",
         "operator": "compare",
         "lineno": 141,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-016dfdb4",
         "operator": "constant",
         "lineno": 141,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f4e136f6",
         "operator": "raise_removed",
         "lineno": 150,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a244c443",
         "operator": "constant",
         "lineno": 152,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-503457c0",
         "operator": "binop",
         "lineno": 154,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5222dd99",
         "operator": "constant",
         "lineno": 154,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-033f8d36",
         "operator": "return_none",
         "lineno": 155,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c1312131",
         "operator": "binop",
         "lineno": 155,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
   {
     "name": "boltons-typeutils",
     "total_mutants": 26,
-    "kill_score": 0.3462,
+    "kill_score": 0.3846,
     "outcome_counts": {
-      "killed": 9,
+      "killed": 10,
       "timeout": 0,
       "error": 0,
-      "survived": 17
+      "survived": 16
     },
     "outcome_fractions": {
-      "killed": 0.3462,
+      "killed": 0.3846,
       "timeout": 0.0,
       "error": 0.0,
-      "survived": 0.6538
+      "survived": 0.6154
     },
     "error_share_of_kills": 0.0,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 14,
-      "reachable_survivor": 3,
+      "reachable_survivor": 2,
       "unknown_reachability_survivor": 0,
-      "killed": 9
-    },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 2,
-      "held_out_reachable_survivors": 1,
-      "held_out_total_mutants": 2
+      "killed": 10
     },
     "mutants": [
       {
@@ -3266,208 +2848,182 @@
         "operator": "constant",
         "lineno": 42,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-8be779f0",
         "operator": "return_none",
         "lineno": 81,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-f5e5ec8c",
         "operator": "return_none",
         "lineno": 82,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e943713f",
         "operator": "constant",
         "lineno": 82,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-cf6ab9c2",
         "operator": "constant",
         "lineno": 82,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0e377763",
         "operator": "return_none",
         "lineno": 86,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-9b8c85cc",
         "operator": "return_none",
         "lineno": 89,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-48d132a1",
         "operator": "constant",
         "lineno": 89,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b901ac92",
         "operator": "return_none",
         "lineno": 92,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-46825c60",
         "operator": "return_none",
         "lineno": 95,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-fce23d26",
         "operator": "constant",
         "lineno": 98,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-24dd8183",
         "operator": "constant",
         "lineno": 99,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7f6b5f20",
         "operator": "boolop",
         "lineno": 100,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-fb7cd4da",
         "operator": "unary_not",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-febfec72",
         "operator": "compare",
         "lineno": 100,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ad61d09f",
         "operator": "raise_removed",
         "lineno": 101,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-5e68b13d",
         "operator": "return_none",
         "lineno": 105,
-        "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "outcome": "killed",
+        "reachable": true
       },
       {
         "mutant_id": "M-d1fe8b5d",
         "operator": "return_none",
         "lineno": 128,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-38d0e055",
         "operator": "return_none",
         "lineno": 130,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-54d5533f",
         "operator": "constant",
         "lineno": 130,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e1fa8616",
         "operator": "raise_removed",
         "lineno": 158,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-ff27af36",
         "operator": "binop",
         "lineno": 158,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-88a76ff1",
         "operator": "constant",
         "lineno": 158,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-94a8697e",
         "operator": "compare",
         "lineno": 162,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-30a751d8",
         "operator": "return_none",
         "lineno": 167,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-28b18a49",
         "operator": "return_none",
         "lineno": 180,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       }
     ]
   },
@@ -3495,219 +3051,188 @@
       "unknown_reachability_survivor": 0,
       "killed": 7
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 8,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 1
-    },
     "mutants": [
       {
         "mutant_id": "M-2a5a2936",
         "operator": "constant",
         "lineno": 13,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-c74c4fe6",
         "operator": "constant",
         "lineno": 13,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b2f46fa2",
         "operator": "constant",
         "lineno": 15,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-d78034e2",
         "operator": "constant",
         "lineno": 16,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c5abb40b",
         "operator": "constant",
         "lineno": 17,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-4643fdcc",
         "operator": "constant",
         "lineno": 18,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-62c3bdce",
         "operator": "constant",
         "lineno": 19,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-66c2921a",
         "operator": "constant",
         "lineno": 20,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-a064a7f1",
         "operator": "constant",
         "lineno": 21,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-50a971c9",
         "operator": "constant",
         "lineno": 22,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-37ee6174",
         "operator": "constant",
         "lineno": 23,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e9844aa0",
         "operator": "constant",
         "lineno": 25,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-08aa7867",
         "operator": "constant",
         "lineno": 25,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-24861dfc",
         "operator": "constant",
         "lineno": 25,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-78d684df",
         "operator": "constant",
         "lineno": 25,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3bc3fa54",
         "operator": "constant",
         "lineno": 25,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-61985428",
         "operator": "boolop",
         "lineno": 33,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": true
+        "reachable": true
       },
       {
         "mutant_id": "M-315eefd5",
         "operator": "compare",
         "lineno": 33,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-ac56b9fb",
         "operator": "constant",
         "lineno": 37,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-cb410971",
         "operator": "return_none",
         "lineno": 40,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-a439369c",
         "operator": "return_none",
         "lineno": 45,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-92757733",
         "operator": "constant",
         "lineno": 48,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-5ab3bcc8",
         "operator": "return_none",
         "lineno": 51,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-e12bfece",
         "operator": "return_none",
         "lineno": 56,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-6d30ae84",
         "operator": "constant",
         "lineno": 59,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f2d7e4cd",
         "operator": "constant",
         "lineno": 60,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       }
     ]
   },
@@ -3716,14 +3241,14 @@
     "total_mutants": 35,
     "kill_score": 0.4286,
     "outcome_counts": {
-      "killed": 15,
-      "timeout": 0,
+      "killed": 14,
+      "timeout": 1,
       "error": 0,
       "survived": 20
     },
     "outcome_fractions": {
-      "killed": 0.4286,
-      "timeout": 0.0,
+      "killed": 0.4,
+      "timeout": 0.0286,
       "error": 0.0,
       "survived": 0.5714
     },
@@ -3735,291 +3260,251 @@
       "unknown_reachability_survivor": 0,
       "killed": 15
     },
-    "held_out_counts": {
-      "work_queue_reachable_survivors": 14,
-      "held_out_reachable_survivors": 0,
-      "held_out_total_mutants": 0
-    },
     "mutants": [
       {
         "mutant_id": "M-51d1d504",
         "operator": "constant",
         "lineno": 29,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-583a4d4a",
         "operator": "constant",
         "lineno": 32,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-e46b07ae",
         "operator": "constant",
         "lineno": 35,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f7181d71",
         "operator": "constant",
         "lineno": 35,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-dddf5d71",
         "operator": "return_none",
         "lineno": 36,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b81a1f56",
         "operator": "constant",
         "lineno": 38,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-83f7e4b0",
         "operator": "constant",
         "lineno": 38,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-f0406520",
         "operator": "return_none",
         "lineno": 39,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-6ab173a1",
         "operator": "constant",
         "lineno": 42,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-22369c8f",
         "operator": "constant",
         "lineno": 52,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-84f86605",
         "operator": "return_none",
         "lineno": 53,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-528515c3",
         "operator": "constant",
         "lineno": 63,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d6925ae0",
         "operator": "return_none",
         "lineno": 64,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-a040afcd",
         "operator": "constant",
         "lineno": 68,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-369f6698",
         "operator": "constant",
         "lineno": 71,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-48663480",
         "operator": "return_none",
         "lineno": 72,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d97ca74c",
         "operator": "constant",
         "lineno": 72,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-3b4a6f0d",
         "operator": "constant",
         "lineno": 79,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-c17e0484",
         "operator": "constant",
         "lineno": 81,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-25c3ab92",
         "operator": "constant",
         "lineno": 85,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-b8611613",
         "operator": "return_none",
         "lineno": 86,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-b0304ae2",
         "operator": "constant",
         "lineno": 96,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-d69fe302",
         "operator": "return_none",
         "lineno": 97,
-        "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "outcome": "timeout",
+        "reachable": true
       },
       {
         "mutant_id": "M-5e2c1a07",
         "operator": "compare",
         "lineno": 97,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-29b584b1",
         "operator": "constant",
         "lineno": 114,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1d560ccd",
         "operator": "compare",
         "lineno": 115,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-2264bbdd",
         "operator": "raise_removed",
         "lineno": 116,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-5ef8200f",
         "operator": "return_none",
         "lineno": 117,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-39d51255",
         "operator": "compare",
         "lineno": 117,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-950b9bd4",
         "operator": "constant",
         "lineno": 132,
         "outcome": "survived",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-7f546506",
         "operator": "compare",
         "lineno": 133,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-5919c690",
         "operator": "raise_removed",
         "lineno": 134,
         "outcome": "survived",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-40ba4b0c",
         "operator": "return_none",
         "lineno": 135,
         "outcome": "killed",
-        "reachable": true,
-        "held_out": false
+        "reachable": true
       },
       {
         "mutant_id": "M-1239da07",
         "operator": "binop",
         "lineno": 136,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       },
       {
         "mutant_id": "M-0ad85105",
         "operator": "compare",
         "lineno": 136,
         "outcome": "killed",
-        "reachable": false,
-        "held_out": false
+        "reachable": false
       }
     ]
   }

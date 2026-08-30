@@ -11,22 +11,37 @@ Three checks, in order:
    means mutations to that module never reach the interpreter -- the
    src-layout editable-install bug class, generalised to any future cause.
    This must pass for every target before any kill score from it is trusted.
+   Note what this does NOT prove: that execution is isolated between runs.
+   That is a separate property, checked next.
 
-2. Baseline scoring + reachability: run the real mutation set, confirm mutant
-   count lands in the 15-60 band, report the killed/timeout/error breakdown
-   per CLAUDE.md's Kill outcome breakdown section, and run the clean suite
-   under `coverage` to determine which surviving mutants sit on a line the
-   suite never executes at all ("unreachable" -- structurally impossible for
-   this suite to kill, independent of assertion quality) versus lines it does
-   execute ("reachable-survivor" -- a real assertion gap). Per CLAUDE.md's
-   Metrics section, the primary metric's denominator is reachable survivors
-   only; raw SKR (unreachable included) is reported alongside it.
+2. Determinism: run each target's full mutation scoring three times serially
+   and assert the survivor SET (not just the count) is byte-identical across
+   all three. This exists because the runner's old default (workers=4,
+   concurrent mutant evaluation) produced a different survivor set on every
+   run for one real target (async I/O against real temp files) -- caught by
+   hand during eval-set verification, before it could reach a committed
+   number. The canary and the determinism check prove two different things:
+   the canary proves a mutation reaches the interpreter; determinism proves
+   the execution that observes it is isolated. A harness needs both. A
+   target that fails this check is quarantined -- excluded from reachability
+   scoring and the pooled count, reported separately, never averaged in.
 
-3. Held-out partition: reachable survivors are split into the agent's actual
-   work queue (operators other than boolop/unary_not) and the held-out set
-   (boolop/unary_not survivors, per CLAUDE.md's Held-out operators section).
-   The held-out set is never targeted by any arm; it exists to measure
-   transfer rate once an arm has run.
+3. Baseline scoring + reachability: run the real mutation set (reusing one of
+   the three determinism runs -- they're identical by construction once a
+   target passes check 2, so a fourth run would be wasted work), confirm
+   mutant count lands in the 15-60 band, report the killed/timeout/error
+   breakdown per CLAUDE.md's Kill outcome breakdown section, and run the
+   clean suite under `coverage` to determine which surviving mutants sit on a
+   line the suite never executes at all ("unreachable" -- structurally
+   impossible for this suite to kill, independent of assertion quality)
+   versus lines it does execute ("reachable-survivor" -- a real assertion
+   gap). Per CLAUDE.md's Metrics section, the primary metric's denominator is
+   reachable survivors only; raw SKR (unreachable included) is reported
+   alongside it.
+
+There is no held-out-operator partition here. One was built and then
+abandoned -- see CLAUDE.md's "Abandoned: holdout transfer control" section
+for the numbers that killed it. All reachable survivors are eligible.
 
 Writes results/target_verification.json with a full per-mutant record per
 target (mutant_id, operator, outcome, reachable) plus the aggregate counts,
@@ -43,8 +58,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from killcheck.engine import Mutant, generate_mutants
-from killcheck.logs import HELD_OUT_OPERATORS
+from killcheck.engine import Mutant
 from killcheck.runner import Target, score_target, verify_clean
 from killcheck.runner import _evaluate_one  # frozen internal; used read-only here
 
@@ -101,6 +115,34 @@ def canary_check(target: Target, timeout: int = 30) -> tuple[bool, str]:
     return True, f"suite correctly reported '{result.outcome}' on unimportable source"
 
 
+def determinism_check(target: Target, timeout: int = 30, runs: int = 3) -> tuple[bool, str, list[dict]]:
+    """Run full mutation scoring `runs` times serially and compare the survivor
+    SET (not just the count) across every run. Returns (deterministic, detail,
+    reports) -- `reports` holds every run's full score_target() output so a
+    deterministic target's scoring loop doesn't have to pay for a 4th run.
+
+    This exists because workers=4 (the runner's old default) produced a
+    different survivor set on every run for one real target (async I/O
+    against real temp files) -- confirmed by hand, not assumed fixed by
+    switching the default to workers=1. This check is the standing gate that
+    replaces "confirmed by hand": any target that varies, even at workers=1,
+    is quarantined and reported, never silently averaged into the pooled
+    number. See CHANGELOG.md for how the original bug was found.
+    """
+    reports = [score_target(target, timeout=timeout, workers=1) for _ in range(runs)]
+    survivor_sets = [
+        frozenset(r["mutant_id"] for r in rep["results"] if r["outcome"] == "survived")
+        for rep in reports
+    ]
+    deterministic = all(s == survivor_sets[0] for s in survivor_sets[1:])
+    if deterministic:
+        detail = f"survivor set identical across {runs} runs ({len(survivor_sets[0])} survivors)"
+    else:
+        sizes = [len(s) for s in survivor_sets]
+        detail = f"survivor set VARIED across {runs} runs (sizes: {sizes}) -- QUARANTINED"
+    return deterministic, detail, reports
+
+
 def measure_reachable_lines(target: Target, timeout: int = 60) -> set[int] | None:
     """Run the clean suite under coverage.py and return the set of line numbers
     actually executed in target.module_path. Returns None if coverage itself
@@ -143,7 +185,7 @@ def measure_reachable_lines(target: Target, timeout: int = 60) -> set[int] | Non
 
 
 def build_mutant_records(target: Target, report: dict, reachable_lines: set[int] | None) -> list[dict]:
-    """One record per mutant: id, operator, lineno, outcome, reachable, held_out.
+    """One record per mutant: id, operator, lineno, outcome, reachable.
     `reachable` is None (not False) when coverage measurement failed, so a
     downstream consumer can tell "known unreachable" apart from "unknown"."""
     records = []
@@ -159,7 +201,6 @@ def build_mutant_records(target: Target, report: dict, reachable_lines: set[int]
                 "lineno": r["lineno"],
                 "outcome": r["outcome"],
                 "reachable": reachable,
-                "held_out": r["operator"] in HELD_OUT_OPERATORS,
             }
         )
     return records
@@ -175,21 +216,6 @@ def summarize_reachability(mutants: list[dict]) -> dict:
         "reachable_survivor": reachable_survivor,
         "unknown_reachability_survivor": unknown_survivor,
         "killed": killed,
-    }
-
-
-def summarize_held_out(mutants: list[dict]) -> dict:
-    work_queue_reachable_survivors = sum(
-        1 for m in mutants if m["outcome"] == "survived" and m["reachable"] and not m["held_out"]
-    )
-    held_out_reachable_survivors = sum(
-        1 for m in mutants if m["outcome"] == "survived" and m["reachable"] and m["held_out"]
-    )
-    held_out_total = sum(1 for m in mutants if m["held_out"])
-    return {
-        "work_queue_reachable_survivors": work_queue_reachable_survivors,
-        "held_out_reachable_survivors": held_out_reachable_survivors,
-        "held_out_total_mutants": held_out_total,
     }
 
 
@@ -218,19 +244,42 @@ def main() -> int:
         return 1
 
     print()
-    print("=== baseline scoring + reachability + held-out partition ===")
+    print("=== determinism check (survivor SET must be identical across 3 serial runs) ===")
+    determinism_reports: dict[str, list[dict]] = {}
+    quarantined = []
+    for t in targets:
+        target = Target.from_dict(t, ROOT)
+        deterministic, detail, reports = determinism_check(target)
+        status = "PASS" if deterministic else "FAIL"
+        print(f"{t['name']:25s} {status:4s}  {detail}")
+        if deterministic:
+            determinism_reports[t["name"]] = reports
+        else:
+            quarantined.append(t["name"])
+
+    if quarantined:
+        print()
+        print(f"QUARANTINED (non-deterministic even at workers=1): {', '.join(quarantined)}")
+        print("Excluded from reachability scoring and the pooled count below, not averaged in.")
+
+    print()
+    print("=== baseline scoring + reachability ===")
     verification_results = []
     error_dominant_targets = []
     unknown_reachability_targets = []
+    pooled_reachable_survivors = 0
     for t in targets:
+        if t["name"] in quarantined:
+            verification_results.append({"name": t["name"], "quarantined": True})
+            continue
         target = Target.from_dict(t, ROOT)
         try:
-            rep = score_target(target, timeout=30, workers=4)
+            rep = determinism_reports[t["name"]][0]  # already ran 3x identically; reuse, don't re-run
             breakdown = outcome_breakdown(rep)
             reachable_lines = measure_reachable_lines(target)
             mutants = build_mutant_records(target, rep, reachable_lines)
             reach = summarize_reachability(mutants)
-            held_out = summarize_held_out(mutants)
+            pooled_reachable_survivors += reach["reachable_survivor"]
 
             c, f = breakdown["counts"], breakdown["fractions"]
             flag = "  [15-60 OK]" if 15 <= rep["total_mutants"] <= 60 else "  [OUT OF RANGE]"
@@ -249,11 +298,6 @@ def main() -> int:
                 f"reachable-survivor={reach['reachable_survivor']:3d}  "
                 f"killed={reach['killed']:3d}"
                 + (f"  unknown={reach['unknown_reachability_survivor']}" if reach["unknown_reachability_survivor"] else "")
-            )
-            print(
-                f"{'':25s} held-out: work-queue-reachable-survivors={held_out['work_queue_reachable_survivors']:3d}  "
-                f"held-out-reachable-survivors={held_out['held_out_reachable_survivors']:3d}  "
-                f"held-out-total={held_out['held_out_total_mutants']:3d}"
             )
             if breakdown["error_dominant"]:
                 print(
@@ -274,7 +318,6 @@ def main() -> int:
                     "error_share_of_kills": breakdown["error_share_of_kills"],
                     "error_dominant": breakdown["error_dominant"],
                     "reachability_counts": reach,
-                    "held_out_counts": held_out,
                     "mutants": mutants,
                 }
             )
@@ -287,6 +330,9 @@ def main() -> int:
     results_path.write_text(json.dumps(verification_results, indent=2))
     print()
     print(f"Wrote {results_path.relative_to(ROOT)}")
+    scored = len(targets) - len(quarantined)
+    print(f"Pooled reachable survivors across {scored} scored targets: {pooled_reachable_survivors}"
+          + (f"  ({len(quarantined)} quarantined, excluded)" if quarantined else ""))
 
     if error_dominant_targets:
         print()

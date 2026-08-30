@@ -6,10 +6,10 @@
     "license": "MIT",
     "project_root": "targets/cachetools",
     "module_path": "src/cachetools/func.py",
-    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests/test_func.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Memoizing decorators (lru_cache/ttl_cache wrappers). Dense TTL/eviction comparisons. -o pythonpath=src is required: this is a src-layout package with no pytest pythonpath config of its own, so without it pytest resolves 'cachetools' via the pip -e .pth pointing at the ORIGINAL checkout, silently ignoring the mutated copy in the tempdir and making every mutant appear to survive."
+    "notes": "Memoizing decorators (lru_cache/ttl_cache wrappers). Dense TTL/eviction comparisons. -o pythonpath=src is required: this is a src-layout package with no pytest pythonpath config of its own, so without it pytest resolves 'cachetools' via the pip -e .pth pointing at the ORIGINAL checkout, silently ignoring the mutated copy in the tempdir and making every mutant appear to survive. Widened from tests/test_func.py to the whole tests/ dir (Task 2b): func.py's decorators wrap the same cache classes tested throughout the suite, so the narrow file badly undercounted reachability. 312 tests, ~4.7s -- verified clean before adopting."
   },
   {
     "name": "validators-card",
@@ -18,10 +18,10 @@
     "license": "MIT",
     "project_root": "targets/validators",
     "module_path": "src/validators/card.py",
-    "test_command": ["python3", "-m", "pytest", "tests/test_card.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "tests", "--ignore=tests/crypto_addresses", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Credit-card validators incl. Luhn checksum. Rich in comparisons/boundaries."
+    "notes": "Credit-card validators incl. Luhn checksum. Rich in comparisons/boundaries. No -o pythonpath=src needed: validators' own pyproject.toml already sets pythonpath=[\"src\"]. Widened from tests/test_card.py to the whole tests/ dir (Task 2b). --ignore=tests/crypto_addresses excludes 17 tests that ImportError on a missing optional extra (validators[crypto-eth-addresses]) unrelated to card.py. 818 tests, ~1.1s."
   },
   {
     "name": "natsort-ns-enum",
@@ -30,10 +30,10 @@
     "license": "MIT",
     "project_root": "targets/natsort",
     "module_path": "natsort/ns_enum.py",
-    "test_command": ["python3", "-m", "pytest", "tests/test_ns_enum.py", "-q"],
-    "extra_requirements": ["hypothesis"],
+    "test_command": ["python3", "-m", "pytest", "tests", "-q"],
+    "extra_requirements": ["hypothesis", "pytest-mock"],
     "hard_case": false,
-    "notes": "Sort-order enum flag composition (bitwise ops read as boolop/binop sites)."
+    "notes": "Sort-order enum flag composition (bitwise ops read as boolop/binop sites). Widened from tests/test_ns_enum.py to the whole tests/ dir (Task 2b): the ns flags are threaded through natsort's whole keygen pipeline, so the narrow file badly undercounted reachability. pytest-mock added: several other test files use the 'mocker' fixture. 354 tests, ~3.3s."
   },
   {
     "name": "dictdiffer-resolve",
@@ -42,10 +42,10 @@
     "license": "MIT",
     "project_root": "targets/dictdiffer",
     "module_path": "dictdiffer/resolve.py",
-    "test_command": ["python3", "-m", "pytest", "-o", "addopts=", "tests/test_resolve.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "-o", "addopts=", "tests", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Conflict-resolution logic for dict diffs. -o addopts= clears repo's pyproject addopts (references isort/pydocstyle/cov plugins we don't install)."
+    "notes": "Conflict-resolution logic for dict diffs. -o addopts= clears repo's pyproject addopts (references isort/pydocstyle/cov plugins we don't install). Widened from tests/test_resolve.py to the whole tests/ dir (Task 2b): resolve.py's Resolver is exercised by other tests beyond test_resolve.py. 87 tests + 2 skipped, ~0.4s."
   },
   {
     "name": "toolz-dicttoolz",
@@ -54,10 +54,10 @@
     "license": "BSD-3-Clause",
     "project_root": "targets/toolz",
     "module_path": "toolz/dicttoolz.py",
-    "test_command": ["python3", "-m", "pytest", "toolz/tests/test_dicttoolz.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "toolz/tests", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Functional dict utilities (merge/assoc/dissoc/keyfilter etc)."
+    "notes": "Functional dict utilities (merge/assoc/dissoc/keyfilter etc). Widened from toolz/tests/test_dicttoolz.py to the whole toolz/tests/ dir (Task 2b) -- deliberately NOT toolz/bench/, which holds timing benchmarks, not tests. 181 tests, ~0.5s."
   },
   {
     "name": "voluptuous-error",
@@ -69,7 +69,7 @@
     "test_command": ["python3", "-m", "pytest", "voluptuous/tests/tests.py", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Validation error hierarchy/formatting. Exercised transitively by the full schema test suite (repo's pytest.ini pins python_files=tests.py, so the whole suite is one file)."
+    "notes": "Validation error hierarchy/formatting. Exercised transitively by the full schema test suite (repo's pytest.ini pins python_files=tests.py, so the whole suite is one file). Task 2b: already the widest possible scope for this repo, unchanged. Its 0 reachable survivors (see CLAUDE.md's Denominator section) are a coverage.py docstring-tracing artifact, not a narrow-scoping artifact."
   },
   {
     "name": "slugify-special",
@@ -81,7 +81,7 @@
     "test_command": ["python3", "-m", "pytest", "test.py", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Special-character replacement table/lookup rules for slug generation."
+    "notes": "Special-character replacement table/lookup rules for slug generation. Task 2b: already the widest possible scope for this repo (test.py is the only test file), unchanged."
   },
   {
     "name": "dotenv-variables",
@@ -90,10 +90,10 @@
     "license": "BSD-3-Clause",
     "project_root": "targets/python-dotenv",
     "module_path": "src/dotenv/variables.py",
-    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests/test_variables.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests", "--ignore=tests/test_cli.py", "-q"],
     "extra_requirements": ["click"],
     "hard_case": false,
-    "notes": "${VAR}-style interpolation parsing for .env files. click needed only because tests/conftest.py imports it for unrelated CLI fixtures. -o pythonpath=src required for the same reason as cachetools-func (src layout, no pythonpath ini of its own -- see that entry's notes)."
+    "notes": "${VAR}-style interpolation parsing for .env files. click needed only because tests/conftest.py imports it for unrelated CLI fixtures. -o pythonpath=src required for the same reason as cachetools-func (src layout, no pythonpath ini of its own -- see that entry's notes). Widened from tests/test_variables.py to the whole tests/ dir (Task 2b): variables.py's Atom/Literal/Variable classes are used throughout parsing, which is exercised well beyond test_variables.py. --ignore=tests/test_cli.py excludes one test that shells out to the system `printenv --version`, which fails on macOS's BSD printenv (illegal option) -- a platform incompatibility in the test itself, unrelated to variables.py. 212 tests + 1 skipped, ~0.6s."
   },
   {
     "name": "shortuuid-main",
@@ -105,7 +105,7 @@
     "test_command": ["python3", "-m", "pytest", "shortuuid/test_shortuuid.py", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Base-N encode/decode arithmetic for UUID<->short-string conversion."
+    "notes": "Base-N encode/decode arithmetic for UUID<->short-string conversion. Task 2b: already the widest possible scope for this repo (test_shortuuid.py is the only test file), unchanged."
   },
   {
     "name": "boltons-typeutils",
@@ -114,10 +114,10 @@
     "license": "BSD-3-Clause",
     "project_root": "targets/boltons",
     "module_path": "boltons/typeutils.py",
-    "test_command": ["python3", "-m", "pytest", "tests/test_typeutils.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "tests", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Small type-introspection utilities (sentinel objects, mro helpers)."
+    "notes": "Small type-introspection utilities (sentinel objects, mro helpers). Widened from tests/test_typeutils.py to the whole tests/ dir (Task 2b): typeutils.make_sentinel is used internally by other boltons modules (e.g. cacheutils), so their tests exercise typeutils.py lines test_typeutils.py alone does not. 472 tests, ~4.8s."
   },
   {
     "name": "aiofiles-temptypes",
@@ -126,11 +126,11 @@
     "license": "Apache-2.0",
     "project_root": "targets/aiofiles",
     "module_path": "src/aiofiles/tempfile/temptypes.py",
-    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests/test_tempfile.py", "-q"],
+    "test_command": ["python3", "-m", "pytest", "-o", "pythonpath=src", "tests", "-q"],
     "extra_requirements": ["pytest-asyncio"],
     "hard_case": true,
     "hard_case_reason": "Genuine async I/O: wraps real tempfile handles behind async/await delegation. A generated test must drive the coroutine correctly without real filesystem races or relying on execution order, and cannot use wall-clock waits per the agent-loop contract.",
-    "notes": "asyncio_mode=auto is set in pyproject.toml, so no explicit @pytest.mark.asyncio needed. -o pythonpath=src required for the same reason as cachetools-func (src layout, no pythonpath ini of its own -- see that entry's notes)."
+    "notes": "asyncio_mode=auto is set in pyproject.toml, so no explicit @pytest.mark.asyncio needed. -o pythonpath=src required for the same reason as cachetools-func (src layout, no pythonpath ini of its own -- see that entry's notes). Widened from tests/test_tempfile.py to the whole tests/ dir (Task 2b): only 4 test files total in this repo, cheap to run all of them. 216 tests + 5 skipped, ~2.1s."
   },
   {
     "name": "tenacity-stop",
@@ -139,10 +139,10 @@
     "license": "Apache-2.0",
     "project_root": "targets/tenacity",
     "module_path": "tenacity/stop.py",
-    "test_command": ["python3", "-m", "pytest", "tests/test_tenacity.py", "-k", "TestStopConditions", "-q"],
+    "test_command": ["python3", "-m", "pytest", "tests/test_tenacity.py", "-q"],
     "extra_requirements": [],
     "hard_case": true,
     "hard_case_reason": "Retry stop-conditions (stop_after_attempt/stop_after_delay/and/or combinators) are only correctly testable by mocking time, never by sleeping for real. The agent-loop contract explicitly bans wall-clock time in generated tests, so this module forces it to reason about mocking rather than taking the easy (flaky) way out.",
-    "notes": "-k TestStopConditions scopes to the stop.py-relevant test class; the full test_tenacity.py also covers wait/retry/tornado/asyncio and would pull in unrelated deps (tornado)."
+    "notes": "Widened from -k TestStopConditions to the whole test_tenacity.py file (Task 2b): stop.py's classes are also exercised by Retrying-level tests outside TestStopConditions specifically. Deliberately still test_tenacity.py only, not the whole tests/ dir -- test_tornado.py needs tornado (not installed, avoided on purpose) and test_asyncio.py/test_issue_478.py were not verified needed once test_tenacity.py alone gave good coverage. 141 tests + 15 subtests, ~2.3s, no new dependencies."
   }
 ]
