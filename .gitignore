@@ -6,4 +6,4 @@ __pycache__/
 htmlcov/
 .env
 .DS_Store
-targets/KICKOFF.md
+targets/
