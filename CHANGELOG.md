@@ -68,3 +68,70 @@ quality or an artifact of how mutants happen to fail.
 both baseline arms produce their own mutant sets (the agent writes new
 tests, but the *mutants* are unchanged and still frozen-runner-generated,
 so this is mainly a re-confirmation, not expected to change).
+
+## Adversarial review of the metric, before any arm runs
+
+An adversarial pass over the (already-committed) primary metric found three
+more threats, all fixed in the same commit that adds this entry:
+
+**1. Unreachable mutants were being scored as test-quality failures.**
+Added coverage-based reachability to `scripts/verify_targets.py`: run the
+clean suite under `coverage`, cross-reference each surviving mutant's line
+against executed lines. Result: pooled across all 12 targets, 54 of the 138
+surviving mutants are reachable survivors -- a healthy primary-metric
+denominator overall -- but two individual targets, `voluptuous-error` and
+`dotenv-variables`, came back with **0 reachable survivors each**, meaning
+their contribution to the pooled denominator is 0/0, not 0%. Investigated
+both by hand rather than accepting the number:
+
+- `dotenv-variables`: genuine. `tests/test_variables.py` only exercises
+  parsing/equality on `Literal`/`Variable`; it never calls `.resolve()`,
+  `__repr__`, or `__hash__`, which is where all 19 survivors live. Confirmed
+  by `grep` for `!=` and manual read of the module -- not assumed.
+- `voluptuous-error`: an artifact, not a real finding. `coverage`'s line
+  tracer does not mark a bare docstring (the sole statement in a class or
+  function body) as executed, even when the class is defined and imported --
+  confirmed directly: `import voluptuous.error` executes the `class Foo
+  (Invalid):` lines but not the docstring lines immediately below them, per
+  `executed_lines`. All 23 of `voluptuous-error`'s survivors are exactly
+  this: one-line docstrings on exception subclasses. Decision: accept this
+  as a known, documented limitation rather than special-case docstring
+  AST nodes to route around it -- the practical effect is conservative
+  (excludes mutants no test would plausibly assert on anyway) rather than
+  distorting the metric in the tool's favor. Recorded in CLAUDE.md's
+  Denominator section so nobody mistakes "0 reachable survivors" for "this
+  target is unusually well-tested."
+
+**2. The agent could be scored on exactly what it was told to fix.**
+Added `boolop`/`unary_not` as held-out operators (`killcheck/logs.py`,
+`HELD_OUT_OPERATORS`): removed from every arm's work queue, still scored.
+Transfer rate (held-out survivors killed after an arm runs, despite never
+being targeted) is the anti-circularity control -- see CLAUDE.md's Held-out
+operators section. No data yet; infrastructure only, verified by unit
+checks in `scripts/verify_targets.py`'s held-out partition counts.
+
+**3. The kill gate proves sensitivity, not specification.** Built
+`scripts/classify_tests.py`, a deterministic AST classifier (value / mock /
+exception / existence / none) with no LLM involved, plus the pre-registered
+hypothesis that a meaningful share of gate-passing tests will land in
+`none`/`existence`. Verified against a synthetic 4-test fixture covering
+all five categories (including a `pytest.raises` case reached only via a
+retry) before deleting the fixture -- no real arm has produced data yet.
+
+**Also added:** `results/generated_tests.jsonl` schema and
+`killcheck/logs.py` as the single write path for it and for trajectories,
+and `scripts/ablate.py`, which reconstructs what a no-gate/no-retry/both
+design would have kept from one arm C run. Verified against the same
+synthetic fixture: confirmed `skr(C) == skr(C_minus_gate)` holds as the
+structural identity it should be (removing the gate cannot change which
+survivors get killed, only how much non-killing material ships), and
+confirmed `skr(C_minus_retry) != skr(C_minus_both)` CAN legitimately diverge
+when a test fails on both clean and mutant source (a broken test, not a
+real kill) -- the synthetic fixture deliberately included one such row to
+prove `ablate.py` catches this rather than silently over-crediting it.
+
+**Decision:** all of the above is infrastructure and metric definition, not
+results. Committed as one changeset alongside the CLAUDE.md and README
+updates, before `killcheck/baseline.py` (arms A and B) is written -- the
+commit ordering is itself part of the evidence that none of this was shaped
+by a result it needed to explain.
