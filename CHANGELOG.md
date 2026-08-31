@@ -4,6 +4,25 @@ Findings and decisions, in the order they happened. Not a commit log --
 `git log` covers that. This is for "what did we try, why, what did the number
 do, what did we decide."
 
+## Improvement changelog
+
+| STAGE | WHAT WE TRIED AND WHY | EVIDENCE | DECISION / LEARNING |
+| --- | --- | --- | --- |
+| Frozen core + fixture baseline | Built `engine.py` (AST mutation operators) and `runner.py` (kill/survive execution), verified against a local fixture before touching any real target | `fixture/bank.py`: 21 mutants, killed=2, survived=19, kill_score=0.0952 | Froze both files (CLAUDE.md invariant 5) before any agent code existed; any later change requires re-running both arms and a changelog note |
+| Eval set construction | 12 targets from permissively licensed public repos, pinned commit SHAs, 15-60 mutants each | 455 total mutants across 12 targets | Locked in `targets.json` before any metric or arm code existed |
+| src-layout bug + canary | 3 of 12 targets scored kill_score=0.0000 -- investigated rather than accepted as "the agent fails on src-layout" | mutated module's `__file__` resolved to the *original* checkout, not the tempdir copy, for the 3 src-layout targets | Fixed with `-o pythonpath=src`; added a standing canary check (unparseable-source mutant must report `survived`=false) before any kill score is trusted anywhere |
+| Metric lock | Pooled reachable-survivor kill rate chosen as primary over mean kill score, before any arm ran | n/a -- a design decision, made and committed pre-data | Locked in CLAUDE.md with the "mean kill score is dominated by mutant count" rationale; per-target results as raw counts, never percentages |
+| Reachability denominator | Coverage-based reachability partition (killed / reachable-survivor / unreachable) added after 2 targets came back with 0 reachable survivors | `voluptuous-error` 0/0 (coverage's docstring-tracing artifact, confirmed by hand); `dotenv-variables` 0/0 (`test_cli.py` excluded for an unrelated platform reason) | Both targets kept, contribute 0/0, excluded from the pooled denominator rather than swapped for denser targets |
+| Widening experiment | Widened every target's `test_command` to the broadest clean-running scope, to test whether narrow scoping explained a thin (54/138) denominator | Pooled reachable survivors moved 54 -> 53 (lower, not higher); 10 of 12 targets showed zero movement | Accepted as a finding -- most undetected faults are unreached code, not weak assertions -- not a defect to engineer around; two ways to inflate the number (target-swap, further widening) rejected on principle |
+| Both abandoned holdout designs | (1) operator-based holdout: exclude `boolop`/`unary_not` from the work queue, score anyway. (2) positional holdout: hold out a fixed fraction by index | 24 total `boolop`/`unary_not` mutants across all 12 targets, 4 of 12 have zero, only 1 pooled survivor-and-reachable | Both abandoned before any arm ran -- denominator too thin under either design to support a rate |
+| Concurrency bug + determinism gate | `score_target`'s default `workers=4` produced non-deterministic survivor sets on `aiofiles-temptypes` (real async I/O against real temp files) | 4 runs at `workers=4`: kill scores 0.7308/0.7308/0.7692/0.7308, different survivor sets each time; `workers=1`: 0.2692 identically, twice | `workers=1` as the new default; added a standing 3x-serial determinism check, quarantining (not averaging) any target that varies. All 12 targets pass, zero quarantined |
+| Arm A (single prompt) | One call per target, unbounded test count, no mutation info, no gate, no retry -- the baseline the challenge brief names | 556 tests from 10 calls; official pooled SKR 9/53 = 0.1698; 6 of 10 targets failed clean-pass | Official 9/53 stands per the never-repaired rule; a repair diagnostic run separately (below) to quantify how much of that is a batch-invalidation floor |
+| Arm B (budget-matched) | One-test-per-call, call count = target's reachable-survivor count, same model/tokens, no mutation info, no gate, no retry | 53 tests from 53 calls; official pooled SKR 2/53 = 0.0377; 0 clean-pass failures | Isolates what budget alone buys, holding the one-test-per-call regime fixed against arm C |
+| Batch-zero repair diagnostic | Re-scored arm A's 6 failing targets with only the individually-bad content removed, to separate "can't kill" from "batch invalidation hid a kill" | Capability diagnostic 0/26 -> 7/26; instrument correction (`natsort-ns-enum`) 0/2 -> 2/2; `tenacity-stop` resolved to a naming collision (`make_retry_state`), true repaired 1/14 | Diagnostic only, reported alongside -- never instead of -- the official 9/53; its own reconstruction bug (dropped shared imports) was caught by a predicted-outcome sanity check before any repaired number was trusted |
+| Arm C partial | One mutant per call, mutant diff in context, execution gate, exactly one retry on failure; ran until the API budget was exhausted | 2 of 10 scoring targets completed (15 of 53 reachable survivors); 9/15 killed, keep rate 60% pooled (57.1% on `tenacity-stop`); 8 of 9 kills call-phase `AssertionError` | Stopped and reported as partial, with the 8 unrun targets and 38 unrun survivors named explicitly; no substitute generator used -- that would not be an identified comparison |
+
+## Full detail, in the order things happened
+
 ## src-layout editable installs silently defeat mutation testing
 
 **What happened:** while assembling `targets.json`, 3 of the first 12
@@ -593,7 +612,18 @@ arm B scores clean at 0/2 (clean, but genuinely kills nothing). **Arm A and
 arm B's official results were both produced before this fix exists** in
 `killcheck/baseline.py`; their recorded JSON has not been regenerated, and
 `natsort-ns-enum`'s official entry still reads clean_pass=False / 0 killed
-for both arms until a decision is made to re-run it.
+for both arms.
+
+**Decision, made rather than left open:** do not re-run. The bug is already
+correctly attributed to the instrument, not the model (see the
+capability-vs-instrument split above), and re-running now would change the
+generator's environment after the fact -- a different `baseline.py` than
+the one arm A and arm B's other 9 targets were scored under -- for the sake
+of one target's number. The repair diagnostic already reports what the
+fixed instrument would have shown (`natsort-ns-enum`: 2/2), alongside the
+official 0/2, exactly as every other repaired figure in this document is
+reported: as a diagnostic, not a silent substitution into the official
+result.
 
 ## Tenacity-stop: generated tests broke the suite they were added to, through a plain naming collision -- not detectable by the kill gate or the taxonomy
 
@@ -679,14 +709,31 @@ generalised past the frozen core: don't just run new code and read off
 whatever it reports -- run it against a case where you already independently
 know the answer, predict the specific outcome first, and treat a false
 prediction as a stop-and-investigate signal rather than noise to average
-past. Four out of five of this project's instrument bugs (src-layout
-imports, concurrent scoring, the classifier's batch-vs-test unit, this
-reconstruction) were caught by exactly this shape of check -- run something
-new against a known answer before trusting it against an unknown one. The
-fifth (the `natsort-ns-enum` `__future__` import) was caught by the
-capability-vs-instrument split in the entry above, a related but distinct
-discipline: asking "whose fault is this failure" before pooling it with
-ones that have a different owner.
+past. Four of the first five instrument bugs found this session
+(src-layout imports, concurrent scoring, the classifier's batch-vs-test
+unit, this reconstruction) were caught by exactly this shape of check --
+run something new against a known answer before trusting it against an
+unknown one. The fifth (the `natsort-ns-enum` `__future__` import) was
+caught by the capability-vs-instrument split in the entry above, a related
+but distinct discipline: asking "whose fault is this failure" before
+pooling it with ones that have a different owner.
+
+**Update, after arm C's run: eight instrument bugs total, not five.** The
+remaining three did not all fit the predicted-outcome shape, and forcing
+them into that bucket would misstate how they were actually found. Bug 6
+(`_test_name()` missing class-based tests) was caught by an anomaly during
+arm C's smoke test -- both attempts on a legitimate response were being
+silently discarded, which prompted looking at what the extractor actually
+returned, not a prediction stated in advance. Bug 7 (unittest-style
+assertion detection) was caught by reading the actual classification of a
+real kept test and noticing it read `none` when it plainly wasn't -- again,
+an examined result, not a stated prediction. Bug 8
+(`calls_mutated_function` undefined for dunder-dispatched code) was caught
+by a suspicious near-zero rate during table-building, which is explicitly
+the kind of signal this entry says is *less* reliable than a stated
+prediction -- worth naming honestly rather than folding into the same
+success story as the other four. The predicted-outcome check remains the
+strongest tool of the ones used here; it is not the only one that worked.
 
 ## Arm C's smoke test found two more instrument bugs before spending the real budget
 
@@ -739,6 +786,66 @@ drift apart the way the bare-assert logic and this logic just did.
 
 Both fixes verified against the actual captured model responses, then the
 smoke test re-run clean before proceeding to the rest of the run.
+
+## Arm C's results: 2 of 10 targets, then the API budget ran out
+
+After both smoke-test bugs were fixed, arm C ran `slugify-special` (1
+reachable survivor) and `tenacity-stop` (14) in full before the Anthropic
+account's credit balance was exhausted on `cachetools-func`'s first call --
+a billing failure, not a tripwire, confirmed to have left no partial or
+corrupted data for that target (the crash occurred before any logging call
+for it). This is the project's main result and it does not get to be a
+paragraph buried after the bug list; it is recorded here in full.
+
+**Pooled over the 15 survivors covered: 9 killed, keep rate 60.0% (9 of 15
+drafts kept on the final attempt; 57.1% on `tenacity-stop` specifically,
+100% on `slugify-special`'s single mutant, not meaningful at n=1).** 9
+retries fired (all on `tenacity-stop`), 3 succeeded.
+
+**The gate rejected valid tests that missed, not broken tests.** Of the 6
+discarded drafts, 0 failed the clean-source check and all 6 passed clean
+but failed to kill their target mutant. Every draft the model produced was
+runnable and correct on unmutated code; six of them simply didn't detect
+the fault they were shown.
+
+**The pre-registered `none`/`existence` hypothesis is NOT supported on this
+sample.** CLAUDE.md's assertion-taxonomy section predicted, before any test
+existed to classify, that a meaningful share of gate-passing tests would be
+`none` or `existence` class. Kept: 7 `value`, 2 `existence`, 0 `none`, 0
+`mock`, 0 `exception`. Discarded: 6 `value`, 0 in every other category. The
+`none` bin is empty on both sides of the keep decision, and every discarded
+draft is `value` class while both `existence` drafts were kept -- the
+opposite of what was predicted. Stated plainly rather than reframed after
+the fact, per the discipline CLAUDE.md itself set for this hypothesis
+before any data existed.
+
+**8 of 9 kills are call-phase `AssertionError`,** the remaining one a
+call-phase other exception. No assertion-free or crash-only kill in this
+sample. All 9 kills are `constant` (8) or `return_none` (1) operator family
+-- no `compare`, `binop`, `boolop`, `unary_not`, or `raise_removed` mutant
+was killed, which is partly population shape (`constant` and `return_none`
+are the largest operator families in the eval set) and partly a real limit
+on what these 9 kills demonstrate.
+
+**Zero cross-function collateral kills.** 10 total kills across 9 kept
+tests (one test killed 2 mutants in its own function), 1 same-function
+collateral kill, 0 cross-function. Cross-function collateral was the only
+remaining transfer signal left after both holdout designs were abandoned
+(see above); it is zero here.
+
+**Per-call gate outcomes and the official one-pass batch rescore agree on
+every mutant, on both targets** -- checked explicitly, not assumed, given
+that arm A's batch broke `tenacity-stop`'s existing suite through exactly
+this kind of interaction (see the naming-collision entry above). Arm C
+writes into the same file one test at a time; its kept set ran clean
+together with zero mismatches.
+
+**What did not run:** 8 targets, 38 reachable survivors --
+`cachetools-func` (11), `aiofiles-temptypes` (8), `shortuuid-main` (7),
+`toolz-dicttoolz` (4), `validators-card` (2), `natsort-ns-enum` (2),
+`dictdiffer-resolve` (2), `boltons-typeutils` (2). No substitute generator
+was used to fill the gap: doing so would not have been an identified
+comparison against arms A and B, which ran on the full 53-survivor set.
 
 ## Correction: "5 of 12 targets have zero boolop/unary_not mutants" should read 4
 
