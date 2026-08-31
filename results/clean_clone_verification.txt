@@ -1,0 +1,49 @@
+Clean-clone reproduction run of scripts/verify_targets.py, captured verbatim.
+Run three hours before submission from a fresh `git clone` of this repo into
+a scratch directory, fresh venv, requirements.txt installed, targets fetched
+and pip-installed per fetch_targets.sh's own logic. Not written to a file by
+the script itself -- this is the captured stdout, saved here so the run has
+an on-disk record instead of only existing in a terminal scrollback.
+
+=== canary check (must pass before any kill score below is trusted) ===
+cachetools-func           PASS  suite correctly reported 'killed' on unimportable source
+validators-card           PASS  suite correctly reported 'killed' on unimportable source
+natsort-ns-enum           PASS  suite correctly reported 'killed' on unimportable source
+dictdiffer-resolve        PASS  suite correctly reported 'killed' on unimportable source
+toolz-dicttoolz           PASS  suite correctly reported 'killed' on unimportable source
+voluptuous-error          PASS  suite correctly reported 'error' on unimportable source
+slugify-special           PASS  suite correctly reported 'killed' on unimportable source
+dotenv-variables          PASS  suite correctly reported 'killed' on unimportable source
+shortuuid-main            PASS  suite correctly reported 'killed' on unimportable source
+boltons-typeutils         PASS  suite correctly reported 'killed' on unimportable source
+aiofiles-temptypes        PASS  suite correctly reported 'killed' on unimportable source
+tenacity-stop             PASS  suite correctly reported 'killed' on unimportable source
+
+=== determinism check (survivor SET must be identical across 3 serial runs) ===
+cachetools-func           PASS  survivor set identical across 3 runs (11 survivors)
+validators-card           PASS  survivor set identical across 3 runs (5 survivors)
+natsort-ns-enum           PASS  survivor set identical across 3 runs (2 survivors)
+dictdiffer-resolve        PASS  survivor set identical across 3 runs (4 survivors)
+toolz-dicttoolz           PASS  survivor set identical across 3 runs (7 survivors)
+voluptuous-error          PASS  survivor set identical across 3 runs (23 survivors)
+slugify-special           PASS  survivor set identical across 3 runs (1 survivors)
+dotenv-variables          PASS  survivor set identical across 3 runs (15 survivors)
+shortuuid-main            PASS  survivor set identical across 3 runs (10 survivors)
+boltons-typeutils         PASS  survivor set identical across 3 runs (16 survivors)
+aiofiles-temptypes        FAIL  survivor set VARIED across 3 runs (sizes: [19, 18, 19]) -- QUARANTINED
+tenacity-stop             PASS  survivor set identical across 3 runs (20 survivors)
+
+QUARANTINED (non-deterministic even at workers=1): aiofiles-temptypes
+Excluded from reachability scoring and the pooled count below, not averaged in.
+
+[exited with code 0]
+
+---
+
+Summary: 12 of 12 targets pass canary. 11 of 12 targets pass the determinism
+check with survivor sets byte-identical to the committed
+results/target_verification.json. aiofiles-temptypes quarantined -- see
+CHANGELOG.md's "The determinism gate fired on a fresh clone..." entry and
+README.md's "One target does not reproduce deterministically" for the full
+writeup, including why this does not affect any arm C result and what it
+does to the pooled-53 figures arms A/B use.
