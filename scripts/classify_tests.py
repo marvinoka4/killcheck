@@ -83,6 +83,28 @@ MOCK_ASSERT_METHODS = {
 MOCK_ATTRS = {"call_count", "called", "call_args", "call_args_list"}
 VALUE_COMPARE_OPS = (ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.In, ast.NotIn)
 
+# unittest.TestCase's assertion methods -- checked against a real model
+# response before assuming coverage: a test written as
+# `self.assertEqual(result.count(x), 0)` has no `ast.Assert` node at all, so
+# without this it silently classifies as "none" (zero assertions found)
+# despite asserting a concrete expected value, same as `assert a == b` would.
+# assertRaises/assertRaisesRegex are handled separately by
+# _is_unittest_assert_raises, already in place before this fix.
+UNITTEST_VALUE_METHODS = {
+    "assertEqual", "assertNotEqual",
+    "assertIn", "assertNotIn",
+    "assertGreater", "assertGreaterEqual", "assertLess", "assertLessEqual",
+    "assertAlmostEqual", "assertNotAlmostEqual",
+    "assertListEqual", "assertDictEqual", "assertSetEqual", "assertTupleEqual",
+    "assertSequenceEqual", "assertMultiLineEqual", "assertCountEqual",
+}
+UNITTEST_EXISTENCE_METHODS = {
+    "assertTrue", "assertFalse",
+    "assertIs", "assertIsNot",
+    "assertIsNone", "assertIsNotNone",
+    "assertIsInstance", "assertNotIsInstance",
+}
+
 
 def classify_test(source: str) -> str:
     """Return exactly one of CATEGORIES for a single test function's source."""
@@ -109,8 +131,13 @@ def classify_test(source: str) -> str:
             # invented a new category for; it's simply not counted as
             # evidence for any of the four positive buckets.
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
-            if _is_mock_assert_call(node.value):
+            call = node.value
+            if _is_mock_assert_call(call):
                 has_mock = True
+            elif isinstance(call.func, ast.Attribute) and call.func.attr in UNITTEST_VALUE_METHODS:
+                has_value = True
+            elif isinstance(call.func, ast.Attribute) and call.func.attr in UNITTEST_EXISTENCE_METHODS:
+                has_existence = True
         elif isinstance(node, ast.With):
             for item in node.items:
                 if _is_pytest_raises(item.context_expr):

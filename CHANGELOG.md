@@ -687,3 +687,55 @@ fifth (the `natsort-ns-enum` `__future__` import) was caught by the
 capability-vs-instrument split in the entry above, a related but distinct
 discipline: asking "whose fault is this failure" before pooling it with
 ones that have a different owner.
+
+## Arm C's smoke test found two more instrument bugs before spending the real budget
+
+`killcheck/agent.py`'s smoke test (`slugify-special`, 1 reachable survivor)
+surfaced two bugs, both fixed and re-verified before running any other
+target.
+
+**Bug 1: `_test_name()` only scanned top-level statements.** The model's
+first real response was a `unittest.TestCase`-based test -- a class with a
+`def test_x(self)` method, not a bare top-level function. A legitimate,
+common pattern. The extractor found no top-level `def test_*`, returned
+`None`, and both attempt 1 and attempt 2 were auto-discarded as "no test
+function found" without ever actually being run -- neither had a chance to
+pass or fail on its own merits. Confirmed by re-evaluating the captured
+attempt-1 response directly after the fix: it does genuinely fail to kill
+its mutant (a real construction flaw in the model's chosen test values,
+unrelated to the bug), so no valid kill was thrown away here -- but the bug
+still fed the retry loop a useless "no test function found" message instead
+of the real pytest output, degrading the retry mechanism's actual chance of
+correcting the problem. That mechanism -- real failure output feeding a
+retry -- is one of the specific things arm C exists to measure, so a bug
+that quietly disables it for an entire class of valid responses is not a
+minor one. Fixed by recursing into class bodies to find the first
+`test_*` def/method, matching `_enforce_one_test()`'s overflow-counting the
+same way.
+
+**This is the same recursion-failure shape as the `classify_tests.py` bug
+from the arm A/B taxonomy pass, worth naming as a repeated pattern rather
+than two unrelated incidents:** an extractor written and tested against the
+common case (a bare top-level function) silently drops the valid uncommon
+one (a class-based test) instead of erroring loudly. Both times, the
+uncommon case wasn't rare in absolute terms -- it's ordinary, idiomatic
+Python -- it was just the one shape the extractor's author didn't happen to
+write a check for. Worth watching for a third instance of this exact shape
+before assuming it's fully closed.
+
+**Bug 2: `classify_test()` had no detection for unittest-style assertion
+methods** (`self.assertEqual`, `assertIn`, etc.) -- only bare `assert`
+statements and mock-specific `assert_called*` calls. A test using only
+`self.assertEqual(...)` classified as `"none"` (zero assertions found)
+despite asserting a concrete expected value. Checked arms A and B's
+already-reported taxonomy for this exposure before fixing anything:
+**zero instances of unittest-style assertions in either arm's logged
+data** -- their reported numbers stand unaffected. Fixed in both
+`scripts/classify_tests.py` and `killcheck/agent.py`'s own
+`mechanical_features()` (which independently re-detects assertions for its
+own mechanical-feature fields), sharing one method-name mapping
+(`UNITTEST_VALUE_METHODS`/`UNITTEST_EXISTENCE_METHODS`) so the two can't
+drift apart the way the bare-assert logic and this logic just did.
+
+Both fixes verified against the actual captured model responses, then the
+smoke test re-run clean before proceeding to the rest of the run.
