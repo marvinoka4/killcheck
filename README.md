@@ -333,6 +333,9 @@ clean-pass. It didn't. The check was looking for confirmation and returned a
 contradiction, which is the only reason the reconstruction bug was caught
 before its numbers were trusted.
 
+The determinism gate fired again during the final clean-clone reproduction, on
+the same target, and quarantined it. The check is not decorative.
+
 **The practical lesson we would carry into the next agentic evaluation:** the
 canary and the determinism check prove *different properties*, and a harness
 needs both. The canary proves mutations reach the interpreter. The determinism
@@ -384,6 +387,34 @@ cp .env.example .env        # then add a real ANTHROPIC_API_KEY
 The three arms together ran roughly 90 model calls for this submission at
 Sonnet rates; a complete arm C across all 10 scoring targets would add ~38 more
 plus retries. Expect a few US dollars total.
+
+### One target does not reproduce deterministically
+
+A clean-clone reproduction run of `scripts/verify_targets.py` three hours
+before submission reproduced 11 of 12 targets exactly against the committed
+`results/target_verification.json`: all 12 pass the canary, and 11 produce
+byte-identical survivor sets across three serial runs. The twelfth,
+`aiofiles-temptypes`, varied — survivor set sizes 19, 18, 19 across three
+runs, one mutant flipping from survived to killed in a single run. The
+determinism gate quarantined it rather than accepting the 2-of-3 majority,
+which is what the gate is for.
+
+This is the same target that motivated the `workers=1` fix: it drives real
+async I/O against real temporary files. Serial execution removed the large,
+result-changing non-determinism documented above — its kill score moved from
+a 0.27/0.77 spread under concurrency to a stable 0.2692 on the original
+machine — but a residual single-mutant flake remains and is
+environment-dependent. We are reporting it rather than fixing it three hours
+before the deadline, and rather than re-running until it agreed.
+
+It does not affect any reported result. `aiofiles-temptypes` is one of the
+eight targets arm C did not run. It contributes 0 of the 15 reachable
+survivors in the head-to-head, and 0 of the 9 kills. It does contribute 8
+reachable survivors to the pooled 53 used in the arms A and B tables, so
+those pooled figures carry a one-target reproducibility caveat.
+
+A reader reproducing this work should expect 11 of 12 targets to match
+exactly and `aiofiles-temptypes` to quarantine.
 
 **Trajectories** for every arm are in `trajectories/`, one JSONL per run, one
 row per model turn, written live rather than reconstructed. Every generated

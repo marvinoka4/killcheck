@@ -928,3 +928,42 @@ document's claims against another's, not just against `results/` on disk.
 The numbers audit two entries ago checked README against `results/`; this
 pass checked CLAUDE.md against README and found it hadn't been updated
 when README was.
+
+## The determinism gate fired on a fresh clone, against our own committed numbers, three hours before submission
+
+A clean-clone reproduction run of `scripts/verify_targets.py`, done to
+confirm the reproducibility claim rather than assume it, reproduced 11 of
+12 targets exactly against the committed `results/target_verification.json`:
+all 12 pass the canary, 11 produce byte-identical survivor sets across
+three serial runs. The twelfth, `aiofiles-temptypes`, did not: survivor set
+sizes 19, 18, 19 across three runs, one mutant flipping from survived to
+killed in a single run. The gate quarantined it rather than accepting the
+2-of-3 majority -- exactly what it exists to do, and exactly what it did
+the first time it caught this same target's much larger, concurrency-driven
+non-determinism (see "Frozen core reopened a second time" above).
+
+**Not investigated or fixed, on purpose, three hours before the deadline.**
+This is the discipline this document has followed throughout: report a
+contradiction, don't chase it down or re-run until it agrees, when doing so
+would mean shipping a number produced under time pressure with no space
+left to verify it properly. Recorded in README's Reproducing section as
+what a reader should actually expect (11 of 12 exact, one quarantine), not
+smoothed over.
+
+**Why this is worth a full entry and not a footnote:** a determinism check
+that has never once fired is indistinguishable, from the outside, between
+two very different explanations -- "the harness is reliable" and "the check
+doesn't actually catch anything." This one has now fired twice, on the same
+target, for two different reasons (concurrent execution the first time,
+something else -- unexamined -- the second), against two different sets of
+committed numbers, months apart, on two different machines. That is what
+distinguishes a check that works from a check that would look identical if
+it didn't.
+
+**Effect on reported results: none.** `aiofiles-temptypes` is one of the
+eight targets arm C did not run -- it contributes 0 of the 15 reachable
+survivors in the head-to-head and 0 of the 9 kills. It contributes 8
+reachable survivors to the pooled 53 arms A and B were scored against, so
+those pooled figures now carry a one-target reproducibility caveat, stated
+plainly in README rather than left for a reader to discover by re-running
+this themselves.
