@@ -739,3 +739,41 @@ drift apart the way the bare-assert logic and this logic just did.
 
 Both fixes verified against the actual captured model responses, then the
 smoke test re-run clean before proceeding to the rest of the run.
+
+## Correction: "5 of 12 targets have zero boolop/unary_not mutants" should read 4
+
+Caught auditing CLAUDE.md's numeric claims against `results/` before
+reporting arm C's partial-run numbers. Recomputed directly from
+`target_verification.json`: 24 total `boolop`/`unary_not` mutants across
+all 12 targets (matches), 1 pooled survivor-and-reachable (matches), but
+only 4 targets have zero such mutants (`cachetools-func`, `natsort-ns-enum`,
+`dictdiffer-resolve`, `tenacity-stop`), not 5. The other two figures in that
+sentence were already correct; only the target count was wrong. Corrected
+in CLAUDE.md's "Design 1: operator-based holdout" entry.
+
+## Eighth instrument finding: a pre-registered mechanical feature that isn't computable on every target
+
+`calls_mutated_function` (does the draft's AST reference the mutated
+function's name) is well-defined for an ordinary function or method: the
+name appears as a literal `Name`/`Attribute` in a `Call` node whenever the
+test actually invokes it. It is not well-defined for a dunder-dispatched
+method. All 14 of `tenacity-stop`'s mutated functions are dunders
+(`__call__` x9, `__or__` x2, `__and__` x2, `__init__` x1) -- Python's normal
+call and operator syntax (`stop(state)`, `a | b`, `a & b`, `ClassName(...)`)
+never spells the dunder name literally, so an AST name-match reads
+near-zero on this target by construction, regardless of whether the test
+actually exercises the mutated code. Confirmed independently: every kept
+test's official-scoring kill was correctly attributed to it via the plugin
+(see the per-target kill data), so the tests are doing their job; the
+feature just can't see it.
+
+**Fix, and what it does and doesn't mean:** `tenacity-stop` is now excluded
+from this one column only (every other mechanical feature, and every other
+target, is unaffected). Pre-registering a mechanical feature before seeing
+any data protects against tuning the feature to flatter a result after the
+fact -- that protection is exactly why this feature was locked in before
+arm C ran. It does not, and cannot, guarantee the feature is measurable on
+every target's code shape. The honest response to finding a feature is
+undefined somewhere is to report it as not computable there, not to force a
+number out of it and not to quietly drop the feature everywhere to avoid
+the asterisk.

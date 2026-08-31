@@ -265,7 +265,7 @@ experiment with a stated reason is evidence of judgment, not a gap.
 from every arm's work queue, score them anyway, report transfer rate =
 held-out reachable survivors killed / held-out reachable survivors
 available. Killed by the numbers: across all 12 targets, only 24 mutants
-total are `boolop`/`unary_not` (of any outcome), 5 of the 12 targets have
+total are `boolop`/`unary_not` (of any outcome), 4 of the 12 targets have
 *zero* such mutants at all, and only 1 of those 24 was ever both a survivor
 and reachable. A rate needs a denominator; 1 pooled and 0 for most
 individual targets is not one. This is not a reachability-widening problem
