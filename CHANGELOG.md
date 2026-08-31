@@ -884,3 +884,47 @@ every target's code shape. The honest response to finding a feature is
 undefined somewhere is to report it as not computable there, not to force a
 number out of it and not to quietly drop the feature everywhere to avoid
 the asterisk.
+
+## Two contradictions between CLAUDE.md and README, caught by cross-doc consistency checking, both fixed
+
+The README (rewritten to the final submission version) had already
+corrected two claims CLAUDE.md still made. Both are now fixed in CLAUDE.md
+to match.
+
+**1. Anti-circularity did not rest on the assertion taxonomy.** CLAUDE.md's
+Metrics section said "anti-circularity rests on the assertion taxonomy: an
+arm cannot inflate its apparent effectiveness by writing vacuous tests,
+because the taxonomy reports exactly how many of its gate-passing tests are
+vacuous." That conflates three separate questions: (a) what the generator
+emits, which the taxonomy does answer; (b) whether the gate selects on
+anything measurable, which the pre-registered mechanical features answer;
+and (c) whether a kept test specifies behaviour independent of the specific
+mutation it was shown, which is the actual anti-circularity question and is
+**not answered by anything in this submission** -- no holdout survived (see
+Abandoned: holdout transfer control). Collateral kills and breadth are weak
+probes computed from arm C's own run, not controls, and do not substitute
+for (c). Replaced with the three-way split, stated as a correction rather
+than silently rewritten.
+
+**2. The pre-registered `none`/`existence` hypothesis was tested and not
+supported -- CLAUDE.md never said so.** The hypothesis (a meaningful share
+of gate-passing tests would be `none`/`existence` class, meaning the gate
+selects differential probes rather than specifications) was written before
+arm C existed. Arm C's completed sample (2 of 10 targets, 15 of 53
+reachable survivors, stopped by an exhausted API budget -- not random)
+contradicts it: kept 7 `value`/2 `existence`/0 `none`; discarded 6
+`value`/0 `existence`/0 `none`; 8 of 9 kills call-phase `AssertionError`.
+CLAUDE.md's hypothesis section still ended at "if the data contradicts
+this, say so plainly" with no record that it had. This is exactly the
+failure mode pre-registration exists to prevent -- a prediction stated in
+public, then quietly left unconfronted once the data came in. Fixed by
+recording the outcome directly beneath the original hypothesis text, which
+is left completely unedited: a pre-registered hypothesis that was not
+supported is worth more than one revised to match the data, and editing the
+prediction itself would have destroyed the thing pre-registration was for.
+
+Both corrections were prompted by the same discipline: checking one
+document's claims against another's, not just against `results/` on disk.
+The numbers audit two entries ago checked README against `results/`; this
+pass checked CLAUDE.md against README and found it hadn't been updated
+when README was.

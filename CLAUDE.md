@@ -84,9 +84,25 @@ Abandoned: holdout transfer control below). All resolved before any arm ran.
 There is no transfer-rate metric. A held-out-mutant anti-circularity control
 was designed and built, then abandoned when the numbers came in too small to
 support any rate -- see Abandoned: holdout transfer control below.
-Anti-circularity instead rests on the assertion taxonomy: an arm cannot
-inflate its apparent effectiveness by writing vacuous tests, because the
-taxonomy reports exactly how many of its gate-passing tests are vacuous.
+
+**Corrected claim -- an earlier draft of this file said anti-circularity
+rested on the assertion taxonomy. That claim was wrong.** Three different
+questions are easy to conflate here, and only one of them is
+anti-circularity:
+
+- *(a)* what does the generator emit -- answered by the assertion taxonomy;
+- *(b)* does the gate select on anything measurable -- answered by the
+  pre-registered mechanical features;
+- *(c)* do the kept tests specify behaviour independent of the mutation they
+  were shown -- **not answered by anything in this submission.**
+
+Only (c) is anti-circularity, and no holdout survived to answer it (see
+Abandoned: holdout transfer control below). What remains are two weak
+probes computed from arm C's own run, not controls: collateral kills on
+reachable mutants a test was not written for, and breadth within the
+mutated function. Neither substitutes for (c). The taxonomy answers (a);
+it says nothing about whether a `value`-class test would still fire on a
+mutation it was never shown.
 
 **Why survivor kill rate over reachable survivors, not mean kill score, is
 primary:** mean kill score is dominated by whichever module happens to have
@@ -312,6 +328,21 @@ Hypothesis, stated before any test exists to classify: a meaningful share of
 gate-passing tests will be `none` or `existence`, meaning the gate selects
 differential probes rather than specifications. If the data contradicts
 this, say so plainly rather than reframing the hypothesis after the fact.
+
+**Outcome, on the completed sample: NOT supported, and it ran the other
+way.** Arm C completed 2 of its 10 targets (15 of 53 reachable survivors)
+before the run was stopped by an exhausted API budget -- not a random
+sample; see the arm C results entry in CHANGELOG.md. On those 15: kept 7
+`value` / 2 `existence` / 0 `none`; discarded 6 `value` / 0 `existence` / 0
+`none`. The `none` bin is empty on both sides of the keep decision, every
+discarded draft is `value` class, and both `existence` drafts were kept --
+the opposite of what was predicted above. 8 of 9 kills are call-phase
+`AssertionError`, not a crash-only oracle. n=15 with 6 discards cannot
+support a claim about assertion class in either direction; what it does
+rule out, on this sample, is the specific failure mode the hypothesis
+named. The hypothesis text above is left exactly as it was written before
+any test existed to classify -- a pre-registered hypothesis that was not
+supported is worth more than one quietly revised to match the data.
 
 **Limitation, binding on how arm A/B taxonomy numbers can be read: the
 classification unit and the scoring unit are not the same for arms A and
