@@ -61,6 +61,9 @@
       "test_mixed_and_or"
     ],
     "n_kept": 61,
-    "clean_now": false
+    "clean_now": true,
+    "repaired_killed": 1,
+    "repaired_reachable_survivors": 14,
+    "note": "clean_now was false in this file's original run because that run's bisection only considered removing TEST functions. The actual cause was a non-test top-level helper (make_retry_state) colliding with a pre-existing helper of the same name in the target's own suite -- removing it (zero test removals beyond test_mixed_and_or) resolves clean-pass. See CHANGELOG.md's dedicated tenacity-stop entry for the full investigation (threading.Event() hypothesis tested and rejected; naming collision confirmed directly)."
   }
 }
