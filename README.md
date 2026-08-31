@@ -367,23 +367,34 @@ cp .env.example .env        # then add a real ANTHROPIC_API_KEY
    (`fixture/bank.py`), independent of the cloned targets. Expected output:
    `mutants=21 killed=2 survived=19 kill_score=0.0952`. Seconds. If this number
    differs, stop — the measuring instrument has changed.
-3. **`python3 scripts/verify_targets.py`** — per target: the canary check, the
+3. **Reproduce the coverage-versus-detection gap** that opens this README:
+
+   ```bash
+   cd fixture && python3 -m coverage run --source=. -m pytest tests -q \
+     && python3 -m coverage report --include="bank.py" && cd ..
+   ```
+
+   Expected: 47% line coverage on `fixture/bank.py`. Read against step 2's
+   9.5% kill score, that is the gap this project set out to measure — the
+   suite executes just under half the module and detects one mutation in ten.
+   Seconds.
+4. **`python3 scripts/verify_targets.py`** — per target: the canary check, the
    determinism check (3 serial full scoring runs, survivor sets must be
    byte-identical), then coverage-based reachability bucketing. This is the slow
    step, and it is slow deliberately: `workers=1` is required for
    reproducibility. Writes `results/target_verification.json`. Tens of minutes
    for all 12.
-4. **`python3 killcheck/baseline.py --arm A`** and **`--arm B`** — the two
+5. **`python3 killcheck/baseline.py --arm A`** and **`--arm B`** — the two
    baseline arms. Writes `results/baseline_arm_a.json` and
    `results/baseline_arm_b.json`. ~10 and ~53 model calls respectively.
-5. **`python3 killcheck/agent.py`** — arm C. One call per reachable survivor,
+6. **`python3 killcheck/agent.py`** — arm C. One call per reachable survivor,
    plus up to one retry each. Writes `results/agent_arm_c.json`. Add
    `--target <name>` to run a single target.
-6. **`python3 scripts/classify_tests.py`** — assertion taxonomy over all
+7. **`python3 scripts/classify_tests.py`** — assertion taxonomy over all
    generated tests. **`python3 scripts/ablate.py`** — reconstructs the weaker
    keep-rules from arm C's draft log without additional calls.
 
-**Approximate cost of a full reproduction:** the harness steps (1–3) are free.
+**Approximate cost of a full reproduction:** the harness steps (1–4) are free.
 The three arms together ran roughly 90 model calls for this submission at
 Sonnet rates; a complete arm C across all 10 scoring targets would add ~38 more
 plus retries. Expect a few US dollars total.
