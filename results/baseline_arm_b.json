@@ -1,0 +1,250 @@
+{
+  "arm": "B",
+  "run_id": "armB-20260830-144157",
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 8000,
+  "call_cap": 25,
+  "pooled_reachable_survivors": 53,
+  "pooled_killed": 2,
+  "pooled_skr": 0.0377,
+  "tokens_in": 550093,
+  "tokens_out": 11291,
+  "total_calls": 53,
+  "truncated_calls": 0,
+  "clean_pass_failures": [
+    "natsort-ns-enum",
+    "shortuuid-main",
+    "aiofiles-temptypes"
+  ],
+  "targets": [
+    {
+      "arm": "B",
+      "target": "cachetools-func",
+      "reachable_survivors": 11,
+      "calls": 11,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {
+        "M-00bf45e5": "survived",
+        "M-7bda0d1a": "survived",
+        "M-f35ac122": "survived",
+        "M-f082e6c3": "survived",
+        "M-3e39f1e1": "survived",
+        "M-c662a811": "survived",
+        "M-d92d6ba3": "survived",
+        "M-090696dc": "survived",
+        "M-7c947327": "survived",
+        "M-57411849": "survived",
+        "M-9c428e15": "survived"
+      },
+      "tokens_in": 35670,
+      "tokens_out": 3409,
+      "wall_clock_s": 126.5,
+      "test_file": "tests/test_func.py",
+      "generated_tests": "import cachetools.func\n\n\ndef test_ttl_cache_expiry_removes_item():\n    \"\"\"Test that ttl_cache evicts items after the TTL has expired.\"\"\"\n    current_time = [0.0]\n\n    def mock_timer():\n        return current_time[0]\n\n    call_count = [0]\n\n    @cachetools.func.ttl_cache(maxsize=128, ttl=10, timer=mock_timer)\n    def expensive(n):\n        call_count[0] += 1\n        return n * 2\n\n    # First call: cache miss\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 1\n    info = expensive.cache_info()\n    assert info.hits == 0\n    assert info.misses == 1\n    assert info.currsize == 1\n\n    # Second call within TTL: cache hit\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 1\n    info = expensive.cache_info()\n    assert info.hits == 1\n    assert info.misses == 1\n\n    # Advance time past TTL\n    current_time[0] = 11.0\n\n    # Call after TTL expired: should be a cache miss and recompute\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 2\n    info = expensive.cache_info()\n    assert info.hits == 1\n    assert info.misses == 2\n\nimport cachetools.func\n\n\ndef test_ttl_cache_unbound_maxsize_is_none():\n    \"\"\"Test that ttl_cache with maxsize=None creates an unbound cache with None maxsize.\"\"\"\n    timer_value = [0.0]\n\n    def fake_timer():\n        return timer_value[0]\n\n    cached = cachetools.func.ttl_cache(maxsize=None, ttl=10, timer=fake_timer)(lambda n: n * 2)\n\n    assert cached.cache_parameters() == {\"maxsize\": None, \"typed\": False}\n    assert cached.cache_info() == (0, 0, None, 0)\n\n    # Populate cache with many items - should not evict since unbound\n    for i in range(200):\n        result = cached(i)\n        assert result == i * 2\n\n    info = cached.cache_info()\n    assert info.currsize == 200\n    assert info.maxsize is None\n\n    # Verify hits work\n    for i in range(200):\n        result = cached(i)\n        assert result == i * 2\n\n    info2 = cached.cache_info()\n    assert info2.hits == 200\n    assert info2.currsize == 200\n\n    # Advance time past TTL so items expire\n    timer_value[0] = 11.0\n\n    # After expiry, calling again should be a miss\n    result = cached(0)\n    assert result == 0\n    info3 = cached.cache_info()\n    assert info3.misses == 201  # 200 original misses + 1 new miss after expiry\n\nimport cachetools.func\n\n\ndef test_ttl_cache_expired_item_is_recomputed():\n    \"\"\"Verify that after TTL expiry, a cache miss occurs and the function is called again.\"\"\"\n    current_time = [0.0]\n\n    def mock_timer():\n        return current_time[0]\n\n    call_count = [0]\n\n    @cachetools.func.ttl_cache(maxsize=2, ttl=10, timer=mock_timer)\n    def expensive(n):\n        call_count[0] += 1\n        return n * 2\n\n    # First call: miss\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 1\n\n    # Second call: hit (within TTL)\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 1\n\n    # Advance time past TTL\n    current_time[0] = 11.0\n\n    # Third call: miss (item expired)\n    result = expensive(5)\n    assert result == 10\n    assert call_count[0] == 2\n\n    info = expensive.cache_info()\n    # hits=1, misses=2, currsize should reflect current state\n    assert info.hits == 1\n    assert info.misses == 2\n\nimport cachetools.func\n\n\ndef test_ttl_cache_user_function_has_ttl_parameter():\n    \"\"\"When ttl_cache is called with a callable as first arg (user function shorthand),\n    the resulting wrapper should have correct cache_parameters and behave correctly.\"\"\"\n\n    call_count = 0\n\n    @cachetools.func.ttl_cache\n    def my_func(n):\n        nonlocal call_count\n        call_count += 1\n        return n * 2\n\n    assert my_func.cache_parameters() == {\"maxsize\": 128, \"typed\": False}\n    info = my_func.cache_info()\n    assert info.maxsize == 128\n    assert info.currsize == 0\n\n    result = my_func(5)\n    assert result == 10\n    assert call_count == 1\n\n    # Second call should hit the cache\n    result = my_func(5)\n    assert result == 10\n    assert call_count == 1  # still 1, served from cache\n\n    info = my_func.cache_info()\n    assert info.hits == 1\n    assert info.misses == 1\n    assert info.currsize == 1\n\nimport cachetools.func\n\n\ndef test_rr_cache_custom_choice():\n    \"\"\"Test that rr_cache respects a custom choice function for eviction.\"\"\"\n    # Use a deterministic choice that always picks the first item\n    def first_choice(seq):\n        return seq[0]\n\n    cached = cachetools.func.rr_cache(maxsize=2, choice=first_choice)(lambda n: n * 2)\n    assert cached.cache_parameters() == {\"maxsize\": 2, \"typed\": False}\n    assert cached.cache_info() == (0, 0, 2, 0)\n    assert cached(1) == 2\n    assert cached(2) == 4\n    assert cached.cache_info() == (0, 2, 2, 2)\n    # Cache is full; adding a new item should evict one\n    assert cached(3) == 6\n    # Cache still holds maxsize items\n    assert cached.cache_info()[3] == 2\n    # Previous result for 3 is cached now\n    assert cached(3) == 6\n    hits, misses, maxsize, currsize = cached.cache_info()\n    assert hits >= 1\n    assert maxsize == 2\n    assert currsize == 2\n\nimport cachetools.func\n\n\ndef test_fifo_cache_evicts_oldest_entry():\n    call_count = 0\n\n    @cachetools.func.fifo_cache(maxsize=2)\n    def func(n):\n        nonlocal call_count\n        call_count += 1\n        return n * 2\n\n    func(1)\n    func(2)\n    # Cache is now full with keys 1 and 2\n    func(3)\n    # Key 1 should have been evicted (FIFO), so calling func(1) again should recompute\n    assert call_count == 3\n    func(1)\n    assert call_count == 4  # recomputed because 1 was evicted\n    # Key 2 may or may not still be present depending on eviction of key 2 vs 3\n    # After inserting 3 (evicts 1), cache has {2, 3}\n    # After inserting 1 again (evicts 2), cache has {3, 1}\n    func(3)\n    assert call_count == 4  # 3 should still be in cache\n    func(2)\n    assert call_count == 5  # 2 was evicted when 1 was re-added\n\ndef test_lru_cache_evicts_least_recently_used():\n    import cachetools.func\n\n    call_count = 0\n\n    @cachetools.func.lru_cache(maxsize=2)\n    def func(n):\n        nonlocal call_count\n        call_count += 1\n        return n * 2\n\n    func(1)  # cache: {1}\n    func(2)  # cache: {1, 2}\n    func(1)  # access 1 again, making 2 the LRU; cache: {2, 1}\n    func(3)  # should evict 2 (LRU); cache: {1, 3}\n\n    assert call_count == 3  # 1, 2, 3 each computed once\n\n    # 1 should still be cached\n    prev_count = call_count\n    func(1)\n    assert call_count == prev_count  # cache hit\n\n    # 2 should have been evicted, so recomputed\n    func(2)\n    assert call_count == prev_count + 1  # cache miss, recomputed\n\ndef test_lfu_cache_evicts_least_frequently_used():\n    import cachetools.func\n\n    call_count = 0\n\n    @cachetools.func.lfu_cache(maxsize=2)\n    def func(n):\n        nonlocal call_count\n        call_count += 1\n        return n\n\n    # Access key 1 twice and key 2 once\n    func(1)\n    func(1)\n    func(2)\n    assert call_count == 2\n    info = func.cache_info()\n    assert info.currsize == 2\n\n    # Adding key 3 should evict key 2 (least frequently used, frequency=1)\n    # while key 1 (frequency=2) stays\n    func(3)\n    assert call_count == 3\n\n    # Key 1 should still be cached (hit)\n    result = func(1)\n    assert result == 1\n    assert call_count == 3  # no new call, served from cache\n\n    # Key 2 should have been evicted (miss)\n    result = func(2)\n    assert result == 2\n    assert call_count == 4  # new call needed\n\nimport cachetools.func\n\n\ndef test_ttl_cache_unbound_does_not_evict_before_expiry():\n    \"\"\"TTL cache with maxsize=None should grow unboundedly and not evict items.\"\"\"\n    call_count = 0\n    timer_value = 0.0\n\n    def mock_timer():\n        return timer_value\n\n    @cachetools.func.ttl_cache(maxsize=None, ttl=10, timer=mock_timer)\n    def func(n):\n        nonlocal call_count\n        call_count += 1\n        return n * 2\n\n    # Fill cache with many items\n    for i in range(50):\n        func(i)\n\n    assert call_count == 50\n\n    # All items should still be cached (no eviction due to unbounded size)\n    call_count = 0\n    for i in range(50):\n        func(i)\n\n    assert call_count == 0, \"Items should not have been evicted before TTL expiry\"\n    info = func.cache_info()\n    assert info.currsize == 50\n    assert info.maxsize is None\n\ndef test_decorator_cache_info_tracks_hits_and_misses_independently():\n    \"\"\"Verify that hits and misses are tracked separately and correctly across multiple distinct arguments.\"\"\"\n    import cachetools.func\n\n    cached = cachetools.func.lru_cache(maxsize=4)(lambda x: x * 2)\n\n    # Initial state\n    assert cached.cache_info() == (0, 0, 4, 0)\n\n    # Miss for each new argument\n    cached(1)\n    cached(2)\n    cached(3)\n    assert cached.cache_info() == (0, 3, 4, 3)\n\n    # Hits for repeated arguments\n    cached(1)\n    cached(2)\n    cached(1)\n    assert cached.cache_info() == (3, 3, 4, 3)\n\n    # Another miss for a new argument\n    cached(4)\n    assert cached.cache_info() == (3, 4, 4, 4)\n\n    # Results are still correct\n    assert cached(1) == 2\n    assert cached(2) == 4\n    assert cached(3) == 6\n    assert cached(4) == 8\n\nimport cachetools.func\n\n\ndef test_lru_cache_callable_maxsize_uses_default_128():\n    \"\"\"When a callable is passed directly as maxsize (user_function shorthand),\n    the cache should be created with maxsize=128 and typed=False.\"\"\"\n    call_count = 0\n\n    @cachetools.func.lru_cache\n    def my_func(x):\n        nonlocal call_count\n        call_count += 1\n        return x * 2\n\n    assert my_func.cache_parameters() == {\"maxsize\": 128, \"typed\": False}\n    assert my_func(5) == 10\n    assert call_count == 1\n    # Second call with same arg should hit cache\n    assert my_func(5) == 10\n    assert call_count == 1\n    info = my_func.cache_info()\n    assert info.hits == 1\n    assert info.misses == 1\n    assert info.maxsize == 128\n    assert info.currsize == 1"
+    },
+    {
+      "arm": "B",
+      "target": "validators-card",
+      "reachable_survivors": 2,
+      "calls": 2,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {
+        "M-8e984385": "survived",
+        "M-bb4463a5": "survived"
+      },
+      "tokens_in": 7545,
+      "tokens_out": 147,
+      "wall_clock_s": 10.4,
+      "test_file": "tests/test_card.py",
+      "generated_tests": "def test_card_number_returns_false_on_empty_string():\n    \"\"\"Test that card_number returns a ValidationError for empty string input.\"\"\"\n    from validators import ValidationError, card_number\n\n    assert isinstance(card_number(\"\"), ValidationError)\n\ndef test_card_number_returns_false_on_non_digit_characters():\n    \"\"\"Test that card_number returns ValidationError when value contains non-digit characters.\"\"\"\n    from validators import card_number, ValidationError\n    assert isinstance(card_number(\"4242-4242-4242-4242\"), ValidationError)"
+    },
+    {
+      "arm": "B",
+      "target": "natsort-ns-enum",
+      "reachable_survivors": 2,
+      "calls": 2,
+      "truncated_calls": 0,
+      "clean_pass": false,
+      "clean_output": "RROR collecting tests/test_ns_enum.py ____________________\n/Users/marvinoka4/Documents/MarvinOka4/Project Repos/contributions/killcheck/.venv/lib/python3.14/site-packages/_pytest/python.py:508: in importtestmodule\n    mod = import_path(\n/Users/marvinoka4/Documents/MarvinOka4/Project Repos/contributions/killcheck/.venv/lib/python3.14/site-packages/_pytest/pathlib.py:596: in import_path\n    importlib.import_module(module_name)\n/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<frozen importlib._bootstrap>:1406: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1371: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1342: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:938: in _load_unlocked\n    ???\n/Users/marvinoka4/Documents/MarvinOka4/Project Repos/contributions/killcheck/.venv/lib/python3.14/site-packages/_pytest/assertion/rewrite.py:179: in exec_module\n    source_stat, co = _rewrite_test(fn, self.config)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n/Users/marvinoka4/Documents/MarvinOka4/Project Repos/contributions/killcheck/.venv/lib/python3.14/site-packages/_pytest/assertion/rewrite.py:350: in _rewrite_test\n    co = compile(tree, strfn, \"exec\", dont_inherit=True)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE     File \"/private/var/folders/zw/q4mf0rlx1mg07xn6wk5dd1_w0000gn/T/killcheck-arm-j3759iyy/project/tests/test_ns_enum.py\", line 56\nE       from __future__ import annotations\nE       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   SyntaxError: from __future__ imports must occur at the beginning of the file\n=========================== short test summary info ============================\nERROR tests/test_ns_enum.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.30s\n",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {},
+      "tokens_in": 5846,
+      "tokens_out": 693,
+      "wall_clock_s": 12.3,
+      "test_file": "tests/test_ns_enum.py",
+      "generated_tests": "from __future__ import annotations\n\nfrom natsort import ns\n\n\ndef test_ns_enum_bitwise_or_combinations_are_independent_bits() -> None:\n    # Verify that combining flags via | produces the union of their bits,\n    # and that no two distinct non-zero base flags share any bits.\n    non_zero_flags = [\n        ns.FLOAT,\n        ns.SIGNED,\n        ns.NOEXP,\n        ns.PATH,\n        ns.LOCALEALPHA,\n        ns.LOCALENUM,\n        ns.IGNORECASE,\n        ns.LOWERCASEFIRST,\n        ns.GROUPLETTERS,\n        ns.UNGROUPLETTERS,\n        ns.NANLAST,\n        ns.COMPATIBILITYNORMALIZE,\n        ns.NUMAFTER,\n        ns.PRESORT,\n    ]\n    for i, flag_a in enumerate(non_zero_flags):\n        for flag_b in non_zero_flags[i + 1:]:\n            assert flag_a & flag_b == 0, (\n                f\"{flag_a!r} and {flag_b!r} share bits, meaning they are not independent\"\n            )\n        # Each flag combined with itself should equal itself\n        assert flag_a | flag_a == flag_a\n        # Each flag combined with DEFAULT should equal itself\n        assert flag_a | ns.DEFAULT == flag_a\n\nfrom __future__ import annotations\n\nfrom natsort import ns\n\n\ndef test_ns_enum_aliases_share_same_value() -> None:\n    \"\"\"Verify that aliases refer to the same integer value as their canonical counterpart.\"\"\"\n    assert ns.F == ns.FLOAT\n    assert ns.S == ns.SIGNED\n    assert ns.N == ns.NOEXP\n    assert ns.P == ns.PATH\n    assert ns.LA == ns.LOCALEALPHA\n    assert ns.LN == ns.LOCALENUM\n    assert ns.IC == ns.IGNORECASE\n    assert ns.LF == ns.LOWERCASEFIRST\n    assert ns.G == ns.GROUPLETTERS\n    assert ns.UG == ns.UNGROUPLETTERS\n    assert ns.C == ns.CAPITALFIRST\n    assert ns.UG == ns.CAPITALFIRST\n    assert ns.NL == ns.NANLAST\n    assert ns.CN == ns.COMPATIBILITYNORMALIZE\n    assert ns.NA == ns.NUMAFTER\n    assert ns.PS == ns.PRESORT\n    assert ns.I == ns.INT\n    assert ns.U == ns.UNSIGNED\n    assert ns.R == ns.REAL\n    assert ns.L == ns.LOCALE\n    assert ns.REAL == ns.FLOAT | ns.SIGNED\n    assert ns.LOCALE == ns.LOCALEALPHA | ns.LOCALENUM"
+    },
+    {
+      "arm": "B",
+      "target": "dictdiffer-resolve",
+      "reachable_survivors": 2,
+      "calls": 2,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {
+        "M-34078ff3": "survived",
+        "M-b93de388": "survived"
+      },
+      "tokens_in": 5992,
+      "tokens_out": 467,
+      "wall_clock_s": 12.1,
+      "test_file": "tests/test_resolve.py",
+      "generated_tests": "import pytest\nfrom dictdiffer.conflict import Conflict\nfrom dictdiffer.resolve import Resolver, UnresolvedConflictsException, NoFurtherResolutionException\n\n\ndef test_resolve_conflicts_cascades_to_shorter_path():\n    \"\"\"Test that resolve_conflicts tries shorter paths when longer path key is missing.\"\"\"\n    p1 = ('add', 'foo', [(0, 0)])\n    p2 = ('add', 'foo', [(0, 1)])\n    c = [Conflict(p1, p2)]\n\n    # Only register action for the shorter path ('foo',), not ('foo', 0)\n    resolved = []\n\n    def action(conflict, first_patches, second_patches, additional_info):\n        resolved.append(conflict)\n        conflict.take = 'f'\n        return True\n\n    r = Resolver({('foo',): action})\n    r.resolve_conflicts([p1], [p2], c)\n\n    assert r.unresolved_conflicts == []\n    assert len(resolved) == 1\n\ndef test_manual_resolve_conflicts_clears_unresolved():\n    from dictdiffer.conflict import Conflict\n    from dictdiffer.resolve import Resolver, UnresolvedConflictsException\n\n    p1 = ('add', 'foo', [(0, 0)])\n    p2 = ('add', 'foo', [(0, 1)])\n    c1 = Conflict(p1, p2)\n    c2 = Conflict(p1, p2)\n\n    r = Resolver({})\n    r.unresolved_conflicts.append(c1)\n    r.unresolved_conflicts.append(c2)\n\n    r.manual_resolve_conflicts(['f', 's'])\n\n    assert c1.take == 'f'\n    assert c2.take == 's'\n    assert r.unresolved_conflicts == []"
+    },
+    {
+      "arm": "B",
+      "target": "toolz-dicttoolz",
+      "reachable_survivors": 4,
+      "calls": 4,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [
+        "M-1360ba68"
+      ],
+      "killed": 1,
+      "kills_by_outcome": {
+        "M-8a4fd6d0": "survived",
+        "M-2492a308": "survived",
+        "M-917ca6a1": "survived",
+        "M-1360ba68": "killed"
+      },
+      "tokens_in": 27636,
+      "tokens_out": 649,
+      "wall_clock_s": 23.4,
+      "test_file": "toolz/tests/test_dicttoolz.py",
+      "generated_tests": "def test_get_in():\n    from toolz.dicttoolz import get_in\n    from toolz.utils import raises\n\n    transaction = {\n        'name': 'Alice',\n        'purchase': {'items': ['Apple', 'Orange'], 'costs': [0.50, 1.25]},\n        'credit card': '5555-1234-1234-1234'\n    }\n\n    # Basic nested access\n    assert get_in(['purchase', 'items', 0], transaction) == 'Apple'\n    assert get_in(['name'], transaction) == 'Alice'\n\n    # Missing key returns default\n    assert get_in(['purchase', 'total'], transaction) is None\n    assert get_in(['purchase', 'total'], transaction, 0) == 0\n\n    # Type error (indexing dict with list index) returns default\n    assert get_in(['purchase', 'items', 'apple'], transaction) is None\n\n    # Index out of range returns default\n    assert get_in(['purchase', 'items', 10], transaction) is None\n\n    # no_default raises on missing key\n    assert raises(KeyError, lambda: get_in(['y'], {}, no_default=True))\n\n    # Empty keys returns the collection itself\n    assert get_in([], transaction) == transaction\n\ndef test_merge_with_iterable_of_dicts():\n    from toolz.dicttoolz import merge_with\n    # Test that merge_with correctly handles keys appearing in only one dict\n    # and that the function is applied to lists of values\n    result = merge_with(sum, {1: 1, 2: 2}, {2: 20, 3: 30})\n    assert result == {1: 1, 2: 22, 3: 30}\n\ndef test_dissoc_missing_key():\n    from toolz.dicttoolz import dissoc\n    # Dissociating a key that doesn't exist should return a dict equal to the original\n    d = {'a': 1, 'b': 2}\n    result = dissoc(d, 'c')\n    assert result == {'a': 1, 'b': 2}\n    assert result is not d\n\nfrom toolz.dicttoolz import merge_with\n\ndef test_merge_with_single_dict():\n    # When a key appears in only one dict, the function should still be applied\n    # to a list containing that single value\n    result = merge_with(sum, {1: 1, 2: 2}, {2: 10})\n    assert result == {1: 1, 2: 12}"
+    },
+    {
+      "arm": "B",
+      "target": "voluptuous-error",
+      "reachable_survivors": 0,
+      "skipped": "no reachable survivors"
+    },
+    {
+      "arm": "B",
+      "target": "slugify-special",
+      "reachable_survivors": 1,
+      "calls": 1,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {
+        "M-d7a7be4c": "survived"
+      },
+      "tokens_in": 9249,
+      "tokens_out": 186,
+      "wall_clock_s": 6.3,
+      "test_file": "test.py",
+      "generated_tests": "import pytest\nfrom slugify.special import add_uppercase_char\n\n\ndef test_add_uppercase_char_does_not_duplicate_already_uppercase():\n    \"\"\"If a char is already uppercase (char == char.upper()), it should not be added again.\"\"\"\n    # '\u039e' is already uppercase (its upper() is itself), so add_uppercase_char should not insert a duplicate\n    char_list = [(u'\u039e', u'X')]\n    result = add_uppercase_char(char_list)\n    # Count occurrences of ('\u039e', 'X') - should appear exactly once\n    count = sum(1 for item in result if item == (u'\u039e', u'X'))\n    assert count == 1"
+    },
+    {
+      "arm": "B",
+      "target": "dotenv-variables",
+      "reachable_survivors": 0,
+      "skipped": "no reachable survivors"
+    },
+    {
+      "arm": "B",
+      "target": "shortuuid-main",
+      "reachable_survivors": 7,
+      "calls": 7,
+      "truncated_calls": 0,
+      "clean_pass": false,
+      "clean_output": " <MagicMock name='print' id='4445200672'>\n\n    @patch(\"shortuuid.cli.print\")\n    def test_shortuuid_command_produces_uuid(self, mock_print):\n        # When we call the main cli function\n        cli([])\n        # Then a shortuuid is printed out\n        mock_print.assert_called()\n        terminal_output = mock_print.call_args[0][0]\n>       self.assertEqual(len(terminal_output), 22)\nE       AssertionError: 128 != 22\n\nshortuuid/test_shortuuid.py:247: AssertionError\n______________________ test_encode_with_custom_pad_length ______________________\n\n    def test_encode_with_custom_pad_length():\n        \"\"\"encode respects an explicit pad_length parameter.\"\"\"\n        su = ShortUUID()\n        from uuid import UUID\n        u = UUID(\"{3b1f8b40-222c-4a6e-b77e-779d5a94e21c}\")\n        encoded_default = su.encode(u)\n        encoded_short = su.encode(u, pad_length=10)\n        encoded_long = su.encode(u, pad_length=30)\n        # Shorter pad_length should truncate leading characters\n>       assert len(encoded_short) == 10\nE       AssertionError: assert 22 == 10\nE        +  where 22 = len('CXc85b4rqinB7s5J52TRYb')\n\nshortuuid/test_shortuuid.py:351: AssertionError\n=========================== short test summary info ============================\nFAILED shortuuid/test_shortuuid.py::LegacyShortUUIDTest::test_alphabet - Type...\nFAILED shortuuid/test_shortuuid.py::LegacyShortUUIDTest::test_decoding - Valu...\nFAILED shortuuid/test_shortuuid.py::LegacyShortUUIDTest::test_encoding - Asse...\nFAILED shortuuid/test_shortuuid.py::LegacyShortUUIDTest::test_generation - Ty...\nFAILED shortuuid/test_shortuuid.py::LegacyShortUUIDTest::test_random - Assert...\nFAILED shortuuid/test_shortuuid.py::CliTest::test_decode_command - ValueError...\nFAILED shortuuid/test_shortuuid.py::CliTest::test_encode_command - AssertionE...\nFAILED shortuuid/test_shortuuid.py::CliTest::test_shortuuid_command_produces_uuid\nFAILED shortuuid/test_shortuuid.py::test_encode_with_custom_pad_length - Asse...\n9 failed, 20 passed in 0.24s\n",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {},
+      "tokens_in": 33814,
+      "tokens_out": 1273,
+      "wall_clock_s": 36.8,
+      "test_file": "shortuuid/test_shortuuid.py",
+      "generated_tests": "import uuid\nfrom shortuuid.main import ShortUUID\n\n\ndef test_legacy_decode_is_inverse_of_encode():\n    \"\"\"Verify that decode with legacy=True correctly reverses an encoding done\n    by a pre-1.0.0 ShortUUID (i.e. the encoded string is stored LSB-first).\"\"\"\n    su = ShortUUID()\n    original = uuid.UUID(\"{3b1f8b40-222c-4a6e-b77e-779d5a94e21c}\")\n    # Simulate a legacy-encoded string by reversing the modern encoding\n    modern_encoded = su.encode(original)\n    legacy_encoded = modern_encoded[::-1]\n    # decode with legacy=True should reverse the string before decoding,\n    # recovering the original UUID\n    assert su.decode(legacy_encoded, legacy=True) == original\n\nimport uuid as _uu\nfrom shortuuid.main import ShortUUID\n\n\ndef test_decode_legacy_reverses_string_before_decoding():\n    \"\"\"legacy=True should decode a string that was encoded with the old (reversed) format.\"\"\"\n    su = ShortUUID()\n    original_uuid = _uu.UUID(\"{3b1f8b40-222c-4a6e-b77e-779d5a94e21c}\")\n    # Encode normally, then reverse the string to simulate a legacy-encoded value\n    normal_encoded = su.encode(original_uuid)\n    legacy_encoded = normal_encoded[::-1]\n    # Decoding with legacy=True should reverse the string back and recover the original UUID\n    assert su.decode(legacy_encoded, legacy=True) == original_uuid\n\nimport uuid as _uu\nfrom shortuuid.main import ShortUUID\n\n\ndef test_encode_decode_roundtrip_with_custom_alphabet():\n    \"\"\"Encoding then decoding with a custom alphabet returns the original UUID.\"\"\"\n    su = ShortUUID(\"abcdefghij\")\n    original = _uu.UUID(\"{3b1f8b40-222c-4a6e-b77e-779d5a94e21c}\")\n    encoded = su.encode(original)\n    # All characters in the encoded string must belong to the custom alphabet\n    assert all(c in \"abcdefghij\" for c in encoded)\n    # Decoding must recover the original UUID exactly\n    assert su.decode(encoded) == original\n\nimport uuid as _uu\nfrom shortuuid.main import ShortUUID\n\n\ndef test_uuid_with_http_name_is_deterministic():\n    \"\"\"uuid() with the same HTTP URL name should always return the same encoded string.\"\"\"\n    su = ShortUUID()\n    name = \"http://www.example.com/\"\n    result1 = su.uuid(name)\n    result2 = su.uuid(name)\n    assert result1 == result2\n    # Also verify it decodes to the expected UUID5 value\n    expected = _uu.uuid5(_uu.NAMESPACE_URL, name)\n    assert su.decode(result1) == expected\n\nimport pytest\nfrom shortuuid.main import ShortUUID\n\n\ndef test_random_uses_only_alphabet_characters():\n    alphabet = \"abc\"\n    su = ShortUUID(alphabet)\n    result = su.random(length=100)\n    assert len(result) == 100\n    assert set(result).issubset(set(alphabet))\n\nimport pytest\nfrom shortuuid.main import ShortUUID\n\n\ndef test_encode_with_custom_pad_length():\n    \"\"\"encode respects an explicit pad_length parameter.\"\"\"\n    su = ShortUUID()\n    from uuid import UUID\n    u = UUID(\"{3b1f8b40-222c-4a6e-b77e-779d5a94e21c}\")\n    encoded_default = su.encode(u)\n    encoded_short = su.encode(u, pad_length=10)\n    encoded_long = su.encode(u, pad_length=30)\n    # Shorter pad_length should truncate leading characters\n    assert len(encoded_short) == 10\n    # Longer pad_length should pad with leading alphabet characters\n    assert len(encoded_long) == 30\n    # The default-padded string should decode back correctly\n    assert su.decode(encoded_default) == u\n    # The longer-padded string should also decode back correctly\n    assert su.decode(encoded_long) == u\n\nimport pytest\nfrom shortuuid.main import ShortUUID, int_to_string, string_to_int\n\n\ndef test_int_to_string_and_string_to_int_roundtrip():\n    alphabet = list(\"0123456789abcdef\")\n    for number in [0, 1, 15, 16, 255, 256, 2**64 - 1, 2**128 - 1]:\n        encoded = int_to_string(number, alphabet, padding=None)\n        decoded = string_to_int(encoded, alphabet)\n        assert decoded == number, f\"Roundtrip failed for {number}: encoded={encoded!r}, decoded={decoded}\""
+    },
+    {
+      "arm": "B",
+      "target": "boltons-typeutils",
+      "reachable_survivors": 2,
+      "calls": 2,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {
+        "M-c63b701e": "survived",
+        "M-7f6b5f20": "survived"
+      },
+      "tokens_in": 3699,
+      "tokens_out": 215,
+      "wall_clock_s": 15.2,
+      "test_file": "tests/test_typeutils.py",
+      "generated_tests": "def test_issubclass_with_non_types():\n    from boltons.typeutils import issubclass\n    assert issubclass('hi', 'friend') is False\n    assert issubclass(42, int) is False\n    assert issubclass(int, 42) is False\n\n    class MyClass(object):\n        pass\n\n    assert issubclass(MyClass, object) is True\n    assert issubclass(MyClass, int) is False\n\ndef test_get_all_subclasses_recursive():\n    from boltons.typeutils import get_all_subclasses\n\n    class Base:\n        pass\n\n    class Child(Base):\n        pass\n\n    class GrandChild(Child):\n        pass\n\n    subclasses = get_all_subclasses(Base)\n    assert Child in subclasses\n    assert GrandChild in subclasses"
+    },
+    {
+      "arm": "B",
+      "target": "aiofiles-temptypes",
+      "reachable_survivors": 8,
+      "calls": 8,
+      "truncated_calls": 0,
+      "clean_pass": false,
+      "clean_output": "........s.....................................ssss...................... [ 31%]\n..F..................................................................... [ 62%]\n........................................................................ [ 94%]\n.............                                                            [100%]\n=================================== FAILURES ===================================\n__________ test_spooled_temporary_file_fileno_raises_before_rollover ___________\n\n    async def test_spooled_temporary_file_fileno_raises_before_rollover():\n        \"\"\"Test that fileno raises IOError/UnsupportedOperation before rollover, and works after.\"\"\"\n        import io\n        import pytest\n        from aiofiles import tempfile\n    \n        async with tempfile.SpooledTemporaryFile(max_size=1000) as f:\n            # Before rollover, fileno should raise an error since it's backed by BytesIO\n>           with pytest.raises((io.UnsupportedOperation, AttributeError, OSError)):\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE           Failed: DID NOT RAISE any of (UnsupportedOperation, AttributeError, OSError)\n\ntests/test_tempfile.py:282: Failed\n=========================== short test summary info ============================\nFAILED tests/test_tempfile.py::test_spooled_temporary_file_fileno_raises_before_rollover\n1 failed, 223 passed, 5 skipped in 1.90s\n",
+      "killed_ids": [],
+      "killed": 0,
+      "kills_by_outcome": {},
+      "tokens_in": 19744,
+      "tokens_out": 1316,
+      "wall_clock_s": 35.4,
+      "test_file": "tests/test_tempfile.py",
+      "generated_tests": "async def test_spooled_temporary_file_writelines():\n    \"\"\"Test writelines method on spooled temporary file, both before and after rollover.\"\"\"\n    from aiofiles import tempfile\n\n    lines = [b\"line one\\n\", b\"line two\\n\", b\"line three\\n\"]\n    total = b\"\".join(lines)\n\n    # Test writelines before rollover (small max_size so it stays in memory initially)\n    async with tempfile.SpooledTemporaryFile(max_size=1000, mode=\"rb+\") as f:\n        await f.writelines(lines)\n        await f.seek(0)\n        assert await f.read() == total\n\n    # Test writelines after rollover (tiny max_size forces rollover)\n    async with tempfile.SpooledTemporaryFile(max_size=1, mode=\"rb+\") as f:\n        await f.writelines(lines)\n        # Ensure rollover has occurred\n        assert f._file._rolled\n        await f.seek(0)\n        assert await f.read() == total\n\nasync def test_spooled_temporary_file_seek_and_tell():\n    \"\"\"Test that seek and tell work correctly on a spooled temporary file.\"\"\"\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        await f.write(\"Hello\")\n        pos = await f.tell()\n        assert pos == 5\n\n        await f.seek(0)\n        pos = await f.tell()\n        assert pos == 0\n\n        content = await f.read()\n        assert content == \"Hello\"\n\nasync def test_spooled_temporary_file_readline():\n    \"\"\"Test readline on a spooled temporary file.\"\"\"\n    import pytest\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        await f.write(\"line1\\nline2\\nline3\\n\")\n        await f.seek(0)\n        assert await f.readline() == \"line1\\n\"\n        assert await f.readline() == \"line2\\n\"\n        assert await f.readline() == \"line3\\n\"\n        assert await f.readline() == \"\"\n\nasync def test_spooled_temporary_file_truncate():\n    \"\"\"Test that truncate works on a spooled temporary file.\"\"\"\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        await f.write(\"Hello World!\")\n        await f.seek(0)\n        await f.truncate(5)\n        await f.seek(0)\n        result = await f.read()\n        assert result == \"Hello\"\n\nasync def test_spooled_temporary_file_isatty():\n    \"\"\"Test that isatty returns False for a spooled temporary file.\"\"\"\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        result = await f.isatty()\n        assert result is False\n\nasync def test_spooled_temporary_file_rollover():\n    \"\"\"Test that SpooledTemporaryFile rolls over to disk when max_size is exceeded.\"\"\"\n    import io\n    from aiofiles import tempfile\n\n    data = b\"Hello\"\n\n    async with tempfile.SpooledTemporaryFile(max_size=3, mode=\"rb+\") as f:\n        # Before rollover, the underlying file should be a BytesIO\n        assert type(f._file._file) is io.BytesIO\n        assert not f._file._rolled\n\n        # Writing more than max_size should trigger rollover\n        await f.write(data)\n\n        # After write exceeding max_size, it should have rolled over\n        assert f._file._rolled\n\n        # Verify we can still read the data back correctly\n        await f.seek(0)\n        result = await f.read()\n        assert result == data\n\nasync def test_spooled_temporary_file_fileno_raises_before_rollover():\n    \"\"\"Test that fileno raises IOError/UnsupportedOperation before rollover, and works after.\"\"\"\n    import io\n    import pytest\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(max_size=1000) as f:\n        # Before rollover, fileno should raise an error since it's backed by BytesIO\n        with pytest.raises((io.UnsupportedOperation, AttributeError, OSError)):\n            await f.fileno()\n\n        # Write enough to trigger rollover\n        await f.write(b\"x\" * 1001)\n\n        # After rollover, fileno should return a valid integer\n        fd = await f.fileno()\n        assert isinstance(fd, int)\n        assert fd >= 0\n\nasync def test_spooled_temporary_file_close_sets_closed():\n    \"\"\"Test that closing a spooled temporary file marks it as closed.\"\"\"\n    from aiofiles import tempfile\n\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        assert not f.closed\n        await f.write(\"some data\")\n        await f.close()\n        assert f.closed"
+    },
+    {
+      "arm": "B",
+      "target": "tenacity-stop",
+      "reachable_survivors": 14,
+      "calls": 14,
+      "truncated_calls": 0,
+      "clean_pass": true,
+      "clean_output": "",
+      "killed_ids": [
+        "M-48663480"
+      ],
+      "killed": 1,
+      "kills_by_outcome": {
+        "M-583a4d4a": "survived",
+        "M-e46b07ae": "survived",
+        "M-f7181d71": "survived",
+        "M-b81a1f56": "survived",
+        "M-83f7e4b0": "survived",
+        "M-22369c8f": "survived",
+        "M-528515c3": "survived",
+        "M-369f6698": "survived",
+        "M-48663480": "killed",
+        "M-c17e0484": "survived",
+        "M-25c3ab92": "survived",
+        "M-b0304ae2": "survived",
+        "M-29b584b1": "survived",
+        "M-950b9bd4": "survived"
+      },
+      "tokens_in": 400898,
+      "tokens_out": 2936,
+      "wall_clock_s": 120.6,
+      "test_file": "tests/test_tenacity.py",
+      "generated_tests": "import threading\nfrom fractions import Fraction\n\nimport pytest\n\nfrom tenacity import RetryCallState\nfrom tenacity.stop import (\n    stop_after_attempt,\n    stop_after_delay,\n    stop_before_delay,\n    stop_never,\n    stop_when_event_set,\n)\n\n\ndef _make_retry_state(attempt_number, delay_since_start, upcoming_sleep=0):\n    rs = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    rs.attempt_number = attempt_number\n    rs.set_result(None)\n    rs.upcoming_sleep = upcoming_sleep\n    rs.start_time = Fraction(rs.start_time)\n    rs.outcome_timestamp = rs.start_time + Fraction(delay_since_start)\n    return rs\n\n\ndef test_stop_when_event_set_stops_when_event_is_set_but_not_before():\n    event = threading.Event()\n    stop = stop_when_event_set(event)\n    rs = _make_retry_state(1, 0)\n\n    assert stop(rs) is False\n\n    event.set()\n    assert stop(rs) is True\n\ndef test_stop_after_delay_raises_when_seconds_since_start_is_none() -> None:\n    import pytest\n    from tenacity import RetryCallState\n    from tenacity.stop import stop_after_delay\n\n    stop = stop_after_delay(5)\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    # Do not set outcome_timestamp so seconds_since_start remains None\n    with pytest.raises(RuntimeError, match=\"seconds_since_start is not set\"):\n        stop(retry_state)\n\ndef test_stop_before_delay_raises_when_seconds_since_start_is_none() -> None:\n    from tenacity import RetryCallState\n    from tenacity.stop import stop_before_delay\n\n    stop = stop_before_delay(5)\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    # seconds_since_start is None when outcome_timestamp is not set\n    retry_state.start_time = retry_state.start_time  # keep as-is, no outcome set\n    # Manually clear outcome_timestamp to ensure seconds_since_start is None\n    retry_state.outcome_timestamp = None  # type: ignore[assignment]\n\n    import pytest\n    with pytest.raises(RuntimeError, match=\"seconds_since_start is not set\"):\n        stop(retry_state)\n\ndef test_stop_never_always_returns_false():\n    import tenacity\n    from tests.test_tenacity import make_retry_state\n\n    stop = tenacity.stop_never\n    for attempt, delay in [(1, 0), (100, 9999), (0, 0)]:\n        assert stop(make_retry_state(attempt, delay)) is False\n\ndef test_stop_after_attempt_boundary_conditions():\n    from tenacity import stop_after_attempt\n    from tests.test_tenacity import make_retry_state\n\n    stop = stop_after_attempt(3)\n    # One below the limit should not stop\n    assert stop(make_retry_state(2, 0)) is False\n    # Exactly at the limit should stop\n    assert stop(make_retry_state(3, 0)) is True\n    # Above the limit should also stop\n    assert stop(make_retry_state(4, 0)) is True\n\ndef test_stop_any_returns_true_if_first_condition_met_but_not_second():\n    \"\"\"stop_any should return True when only one of the conditions is satisfied.\"\"\"\n    import tenacity\n    from tests.test_tenacity import make_retry_state\n\n    stop = tenacity.stop_any(\n        tenacity.stop_after_attempt(3),\n        tenacity.stop_after_delay(10),\n    )\n    # attempt_number=3 triggers stop_after_attempt, but delay=0.5 does not trigger stop_after_delay\n    assert stop(make_retry_state(3, 0.5)) is True\n    # attempt_number=1 does not trigger stop_after_attempt, but delay=10 triggers stop_after_delay\n    assert stop(make_retry_state(1, 10)) is True\n    # neither condition met\n    assert stop(make_retry_state(1, 0.5)) is False\n\ndef test_stop_all_requires_all_conditions_met():\n    \"\"\"stop_all returns True only when every condition is satisfied.\"\"\"\n    import threading\n    from tenacity.stop import stop_all, stop_after_attempt, stop_when_event_set\n\n    event = threading.Event()\n    stop = stop_all(stop_after_attempt(3), stop_when_event_set(event))\n\n    # Attempt number >= 3 but event not set: should NOT stop\n    rs = make_retry_state(3, 0)\n    assert stop(rs) is False\n\n    # Event set but attempt number < 3: should NOT stop\n    event.set()\n    rs = make_retry_state(2, 0)\n    assert stop(rs) is False\n\n    # Both conditions met: should stop\n    rs = make_retry_state(3, 0)\n    assert stop(rs) is True\n\ndef test_stop_before_delay_accounts_for_upcoming_sleep() -> None:\n    \"\"\"stop_before_delay should stop when seconds_since_start + upcoming_sleep >= max_delay,\n    even if seconds_since_start alone is less than max_delay.\"\"\"\n    import typing\n    from fractions import Fraction\n    from tenacity import RetryCallState\n    from tenacity.stop import stop_before_delay\n\n    def make_state(delay: float, upcoming_sleep: float) -> RetryCallState:\n        retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n        retry_state.attempt_number = 1\n        retry_state.set_result(None)\n        retry_state.upcoming_sleep = upcoming_sleep\n        retry_state.start_time = Fraction(retry_state.start_time)  # type: ignore[assignment]\n        retry_state.outcome_timestamp = retry_state.start_time + Fraction(delay)\n        return retry_state\n\n    stop = stop_before_delay(10)\n\n    # 6 seconds elapsed + 5 seconds upcoming = 11 >= 10, should stop\n    assert stop(make_state(6.0, 5.0)) is True\n\n    # 6 seconds elapsed + 3 seconds upcoming = 9 < 10, should not stop\n    assert stop(make_state(6.0, 3.0)) is False\n\n    # exactly at boundary: 5 + 5 = 10 >= 10, should stop\n    assert stop(make_state(5.0, 5.0)) is True\n\ndef test_stop_or_operator_produces_stop_any_instance():\n    import tenacity\n    from tenacity.stop import stop_any\n\n    stop = tenacity.stop_after_attempt(3) | tenacity.stop_after_delay(10)\n    assert isinstance(stop, stop_any)\n\ndef test_stop_and_operator_produces_stop_all_instance():\n    import tenacity\n    from tenacity.stop import stop_all\n\n    stop = tenacity.stop_after_attempt(3) & tenacity.stop_after_delay(10)\n    assert isinstance(stop, stop_all)\n\ndef test_stop_any_short_circuits_on_first_true():\n    \"\"\"stop_any should return True as soon as one condition is met, even if others would also be True.\"\"\"\n    import threading\n    from tenacity.stop import stop_any, stop_after_attempt, stop_when_event_set\n\n    event = threading.Event()\n    event.set()\n\n    stop = stop_any(stop_after_attempt(100), stop_when_event_set(event))\n\n    # attempt_number=1 means stop_after_attempt(100) is False, but event is set -> True\n    from fractions import Fraction\n    from tenacity import RetryCallState\n\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    retry_state.attempt_number = 1\n    retry_state.set_result(None)\n    retry_state.start_time = Fraction(retry_state.start_time)\n    retry_state.outcome_timestamp = retry_state.start_time + Fraction(0)\n\n    assert stop(retry_state) is True\n\ndef test_stop_all_short_circuits_false_on_first_false():\n    \"\"\"stop_all returns False immediately when the first condition is not met,\n    without evaluating subsequent conditions.\"\"\"\n    import threading\n    from tenacity.stop import stop_all, stop_after_attempt, stop_after_delay\n\n    # attempt=2, delay=2.0: stop_after_attempt(5) is False, stop_after_delay(1) is True\n    # stop_all should return False because NOT all conditions are met\n    stop = stop_all(stop_after_attempt(5), stop_after_delay(1))\n\n    from fractions import Fraction\n    from tenacity import RetryCallState\n\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    retry_state.attempt_number = 2\n    retry_state.start_time = Fraction(0)\n    retry_state.outcome_timestamp = Fraction(2)\n    retry_state.upcoming_sleep = 0\n\n    assert retry_state.seconds_since_start == 2\n    # attempt_number=2 < 5, so stop_after_attempt(5) is False\n    # seconds_since_start=2 >= 1, so stop_after_delay(1) is True\n    # stop_all requires ALL to be True, so result should be False\n    assert stop(retry_state) is False\n\ndef test_stop_after_delay_accepts_timedelta():\n    import datetime\n    from fractions import Fraction\n    from tenacity import RetryCallState\n    from tenacity.stop import stop_after_delay\n\n    stop = stop_after_delay(datetime.timedelta(seconds=2))\n    assert stop.max_delay == 2.0\n\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    retry_state.start_time = Fraction(retry_state.start_time)\n    retry_state.outcome_timestamp = retry_state.start_time + Fraction(\"1.999\")\n    assert not stop(retry_state)\n\n    retry_state2 = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    retry_state2.start_time = Fraction(retry_state2.start_time)\n    retry_state2.outcome_timestamp = retry_state2.start_time + Fraction(\"2\")\n    assert stop(retry_state2)\n\ndef test_stop_before_delay_raises_when_seconds_since_start_is_none():\n    import pytest\n    from tenacity import RetryCallState\n    from tenacity.stop import stop_before_delay\n\n    stop = stop_before_delay(10)\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    # seconds_since_start is None when outcome_timestamp is not set\n    retry_state.upcoming_sleep = 1.0\n    with pytest.raises(RuntimeError, match=\"seconds_since_start is not set\"):\n        stop(retry_state)"
+    }
+  ]
+}

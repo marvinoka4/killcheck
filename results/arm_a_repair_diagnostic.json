@@ -1,0 +1,66 @@
+{
+  "validators-card": {
+    "n_before": 59,
+    "n_removed": 3,
+    "removed_names": [
+      "test_card_number_luhn_single_digit_zero",
+      "test_card_number_single_zero",
+      "test_card_number_very_long_string"
+    ],
+    "n_kept": 56,
+    "clean_now": true,
+    "repaired_killed": 0,
+    "repaired_reachable_survivors": 2
+  },
+  "natsort-ns-enum": {
+    "n_before": 40,
+    "n_removed": 0,
+    "removed_names": [],
+    "n_kept": 40,
+    "clean_now": true,
+    "repaired_killed": 2,
+    "repaired_reachable_survivors": 2
+  },
+  "slugify-special": {
+    "n_before": 66,
+    "n_removed": 1,
+    "removed_names": [
+      "test_pre_translations_exact_value"
+    ],
+    "n_kept": 65,
+    "clean_now": true,
+    "repaired_killed": 1,
+    "repaired_reachable_survivors": 1
+  },
+  "shortuuid-main": {
+    "n_before": 57,
+    "n_removed": 1,
+    "removed_names": [
+      "test_uuid_name_http_uppercase"
+    ],
+    "n_kept": 56,
+    "clean_now": true,
+    "repaired_killed": 4,
+    "repaired_reachable_survivors": 7
+  },
+  "boltons-typeutils": {
+    "n_before": 37,
+    "n_removed": 1,
+    "removed_names": [
+      "test_sentinel_not_set_reduce"
+    ],
+    "n_kept": 36,
+    "clean_now": true,
+    "repaired_killed": 1,
+    "repaired_reachable_survivors": 2
+  },
+  "tenacity-stop": {
+    "n_before": 62,
+    "n_removed": 1,
+    "removed_names": [
+      "test_mixed_and_or"
+    ],
+    "n_kept": 61,
+    "clean_now": false
+  }
+}

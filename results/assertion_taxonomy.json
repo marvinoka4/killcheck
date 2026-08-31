@@ -1,0 +1,104 @@
+{
+  "A": {
+    "all_generated": {
+      "total": 556,
+      "counts": {
+        "value": 358,
+        "mock": 0,
+        "exception": 22,
+        "existence": 174,
+        "none": 2
+      },
+      "fractions": {
+        "value": 0.6439,
+        "mock": 0.0,
+        "exception": 0.0396,
+        "existence": 0.3129,
+        "none": 0.0036
+      }
+    },
+    "gate_would_keep": {
+      "total": 0,
+      "attributable_rows": 0,
+      "total_rows": 10,
+      "counts": {
+        "value": 0,
+        "mock": 0,
+        "exception": 0,
+        "existence": 0,
+        "none": 0
+      },
+      "fractions": {
+        "value": 0.0,
+        "mock": 0.0,
+        "exception": 0.0,
+        "existence": 0.0,
+        "none": 0.0
+      }
+    },
+    "tests_by_target": {
+      "cachetools-func": 69,
+      "validators-card": 59,
+      "natsort-ns-enum": 40,
+      "dictdiffer-resolve": 36,
+      "toolz-dicttoolz": 99,
+      "slugify-special": 66,
+      "shortuuid-main": 57,
+      "boltons-typeutils": 37,
+      "aiofiles-temptypes": 31,
+      "tenacity-stop": 62
+    },
+    "tests_generated_pooled": 556
+  },
+  "B": {
+    "all_generated": {
+      "total": 53,
+      "counts": {
+        "value": 36,
+        "mock": 0,
+        "exception": 3,
+        "existence": 14,
+        "none": 0
+      },
+      "fractions": {
+        "value": 0.6792,
+        "mock": 0.0,
+        "exception": 0.0566,
+        "existence": 0.2642,
+        "none": 0.0
+      }
+    },
+    "gate_would_keep": {
+      "total": 0,
+      "attributable_rows": 1,
+      "total_rows": 10,
+      "counts": {
+        "value": 0,
+        "mock": 0,
+        "exception": 0,
+        "existence": 0,
+        "none": 0
+      },
+      "fractions": {
+        "value": 0.0,
+        "mock": 0.0,
+        "exception": 0.0,
+        "existence": 0.0,
+        "none": 0.0
+      }
+    },
+    "tests_by_target": {
+      "cachetools-func": 11,
+      "validators-card": 2,
+      "natsort-ns-enum": 2,
+      "dictdiffer-resolve": 2,
+      "toolz-dicttoolz": 4,
+      "slugify-special": 1,
+      "shortuuid-main": 7,
+      "boltons-typeutils": 2,
+      "aiofiles-temptypes": 8,
+      "tenacity-stop": 14
+    },
+    "tests_generated_pooled": 53
+  }
+}
