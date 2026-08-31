@@ -1,0 +1,829 @@
+[
+  {
+    "target": "slugify-special",
+    "reachable_survivors": 1,
+    "drafts": 1,
+    "kept": 1,
+    "discarded": 0,
+    "retries_fired": 0,
+    "retries_succeeded": 0,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 1,
+    "official_per_mutant": {
+      "M-d7a7be4c": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_already_uppercase_char_not_duplicated",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-d7a7be4c",
+        "function": "add_uppercase_char",
+        "attempts": [
+          {
+            "target": "slugify-special",
+            "mutant_id": "M-d7a7be4c",
+            "attempt": 1,
+            "test_source": "import unittest\nfrom slugify.special import add_uppercase_char\n\n\nclass TestAddUppercaseCharMutation(unittest.TestCase):\n    def test_already_uppercase_char_not_duplicated(self):\n        # 'A' is already uppercase, so upper_dict = ('A', 'A_trans')\n        # Original code: char != upper_dict[0] => 'A' != 'A' => False => skip insertion\n        # Mutant code:   char != upper_dict[1] => 'A' != 'A_trans' => True => insert ('A', 'A_trans')\n        char_list = [('A', 'a_trans')]\n        result = add_uppercase_char(char_list)\n        # The original char ('A', 'a_trans') should be present\n        self.assertIn(('A', 'a_trans'), result)\n        # No extra uppercase entry should be inserted for an already-uppercase char\n        # Mutation would add ('A', 'A_trans') which differs from the original entry\n        self.assertNotIn(('A', 'A_trans'), result)",
+            "test_name": "test_already_uppercase_char_not_duplicated",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 9358,
+            "tokens_out": 888,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 54
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-d7a7be4c": "add_uppercase_char"
+    },
+    "tokens_in": 9358,
+    "tokens_out": 888,
+    "wall_clock_s": 23.8,
+    "test_file": "test.py"
+  },
+  {
+    "target": "tenacity-stop",
+    "reachable_survivors": 14,
+    "drafts": 23,
+    "kept": 8,
+    "discarded": 6,
+    "retries_fired": 9,
+    "retries_succeeded": 3,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 8,
+    "official_per_mutant": {
+      "M-22369c8f": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_any_call_has_correct_retry_state_annotation",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-25c3ab92": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-29b584b1": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-369f6698": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-48663480": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_never_returns_false_not_none",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-528515c3": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-583a4d4a": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_base_call_has_retry_call_state_annotation",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-83f7e4b0": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_base_or_return_annotation_is_stop_any",
+            "plugin_outcome": "call-phase AssertionError"
+          },
+          {
+            "test_name": "test_stop_base_or_other_annotation_is_stop_base",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-950b9bd4": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-b0304ae2": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-b81a1f56": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_base_or_other_annotation_is_stop_base",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-c17e0484": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_when_event_set_event_parameter_annotation",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-e46b07ae": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_base_and_other_annotation_is_stop_base",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-f7181d71": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_stop_base_and_return_annotation_is_stop_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-22369c8f",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-22369c8f",
+            "attempt": 1,
+            "test_source": "def __call__(self, retry_state: \"RetryCallState\") -> bool:\n\ndef test_stop_any_call_retry_state_annotation():\n    import tenacity\n    annotations = tenacity.stop_any.__call__.__annotations__\n    assert annotations.get('retry_state') == 'RetryCallState'\n\ndef test_stop_any_call_has_correct_retry_state_annotation() -> None:\n    import tenacity\n\n    # The __call__ method of stop_any should have its 'retry_state' parameter\n    # annotated as \"RetryCallState\" (a forward reference string).\n    # The mutation changes this annotation to '' (empty string).\n    annotations = tenacity.stop_any.__call__.__annotations__\n    assert \"retry_state\" in annotations, (\n        \"stop_any.__call__ must have a 'retry_state' annotation\"\n    )\n    assert annotations[\"retry_state\"] == \"RetryCallState\", (\n        f\"Expected annotation 'RetryCallState', got {annotations['retry_state']!r}\"\n    )",
+            "test_name": null,
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28610,
+            "tokens_out": 472,
+            "assertion_class": "none",
+            "plugin_outcome": "n/a",
+            "clean_output": "no test function found",
+            "parses": false,
+            "calls_mutated_function": false,
+            "assert_count": 0,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 0
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-22369c8f",
+            "attempt": 2,
+            "test_source": "def test_stop_any_call_has_correct_retry_state_annotation() -> None:\n    import tenacity\n\n    annotations = tenacity.stop_any.__call__.__annotations__\n    assert \"retry_state\" in annotations, (\n        \"stop_any.__call__ must have a 'retry_state' annotation\"\n    )\n    assert annotations[\"retry_state\"] == \"RetryCallState\", (\n        f\"Expected annotation 'RetryCallState', got {annotations['retry_state']!r}\"\n    )",
+            "test_name": "test_stop_any_call_has_correct_retry_state_annotation",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28922,
+            "tokens_out": 130,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 41
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-25c3ab92",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-25c3ab92",
+            "attempt": 1,
+            "test_source": "def test_stop_never_return_annotation_is_bool():\n    \"\"\"\n    The _stop_never.__call__ method must be annotated with RetryCallState,\n    not an empty string. We verify observable behaviour: the __annotations__\n    dict on the __call__ method should reference the real RetryCallState type\n    (or the forward-reference string 'RetryCallState'), not an empty string.\n    \"\"\"\n    import typing\n    from tenacity.stop import _stop_never\n\n    instance = _stop_never()\n    call_annotations = instance.__call__.__annotations__\n\n    # The parameter annotated as 'retry_state' must NOT be an empty string.\n    # Before mutation: annotated as \"RetryCallState\" (a non-empty forward ref string).\n    # After mutation:  annotated as '' (an empty string).\n    retry_state_annotation = call_annotations.get('retry_state')\n    assert retry_state_annotation != '', (\n        f\"Expected a non-empty annotation for retry_state, got {retry_state_annotation!r}\"\n    )\n    # Also ensure it refers to RetryCallState in some form.\n    assert retry_state_annotation is not None, \"retry_state annotation is missing entirely\"\n    # Accept either the resolved type or the forward-reference string\n    annotation_str = (\n        retry_state_annotation\n        if isinstance(retry_state_annotation, str)\n        else getattr(retry_state_annotation, '__name__', str(retry_state_annotation))\n    )\n    assert 'RetryCallState' in annotation_str, (\n        f\"Expected 'RetryCallState' in annotation, got {retry_state_annotation!r}\"\n    )",
+            "test_name": "test_stop_never_return_annotation_is_bool",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28641,
+            "tokens_out": 410,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 86
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-25c3ab92",
+            "attempt": 2,
+            "test_source": "def test_stop_never_call_annotation_resolves_correctly():\n    \"\"\"\n    The _stop_never.__call__ annotation for retry_state must be 'RetryCallState',\n    not ''. When get_type_hints() is called, '' cannot be resolved as a valid\n    type and will raise an error, whereas 'RetryCallState' resolves correctly\n    via TYPE_CHECKING imports.\n    \"\"\"\n    import typing\n    import tenacity.stop as stop_module\n    from tenacity.stop import _stop_never\n\n    instance = _stop_never()\n    \n    # get_type_hints evaluates string annotations in the module's namespace.\n    # '' is not valid Python and will cause a NameError or similar,\n    # while 'RetryCallState' will resolve to the actual type (available via\n    # TYPE_CHECKING namespace tricks or direct import).\n    # We check __annotations__ directly on the function.\n    ann = instance.__call__.__annotations__\n    retry_state_ann = ann.get('retry_state', None)\n    \n    # Before mutation: retry_state_ann == 'RetryCallState' (non-empty)\n    # After mutation:  retry_state_ann == '' (empty string)\n    assert retry_state_ann is not None, \"retry_state annotation should exist\"\n    assert retry_state_ann != '', (\n        f\"retry_state annotation must not be empty string, got {retry_state_ann!r}\"\n    )\n    assert isinstance(retry_state_ann, str) and len(retry_state_ann) > 0, (\n        f\"Expected non-empty string annotation, got {retry_state_ann!r}\"\n    )\n    # Verify it contains the expected type name\n    assert 'RetryCallState' in retry_state_ann, (\n        f\"Expected 'RetryCallState' in annotation, got {retry_state_ann!r}\"\n    )",
+            "test_name": "test_stop_never_call_annotation_resolves_correctly",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 29143,
+            "tokens_out": 680,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 4,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 88
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-29b584b1",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-29b584b1",
+            "attempt": 1,
+            "test_source": "def test_stop_never_call_retry_state_annotation():\n    import typing\n    import tenacity\n    from tenacity.stop import _stop_never\n\n    # Get the annotations from the __call__ method\n    hints = typing.get_type_hints(_stop_never.__call__, include_extras=True)\n    # The annotation for 'retry_state' should reference RetryCallState, not be empty\n    assert 'retry_state' in _stop_never.__call__.__annotations__\n    annotation = _stop_never.__call__.__annotations__['retry_state']\n    assert annotation != '', f\"Expected 'RetryCallState' annotation but got {annotation!r}\"\n    assert 'RetryCallState' in annotation, f\"Expected 'RetryCallState' in annotation but got {annotation!r}\"",
+            "test_name": "test_stop_never_call_retry_state_annotation",
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28641,
+            "tokens_out": 293,
+            "assertion_class": "value",
+            "plugin_outcome": "n/a",
+            "clean_output": " not None:\n            for param in type_params:\n                locals.setdefault(param.__name__, param)\n    \n        # Similar logic can be used for nonlocals, which should not\n        # override locals.\n        if isinstance(self.__cell__, dict):\n            for cell_name, cell in self.__cell__.items():\n                try:\n                    cell_value = cell.cell_contents\n                except ValueError:\n                    pass\n                else:\n                    locals.setdefault(cell_name, cell_value)\n    \n        if self.__extra_names__:\n            locals.update(self.__extra_names__)\n    \n        arg = self.__forward_arg__\n        if arg.isidentifier() and not keyword.iskeyword(arg):\n            if arg in locals:\n                return locals[arg]\n            elif arg in globals:\n                return globals[arg]\n            elif hasattr(builtins, arg):\n                return getattr(builtins, arg)\n            elif is_forwardref_format:\n                return self\n            else:\n>               raise NameError(_NAME_ERROR_MSG.format(name=arg), name=arg)\nE               NameError: name 'RetryCallState' is not defined\n\n/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/annotationlib.py:203: NameError\n=========================== short test summary info ============================\nFAILED tests/test_tenacity.py::test_stop_never_call_retry_state_annotation - ...\n1 failed, 141 passed, 15 subtests passed in 2.37s\n",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 67
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-29b584b1",
+            "attempt": 2,
+            "test_source": "def test_stop_never_call_annotation_is_not_empty_string():\n    from tenacity.stop import _stop_never\n\n    # Access the raw annotation string directly without resolving it\n    annotations = _stop_never.__call__.__annotations__\n    assert 'retry_state' in annotations\n    annotation = annotations['retry_state']\n    assert annotation != '', f\"Expected a non-empty annotation but got {annotation!r}\"",
+            "test_name": "test_stop_never_call_annotation_is_not_empty_string",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 29292,
+            "tokens_out": 108,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 39
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-369f6698",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-369f6698",
+            "attempt": 1,
+            "test_source": "def test_stop_all_call_has_correct_retry_state_annotation():\n    import tenacity\n    from tenacity.stop import stop_all\n\n    annotations = stop_all.__call__.__annotations__\n    assert \"retry_state\" in annotations, \"retry_state parameter should have an annotation\"\n    annotation = annotations[\"retry_state\"]\n    # The annotation should be the string 'RetryCallState' (a forward reference),\n    # not an empty string\n    assert annotation == \"RetryCallState\", (\n        f\"Expected annotation 'RetryCallState' but got {annotation!r}\"\n    )",
+            "test_name": "test_stop_all_call_has_correct_retry_state_annotation",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28641,
+            "tokens_out": 338,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 42
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-369f6698",
+            "attempt": 2,
+            "test_source": "def test_stop_all_call_retry_state_annotation_is_not_empty():\n    import inspect\n    from tenacity.stop import stop_all\n\n    # Get the __call__ method directly from stop_all's own dict,\n    # not inherited from a base class\n    call_method = stop_all.__dict__[\"__call__\"]\n    \n    # Get annotations directly from the function object\n    annotations = call_method.__annotations__\n    \n    assert \"retry_state\" in annotations, (\n        \"stop_all.__call__ should have a 'retry_state' annotation\"\n    )\n    annotation_value = annotations[\"retry_state\"]\n    \n    # The annotation should be \"RetryCallState\", not an empty string\n    assert annotation_value != \"\", (\n        f\"stop_all.__call__ retry_state annotation should not be empty, got {annotation_value!r}\"\n    )\n    assert annotation_value == \"RetryCallState\", (\n        f\"stop_all.__call__ retry_state annotation should be 'RetryCallState', got {annotation_value!r}\"\n    )",
+            "test_name": "test_stop_all_call_retry_state_annotation_is_not_empty",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28883,
+            "tokens_out": 514,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 61
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-48663480",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-48663480",
+            "attempt": 1,
+            "test_source": "def test_stop_never_returns_false_not_none():\n    \"\"\"_stop_never.__call__ must return False (a bool), not None.\"\"\"\n    import tenacity\n    from tenacity import RetryCallState\n\n    stop = tenacity.stop_never\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore[arg-type]\n    result = stop(retry_state)\n    # The result must be exactly False, not None.\n    # None is falsy but is not False, so `result is False` distinguishes them.\n    assert result is False, f\"Expected False, got {result!r}\"\n    # Also ensure it's a bool (None would fail this too)\n    assert isinstance(result, bool), f\"Expected bool, got {type(result)}\"",
+            "test_name": "test_stop_never_returns_false_not_none",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28616,
+            "tokens_out": 196,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 62
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-528515c3",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-528515c3",
+            "attempt": 1,
+            "test_source": "def test_stop_never_call_retry_state_annotation():\n    import tenacity\n    from tenacity.stop import _stop_never, stop_never\n\n    # Get the __call__ method's annotations\n    annotations = _stop_never.__call__.__annotations__\n    # The parameter 'retry_state' should be annotated as \"RetryCallState\"\n    # (a forward reference string), not as an empty string ''\n    assert 'retry_state' in annotations, \"retry_state parameter should have an annotation\"\n    assert annotations['retry_state'] == 'RetryCallState', (\n        f\"Expected annotation 'RetryCallState' but got {annotations['retry_state']!r}\"\n    )",
+            "test_name": "test_stop_never_call_retry_state_annotation",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28655,
+            "tokens_out": 272,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 41
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-528515c3",
+            "attempt": 2,
+            "test_source": "def test_stop_never_call_has_correct_retry_state_type_annotation():\n    import inspect\n    import tenacity\n    from tenacity.stop import _stop_never\n\n    # Get the __call__ method via inspect to access annotations\n    method = _stop_never.__call__\n    \n    # Try to get annotations from the underlying function\n    # Some decorators wrap the function, so we may need to unwrap\n    unwrapped = inspect.unwrap(method)\n    \n    annotations = unwrapped.__annotations__\n    \n    assert 'retry_state' in annotations, (\n        f\"retry_state parameter should have an annotation, got: {annotations}\"\n    )\n    assert annotations['retry_state'] == 'RetryCallState', (\n        f\"Expected annotation 'RetryCallState' but got {annotations['retry_state']!r}\"\n    )",
+            "test_name": "test_stop_never_call_has_correct_retry_state_type_annotation",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28921,
+            "tokens_out": 478,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 61
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-583a4d4a",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-583a4d4a",
+            "attempt": 1,
+            "test_source": "def test_stop_base_call_has_retry_call_state_annotation():\n    import typing\n    from tenacity.stop import stop_base, _stop_never\n\n    # Get the annotations on stop_base.__call__\n    annotations = stop_base.__call__.__annotations__\n    \n    # The 'retry_state' parameter should be annotated with 'RetryCallState'\n    # (as a forward reference string), not an empty string\n    assert 'retry_state' in annotations, \"stop_base.__call__ must annotate 'retry_state'\"\n    annotation = annotations['retry_state']\n    assert annotation == 'RetryCallState', (\n        f\"Expected annotation 'RetryCallState' for retry_state, got {annotation!r}\"\n    )",
+            "test_name": "test_stop_base_call_has_retry_call_state_annotation",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28655,
+            "tokens_out": 364,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 43
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-83f7e4b0",
+        "function": "__or__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-83f7e4b0",
+            "attempt": 1,
+            "test_source": "def test_stop_base_or_returns_stop_any_instance():\n    import tenacity\n    from tenacity.stop import stop_after_attempt, stop_after_delay, stop_any\n\n    stop1 = stop_after_attempt(3)\n    stop2 = stop_after_delay(10)\n    result = stop1 | stop2\n\n    assert isinstance(result, stop_any), (\n        f\"Expected stop_any instance, got {type(result)!r}\"\n    )",
+            "test_name": "test_stop_base_or_returns_stop_any_instance",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28676,
+            "tokens_out": 125,
+            "assertion_class": "existence",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 48
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-83f7e4b0",
+            "attempt": 2,
+            "test_source": "def test_stop_base_or_return_annotation_is_stop_any():\n    import tenacity\n    from tenacity.stop import stop_base\n\n    annotation = stop_base.__or__.__annotations__.get(\"return\", None)\n    assert annotation == \"stop_any\", (\n        f\"Expected return annotation 'stop_any', got {annotation!r}\"\n    )",
+            "test_name": "test_stop_base_or_return_annotation_is_stop_any",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28893,
+            "tokens_out": 234,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 32
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-950b9bd4",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-950b9bd4",
+            "attempt": 1,
+            "test_source": "def test_stop_after_attempt_call_annotation_uses_retry_call_state():\n    import inspect\n    from tenacity.stop import stop_after_attempt\n    hints = {}\n    try:\n        import typing\n        hints = typing.get_type_hints(stop_after_attempt.__call__)\n    except Exception:\n        # Fall back to inspecting annotations directly\n        sig = inspect.signature(stop_after_attempt.__call__)\n        for name, param in sig.parameters.items():\n            if param.annotation is not inspect.Parameter.empty:\n                hints[name] = param.annotation\n\n    # The annotation for retry_state should reference RetryCallState, not be an empty string\n    retry_state_annotation = hints.get('retry_state', '')\n    # It should not be an empty string\n    assert retry_state_annotation != '', (\n        \"retry_state annotation should not be empty string; got: {!r}\".format(retry_state_annotation)\n    )\n    # It should contain 'RetryCallState' in some form\n    annotation_str = str(retry_state_annotation)\n    assert 'RetryCallState' in annotation_str, (\n        \"retry_state annotation should reference RetryCallState; got: {!r}\".format(retry_state_annotation)\n    )",
+            "test_name": "test_stop_after_attempt_call_annotation_uses_retry_call_state",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28691,
+            "tokens_out": 315,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 121
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-950b9bd4",
+            "attempt": 2,
+            "test_source": "def test_stop_after_attempt_call_annotation_is_retry_call_state():\n    from tenacity.stop import stop_after_attempt\n    # Get the raw annotations directly from the __call__ method\n    # without resolving forward references, so we can detect the empty string mutation\n    call_method = stop_after_attempt.__call__\n    annotations = getattr(call_method, '__annotations__', {})\n    retry_state_annotation = annotations.get('retry_state', None)\n    assert retry_state_annotation is not None, (\n        \"stop_after_attempt.__call__ should have a retry_state annotation\"\n    )\n    assert retry_state_annotation != '', (\n        \"retry_state annotation should not be empty string; got: {!r}\".format(retry_state_annotation)\n    )\n    assert 'RetryCallState' in str(retry_state_annotation), (\n        \"retry_state annotation should reference RetryCallState; got: {!r}\".format(retry_state_annotation)\n    )",
+            "test_name": "test_stop_after_attempt_call_annotation_is_retry_call_state",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 29098,
+            "tokens_out": 345,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 66
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-b0304ae2",
+        "function": "__call__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-b0304ae2",
+            "attempt": 1,
+            "test_source": "def test_stop_never_call_has_correct_retry_state_annotation():\n    import typing\n    import tenacity\n    from tenacity.stop import _stop_never\n    \n    hints = typing.get_type_hints(_stop_never.__call__, include_extras=True)\n    # The annotation for 'retry_state' should reference RetryCallState, not be empty string\n    assert 'retry_state' in hints, \"retry_state parameter should have a type annotation\"\n    # The resolved type should be RetryCallState, not something from an empty string ''\n    from tenacity import RetryCallState\n    assert hints['retry_state'] is RetryCallState, (\n        f\"Expected retry_state annotation to be RetryCallState, got {hints['retry_state']}\"\n    )",
+            "test_name": "test_stop_never_call_has_correct_retry_state_annotation",
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28691,
+            "tokens_out": 269,
+            "assertion_class": "value",
+            "plugin_outcome": "n/a",
+            "clean_output": "one:\n            for param in type_params:\n                locals.setdefault(param.__name__, param)\n    \n        # Similar logic can be used for nonlocals, which should not\n        # override locals.\n        if isinstance(self.__cell__, dict):\n            for cell_name, cell in self.__cell__.items():\n                try:\n                    cell_value = cell.cell_contents\n                except ValueError:\n                    pass\n                else:\n                    locals.setdefault(cell_name, cell_value)\n    \n        if self.__extra_names__:\n            locals.update(self.__extra_names__)\n    \n        arg = self.__forward_arg__\n        if arg.isidentifier() and not keyword.iskeyword(arg):\n            if arg in locals:\n                return locals[arg]\n            elif arg in globals:\n                return globals[arg]\n            elif hasattr(builtins, arg):\n                return getattr(builtins, arg)\n            elif is_forwardref_format:\n                return self\n            else:\n>               raise NameError(_NAME_ERROR_MSG.format(name=arg), name=arg)\nE               NameError: name 'RetryCallState' is not defined\n\n/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/annotationlib.py:203: NameError\n=========================== short test summary info ============================\nFAILED tests/test_tenacity.py::test_stop_never_call_has_correct_retry_state_annotation\n1 failed, 141 passed, 15 subtests passed in 2.32s\n",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 50
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-b0304ae2",
+            "attempt": 2,
+            "test_source": "def test_stop_never_call_annotation_resolves_to_retry_call_state():\n    import inspect\n    from tenacity.stop import _stop_never\n    from tenacity import RetryCallState\n\n    sig = inspect.signature(_stop_never.__call__)\n    annotation = sig.parameters['retry_state'].annotation\n    # The annotation should be the string \"RetryCallState\" (forward reference), not empty string ''\n    assert annotation != '', \"retry_state annotation should not be empty string\"\n    assert annotation == 'RetryCallState', (\n        f\"Expected retry_state annotation to be 'RetryCallState', got {annotation!r}\"\n    )",
+            "test_name": "test_stop_never_call_annotation_resolves_to_retry_call_state",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 29339,
+            "tokens_out": 163,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 51
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-b81a1f56",
+        "function": "__or__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-b81a1f56",
+            "attempt": 1,
+            "test_source": "def test_stop_base_or_other_annotation_is_stop_base():\n    import typing\n    import tenacity.stop as stop_module\n    from tenacity.stop import stop_base\n\n    hints = typing.get_type_hints(stop_base.__or__, localns=vars(stop_module))\n    assert hints[\"other\"] is stop_base",
+            "test_name": "test_stop_base_or_other_annotation_is_stop_base",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28693,
+            "tokens_out": 338,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 37
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-c17e0484",
+        "function": "__init__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-c17e0484",
+            "attempt": 1,
+            "test_source": "def test_stop_when_event_set_uses_threading_event():\n    import threading\n    from tenacity.stop import stop_when_event_set\n\n    event = threading.Event()\n    stop = stop_when_event_set(event)\n\n    # Before event is set, should not stop\n    from fractions import Fraction\n    from tenacity import RetryCallState\n\n    retry_state = RetryCallState(None, None, (), {})  # type: ignore\n    retry_state.start_time = Fraction(0)\n    retry_state.outcome_timestamp = Fraction(0)\n\n    assert stop(retry_state) is False\n\n    # After event is set, should stop\n    event.set()\n    assert stop(retry_state) is True",
+            "test_name": "test_stop_when_event_set_uses_threading_event",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28704,
+            "tokens_out": 186,
+            "assertion_class": "existence",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 80
+          },
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-c17e0484",
+            "attempt": 2,
+            "test_source": "def test_stop_when_event_set_event_parameter_annotation():\n    import inspect\n    from tenacity.stop import stop_when_event_set\n\n    sig = inspect.signature(stop_when_event_set.__init__)\n    params = sig.parameters\n    assert 'event' in params\n    # The annotation should reference threading.Event, not be an empty string\n    annotation = params['event'].annotation\n    # Convert to string for comparison - should contain 'Event', not be empty\n    annotation_str = str(annotation)\n    assert annotation_str != ''\n    assert 'Event' in annotation_str or 'threading' in annotation_str",
+            "test_name": "test_stop_when_event_set_event_parameter_annotation",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28982,
+            "tokens_out": 274,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 69
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-e46b07ae",
+        "function": "__and__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-e46b07ae",
+            "attempt": 1,
+            "test_source": "def test_stop_base_and_other_annotation_is_stop_base():\n    import inspect\n    from tenacity.stop import stop_base\n    hints = {}\n    for name, param in inspect.signature(stop_base.__and__).parameters.items():\n        if name == 'other':\n            annotation = param.annotation\n            hints['other'] = annotation\n    # The annotation for 'other' should be the string \"stop_base\", not an empty string ''\n    assert hints.get('other') == 'stop_base', (\n        f\"Expected annotation 'stop_base' for 'other' parameter, got {hints.get('other')!r}\"\n    )",
+            "test_name": "test_stop_base_and_other_annotation_is_stop_base",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28727,
+            "tokens_out": 167,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 72
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-f7181d71",
+        "function": "__and__",
+        "attempts": [
+          {
+            "target": "tenacity-stop",
+            "mutant_id": "M-f7181d71",
+            "attempt": 1,
+            "test_source": "def test_stop_base_and_return_annotation_is_stop_all():\n    import inspect\n    import tenacity.stop as stop_module\n\n    hints = {}\n    try:\n        import typing\n        hints = typing.get_type_hints(stop_module.stop_base.__and__)\n    except Exception:\n        pass\n\n    # If get_type_hints fails or returns empty, fall back to __annotations__\n    if not hints:\n        annotations = getattr(stop_module.stop_base.__and__, '__annotations__', {})\n        return_annotation = annotations.get('return', '')\n    else:\n        return_annotation = hints.get('return', '')\n\n    # The return annotation should reference stop_all, not be empty string\n    annotation_str = str(return_annotation)\n    assert 'stop_all' in annotation_str, (\n        f\"Expected 'stop_all' in return annotation of stop_base.__and__, got: {annotation_str!r}\"\n    )",
+            "test_name": "test_stop_base_and_return_annotation_is_stop_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 28746,
+            "tokens_out": 240,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 90
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-22369c8f": "__call__",
+      "M-25c3ab92": "__call__",
+      "M-29b584b1": "__call__",
+      "M-369f6698": "__call__",
+      "M-48663480": "__call__",
+      "M-528515c3": "__call__",
+      "M-583a4d4a": "__call__",
+      "M-83f7e4b0": "__or__",
+      "M-950b9bd4": "__call__",
+      "M-b0304ae2": "__call__",
+      "M-b81a1f56": "__or__",
+      "M-c17e0484": "__init__",
+      "M-e46b07ae": "__and__",
+      "M-f7181d71": "__and__"
+    },
+    "tokens_in": 662860,
+    "tokens_out": 6911,
+    "wall_clock_s": 380.3,
+    "test_file": "tests/test_tenacity.py"
+  }
+]
