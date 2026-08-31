@@ -509,3 +509,181 @@ construction; incidentally, any A/B target whose whole batch happened to be
 a single test, like arm B's `slugify-special`). For every multi-test batch
 it's reported as explicitly not computable, not guessed at by attributing
 the batch's outcome to every test inside it.
+
+## Arm A's 9/53 is a floor, not a capability measure -- quantified before designing arm C's prompt
+
+Arm A wrote 556 tests from 10 calls against 53 reachable survivors; arm B
+wrote 53 tests from 53 calls. Before treating the A-vs-B gap as evidence
+about unguided generation's design, not just its volume, a diagnostic was
+run to separate "arm A can't kill mutants" from "arm A's kills are hidden
+behind a batch-invalidating test." Full method and numbers below; run as a
+scratch script, not added to the pipeline -- it exists to inform arm C's
+prompt design, not to be re-run as part of the official metric.
+
+**Arm A's official pooled SKR is 9/53 = 0.1698, with 6 of 10 targets failing
+clean-pass.** Per the standing clean-pass rule, that 9/53 stands as the
+official result -- a failing test is the arm producing a wrong test, never
+repaired for scoring. But 6 of 10 targets contributing zero kills purely
+because one bad test invalidated their whole batch means 9/53 measures a
+floor, not arm A's ceiling.
+
+**The six failures are not one category, and pooling them would mislead.**
+Split into two kinds, because they have different owners:
+
+- **Capability diagnostic** -- `validators-card`, `slugify-special`,
+  `shortuuid-main`, `boltons-typeutils`, `tenacity-stop`. In every one of
+  these, the model wrote something wrong (a bad assertion, or -- see
+  `tenacity-stop` below -- code that collides with the target's own test
+  infrastructure). Removing exactly what's wrong and re-scoring answers "how
+  much of arm A's capability is masked by batch invalidation."
+- **Instrument correction** -- `natsort-ns-enum` only. Zero of its 40 tests
+  were wrong. The batch was invalidated by a misplaced `from __future__
+  import annotations`, a consequence of this harness's append-only
+  augmentation, not of anything the model got wrong about the module under
+  test. This does not belong in a table of model failures.
+
+**Of arm A's six clean-pass failures, five were the model writing something
+wrong and one was the harness.**
+
+**Capability diagnostic -- per-target result:**
+
+| target | batch size | bad content found | repaired kill / reachable |
+| --- | --- | --- | --- |
+| validators-card | 59 | 3 wrong assertions | 0/2 |
+| slugify-special | 66 | 1 wrong assertion | 1/1 |
+| shortuuid-main | 57 | 1 wrong assertion | 4/7 |
+| boltons-typeutils | 37 | 1 wrong assertion | 1/2 |
+| tenacity-stop | 62 | 1 wrong assertion + 1 colliding helper function (see dedicated entry below) | 1/14 |
+
+Pooled, capability diagnostic: official 0/26 = 0.0000 -> repaired 7/26 =
+0.2692.
+
+**Instrument correction -- `natsort-ns-enum`:** official 0/2 -> repaired
+(under the fixed harness, see below) 2/2.
+
+**Combined, informational only:** official 9/53 = 0.1698 -> repaired
+(capability diagnostic + instrument correction, all six previously-failing
+targets resolved) 18/53 = 0.3396 -- roughly double. Neither the 18/53 total
+nor the 7/26 capability-only figure is arm A's score. The official 9/53
+stands. These exist to show arm C's per-mutant, retry-on-failure design
+(never batching many tests behind one shared clean-pass gate) is a direct
+structural fix for a failure mode just measured, not merely a different
+strategy assumed to be better.
+
+**Reconstruction method, and the bug in the first attempt at it, are
+recorded in their own entry below** (the fifth instrument bug found this
+session) -- surgical per-test removal on a copy of the batch's own AST,
+`from __future__ import` dropped unconditionally from what gets attributed
+to any test (see the augmentation fix below).
+
+**Augmentation fix, and checking arm B for the same exposure.** Grepped
+both arms' logged output for `from __future__`: **`natsort-ns-enum` under
+arm B has the identical exposure** -- same misplaced
+`from __future__ import annotations`, same `SyntaxError`, same target.
+`killcheck/baseline.py`'s `score_with_added_tests()` appended generated
+tests strictly after the existing file's content, which can never satisfy
+Python's requirement that `__future__` imports be a file's first
+statement, regardless of whether the appended tests are otherwise correct.
+Fixed: `hoist_future_imports()` now moves any `__future__` import in the
+appended batch to right after the existing file's own leading
+docstring/`__future__` imports (found by AST, spliced by exact line span,
+so nothing else gets reformatted), verified directly against both arms'
+actual logged `natsort-ns-enum` batches -- arm A now scores clean at 2/2,
+arm B scores clean at 0/2 (clean, but genuinely kills nothing). **Arm A and
+arm B's official results were both produced before this fix exists** in
+`killcheck/baseline.py`; their recorded JSON has not been regenerated, and
+`natsort-ns-enum`'s official entry still reads clean_pass=False / 0 killed
+for both arms until a decision is made to re-run it.
+
+## Tenacity-stop: generated tests broke the suite they were added to, through a plain naming collision -- not detectable by the kill gate or the taxonomy
+
+This is a finding, not a loose end, and `tenacity-stop` is this eval set's
+largest single denominator (14 of 53 pooled reachable survivors), so it
+gets its own entry rather than a footnote.
+
+**Symptom:** after removing arm A's one wrong assertion
+(`test_mixed_and_or`), clean-pass still failed. Twelve *pre-existing* tests
+in `tests/test_tenacity.py` -- `TestBase::test_callstate_repr`,
+`TestWaitConditions::test_wait_exception`, ten under
+`TestRetryConditions` -- started failing with `TypeError`s, none of them
+part of any of the model's own eleven new `TestStop*` classes. Single-test
+removal bisection over the model's other 60 tests found no one-test fix.
+
+**Hypothesis going in:** `TestStopWhenEventSet`, one of the model's new
+classes, uses a real `threading.Event()` -- the obvious suspect for
+cross-test pollution. Spent under 20 minutes checking it directly:
+
+- Removed all four of `TestStopWhenEventSet`'s tests (the only tests in the
+  batch using `threading` at all -- confirmed by grep, 5 of 5 `Event(`
+  occurrences are in this one class) and re-ran. **All twelve pre-existing
+  failures persisted, identically.** Threading is not the cause.
+  **Hypothesis rejected, not left unconfirmed.**
+
+**Actual cause, found by reading what else the batch defines, not just its
+tests:** the model's response includes its own top-level helper function,
+`make_retry_state(previous_attempt_number, delay_since_first_attempt,
+upcoming_sleep=0)` -- a plausible-looking reimplementation of a helper the
+existing `tests/test_tenacity.py` *already defines*, with a different
+signature (the real one: `make_retry_state(previous_attempt_number,
+delay_since_first_attempt, last_result=None, upcoming_sleep=0)`). Appended
+after the existing file's content, the model's definition executes second
+and silently rebinds the module-level name -- every pre-existing test that
+calls `make_retry_state(...)` for the rest of that test session is now
+calling the model's incompatible version, not the original. Confirmed
+directly: removing *only* the colliding function (zero test removals, all
+62 of the model's tests kept, including the one wrong assertion) restores
+clean-pass for all twelve pre-existing tests in one shot. Re-adding just
+`test_mixed_and_or`'s removal on top of that gives `tenacity-stop`'s true
+repaired score: **1/14** (folded into the capability-diagnostic pooled
+figure above).
+
+**Why this matters beyond one target:** the kill gate checks one test
+against one mutant, in isolation, by design -- that's exactly right for
+what it's built to measure, and exactly why it cannot see this. A test
+that's individually well-formed, passes clean, and correctly targets its
+intended mutant can still corrupt an unrelated part of the same test
+session through a shared name, and nothing in this project's kill gate or
+assertion taxonomy is positioned to catch that, because both operate on
+one test in isolation from everything else already in the file. The only
+reason this surfaced at all is that arm A batches many tests into one
+append, so a collision has something to collide with; arm C, gating and
+scoring one test per mutant, narrows but does not eliminate the exposure
+(the existing suite is still present in every scoring run). Recorded here
+as an open exposure for arm C's tripwires, not something this session's fix
+closes.
+
+## Fifth instrument bug, and the best-caught one: a predicted outcome that came back false
+
+The repair diagnostic's first reconstruction (extract each test function
+individually, rejoin them) was wrong: it dropped every batch-level shared
+import/constant, spuriously breaking any test that referenced one and
+logging it as `NameError` -- not a real defect -- and it broke class-based
+tests by extracting a method as a bare function with an unfillable `self`
+parameter.
+
+**What actually caught it, worth generalising:** not inspection of the
+reconstruction code, and not a suspicious-looking result. A sanity check
+with a specific, falsifiable, *predicted* outcome, run before trusting
+anything downstream of the new code: `slugify-special`'s one bad test
+(`test_pre_translations_exact_value`) was already known, independently,
+from the pytest output in the original run. The prediction: remove exactly
+that one test from the reconstructed batch, and clean-pass must restore.
+It didn't -- the first reconstruction attempt reported 62 of 66 tests still
+needed removing, `clean_now=False`. That is a contradiction of a specific
+prediction, not a vague feeling that a number looked off, and it was caught
+*before* the diagnostic's numbers were used for anything, on the first
+target checked, not discovered by auditing all six after the fact.
+
+This is the same mechanism as the canary check and the determinism check,
+generalised past the frozen core: don't just run new code and read off
+whatever it reports -- run it against a case where you already independently
+know the answer, predict the specific outcome first, and treat a false
+prediction as a stop-and-investigate signal rather than noise to average
+past. Four out of five of this project's instrument bugs (src-layout
+imports, concurrent scoring, the classifier's batch-vs-test unit, this
+reconstruction) were caught by exactly this shape of check -- run something
+new against a known answer before trusting it against an unknown one. The
+fifth (the `natsort-ns-enum` `__future__` import) was caught by the
+capability-vs-instrument split in the entry above, a related but distinct
+discipline: asking "whose fault is this failure" before pooling it with
+ones that have a different owner.

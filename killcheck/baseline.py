@@ -306,6 +306,80 @@ def existing_test_source(spec: dict, target: Target) -> tuple[Path, str]:
 # ---------------------------------------------------------------------------
 
 
+def _split_future_import_lines(source: str) -> tuple[list[str], str]:
+    """Return (future_import_lines, source_with_those_lines_removed).
+
+    Lines are extracted by their original source span (node.lineno ..
+    end_lineno), not reformatted -- only the __future__ lines themselves
+    move, everything else keeps its exact original text.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return [], source
+    lines = source.splitlines()
+    remove_ranges = [
+        (node.lineno, node.end_lineno)
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "__future__"
+    ]
+    if not remove_ranges:
+        return [], source
+    future_lines: list[str] = []
+    for start, end in remove_ranges:
+        future_lines.extend(lines[start - 1:end])
+    remove_set = {i for start, end in remove_ranges for i in range(start, end + 1)}
+    kept = [line for i, line in enumerate(lines, start=1) if i not in remove_set]
+    return future_lines, "\n".join(kept)
+
+
+def _future_import_insertion_point(existing_source: str) -> int:
+    """Line index (0-based, into existing_source.splitlines()) right after
+    any leading module docstring and any leading __future__ imports --
+    i.e. the one legal place to insert more __future__ imports without
+    disturbing what's already correctly placed in `existing_source`."""
+    try:
+        tree = ast.parse(existing_source)
+    except SyntaxError:
+        return 0
+    body = tree.body
+    idx = 0
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        idx = 1
+    while idx < len(body) and isinstance(body[idx], ast.ImportFrom) and body[idx].module == "__future__":
+        idx += 1
+    return body[idx - 1].end_lineno if idx else 0
+
+
+def hoist_future_imports(existing_source: str, added_source: str) -> str:
+    """Combine existing + added file content, hoisting any `from __future__
+    import ...` statement in `added_source` to right after
+    `existing_source`'s own leading docstring/future-imports, instead of
+    leaving it wherever it fell in the appended content.
+
+    Needed because appending generated tests after existing content can
+    never satisfy Python's requirement that __future__ imports be a file's
+    first statements, regardless of whether the appended tests are
+    otherwise correct. Confirmed necessary on natsort-ns-enum for both arm A
+    and arm B: neither had a single bad test, and 40 (arm A) / 2 (arm B)
+    individually-correct tests were invalidated by this alone, because the
+    model included its own (redundant -- the existing file already has one)
+    `from __future__ import annotations`. See CHANGELOG.md.
+    """
+    future_lines, added_rest = _split_future_import_lines(added_source)
+    if not future_lines:
+        return existing_source + "\n\n" + added_source
+    existing_lines = existing_source.splitlines()
+    insert_at = _future_import_insertion_point(existing_source)
+    new_existing = "\n".join(existing_lines[:insert_at] + future_lines + existing_lines[insert_at:])
+    return new_existing + "\n\n" + added_rest
+
+
 def score_with_added_tests(
     target: Target,
     test_file: Path,
@@ -330,7 +404,7 @@ def score_with_added_tests(
             ),
         )
         augmented = work / rel_test
-        augmented.write_text(augmented.read_text() + "\n\n" + added + "\n")
+        augmented.write_text(hoist_future_imports(augmented.read_text(), added) + "\n")
 
         code, output = _run(target.test_command, work, timeout)
         clean_pass = code == 0
