@@ -235,9 +235,14 @@ specifications. **On the full sample that hypothesis is not supported.** The
 final-losing draft was ever classified `none`. Two of the 74 raw attempts were
 `none`-class on a first try (`tenacity-stop`'s M-22369c8f, `toolz-dicttoolz`'s
 M-917ca6a1), both superseded once a retry, given the real pytest output,
-produced a `value`-class kept test instead. There are no assertion-free tests
-and no crash-only oracles among the kept set: of 44 kills, 35 are call-phase
-`AssertionError` and 9 are call-phase other exceptions.
+produced a `value`-class kept test instead. That is the retry channel doing
+the job it was built for, visibly: of the two truly assertion-free drafts
+among all 74 raw attempts, the gate rejected both, and both came back
+`value`-class and kept after one retry — the gap between 74 raw attempts and
+53 final dispositions is exactly the cases like this one. There are no
+assertion-free tests and no crash-only oracles among the kept set: of 44
+kills, 35 are call-phase `AssertionError` and 9 are call-phase other
+exceptions.
 
 Nor does the gate appear to select *on* assertion class: kept and discarded
 drafts have nearly identical class mixes (86% vs 89% `value`). Per the

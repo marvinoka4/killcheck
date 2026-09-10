@@ -1103,3 +1103,21 @@ smoothed over, but no longer describing a target as unrun that ran.
 target carrying 14 of 15 survivors" -- `15` was the 2-target partial-run
 denominator; `tenacity-stop`'s 14 mutants sit inside the pooled 53 now.
 Corrected to "14 of the 53 reachable survivors."
+
+**Thirteenth, and the odd one out: not an instrument bug.** This
+CHANGELOG's own summary table has claimed arm B had "0 clean-pass
+failures" since the table was written (`27f4269`, "CHANGELOG: add summary
+table, arm C results entry, two staleness fixes"); `results/baseline_arm_b.json`
+has always shown 3 (`natsort-ns-enum`, `shortuuid-main`,
+`aiofiles-temptypes`). The underlying data was never wrong -- arm B's real
+clean-pass failures were correctly available in `results/` the entire time.
+The summary row itself was just never checked against it when written, and
+the wrong "0" survived multiple review passes and a prior numbers audit
+before this session's grep-and-audit pass caught it. Nothing in `engine.py`,
+`runner.py`, `baseline.py`, or `agent.py` was ever wrong here, so this is
+not a fourteenth instrument bug -- but it belongs in the same record for the
+same reason the other thirteen do: a wrong number that reads as plausible
+inside a summary table is exactly the shape of error that reading a
+document catches least reliably, and auditing it against disk catches
+directly. Fixed in the summary table; see the "Arm C complete" row entry
+above.
