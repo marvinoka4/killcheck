@@ -825,5 +825,2006 @@
     "tokens_out": 6911,
     "wall_clock_s": 380.3,
     "test_file": "tests/test_tenacity.py"
+  },
+  {
+    "target": "cachetools-func",
+    "reachable_survivors": 11,
+    "drafts": 17,
+    "kept": 10,
+    "discarded": 1,
+    "retries_fired": 6,
+    "retries_succeeded": 5,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 10,
+    "official_per_mutant": {
+      "M-00bf45e5": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_fifo_cache_in_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-090696dc": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_lru_cache_default_maxsize_is_128",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-3e39f1e1": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_ttl_cache_in_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-57411849": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_ttl_cache_default_maxsize_is_128_explicit",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-7bda0d1a": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_lfu_cache_in_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-7c947327": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_rr_cache_default_maxsize_is_128",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-9c428e15": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_ttl_cache_default_ttl_is_600",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-c662a811": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_fifo_cache_default_maxsize_is_128",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-d92d6ba3": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-f082e6c3": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_rr_cache_in_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-f35ac122": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_lru_cache_in_all",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-00bf45e5",
+        "function": null,
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-00bf45e5",
+            "attempt": 1,
+            "test_source": "def test_fifo_cache_in_all():\n    import cachetools.func\n    assert \"fifo_cache\" in cachetools.func.__all__",
+            "test_name": "test_fifo_cache_in_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3295,
+            "tokens_out": 46,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-090696dc",
+        "function": "lru_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-090696dc",
+            "attempt": 1,
+            "test_source": "def test_lru_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.lru_cache(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, f\"Expected maxsize=128, got {params['maxsize']}\"\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache_info maxsize=128, got {info.maxsize}\"",
+            "test_name": "test_lru_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3281,
+            "tokens_out": 130,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 68
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-090696dc",
+            "attempt": 2,
+            "test_source": "def test_lru_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    # Call with no arguments to use the default maxsize\n    decorator = cachetools.func.lru_cache()\n    cached = decorator(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, f\"Expected maxsize=128, got {params['maxsize']}\"\n    info = cached.cache_info()\n    assert info[2] == 128, f\"Expected cache_info maxsize=128, got {info[2]}\"",
+            "test_name": "test_lru_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3514,
+            "tokens_out": 466,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 76
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-3e39f1e1",
+        "function": null,
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-3e39f1e1",
+            "attempt": 1,
+            "test_source": "def test_ttl_cache_in_all():\n    import cachetools.func\n    assert \"ttl_cache\" in cachetools.func.__all__",
+            "test_name": "test_ttl_cache_in_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3333,
+            "tokens_out": 46,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-57411849",
+        "function": "ttl_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-57411849",
+            "attempt": 1,
+            "test_source": "def test_ttl_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.ttl_cache(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, f\"Expected maxsize=128, got {params['maxsize']}\"\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache maxsize=128, got {info.maxsize}\"",
+            "test_name": "test_ttl_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3332,
+            "tokens_out": 128,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 68
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-57411849",
+            "attempt": 2,
+            "test_source": "def test_ttl_cache_default_maxsize_is_128_explicit():\n    import cachetools.func\n\n    # When called with explicit maxsize=128, cache_parameters should report 128\n    cached = cachetools.func.ttl_cache(maxsize=128)(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, f\"Expected maxsize=128, got {params['maxsize']}\"\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache maxsize=128, got {info.maxsize}\"\n\n    # Also verify the default (no maxsize argument) reports 128\n    cached2 = cachetools.func.ttl_cache()(lambda n: n)\n    params2 = cached2.cache_parameters()\n    assert params2[\"maxsize\"] == 128, f\"Expected default maxsize=128, got {params2['maxsize']}\"\n    info2 = cached2.cache_info()\n    assert info2.maxsize == 128, f\"Expected default cache maxsize=128, got {info2.maxsize}\"",
+            "test_name": "test_ttl_cache_default_maxsize_is_128_explicit",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3563,
+            "tokens_out": 280,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 4,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 135
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-7bda0d1a",
+        "function": null,
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-7bda0d1a",
+            "attempt": 1,
+            "test_source": "def test_lfu_cache_in_all():\n    import cachetools.func\n    assert \"lfu_cache\" in cachetools.func.__all__",
+            "test_name": "test_lfu_cache_in_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3362,
+            "tokens_out": 46,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-7c947327",
+        "function": "rr_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-7c947327",
+            "attempt": 1,
+            "test_source": "def test_rr_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.rr_cache(lambda n: n)\n    assert cached.cache_parameters()[\"maxsize\"] == 128, (\n        f\"Expected default maxsize of 128, got {cached.cache_parameters()['maxsize']}\"\n    )",
+            "test_name": "test_rr_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3349,
+            "tokens_out": 99,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 43
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-7c947327",
+            "attempt": 2,
+            "test_source": "def test_rr_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.rr_cache()(lambda n: n)\n    assert cached.cache_parameters()[\"maxsize\"] == 128, (\n        f\"Expected default maxsize of 128, got {cached.cache_parameters()['maxsize']}\"\n    )",
+            "test_name": "test_rr_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3551,
+            "tokens_out": 346,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 44
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-9c428e15",
+        "function": "ttl_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-9c428e15",
+            "attempt": 1,
+            "test_source": "def test_ttl_cache_default_ttl_is_600():\n    import cachetools.func\n\n    # Capture the TTL used when ttl_cache is called with default arguments\n    # by inspecting the underlying cache object.\n    cached_func = cachetools.func.ttl_cache(lambda n: n)\n    cache = cached_func.__wrapped__.__self__ if hasattr(cached_func, '__wrapped__') else None\n\n    # Access the cache directly via the closure/cache attribute\n    # The wrapped function exposes cache via cache_info and cache_clear,\n    # but we need the actual cache object. Let's use the cache attribute.\n    underlying_cache = cached_func.cache\n\n    assert underlying_cache.ttl == 600, (\n        f\"Expected default ttl=600, got ttl={underlying_cache.ttl}\"\n    )",
+            "test_name": "test_ttl_cache_default_ttl_is_600",
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3377,
+            "tokens_out": 211,
+            "assertion_class": "value",
+            "plugin_outcome": "n/a",
+            "clean_output": "........................................................................ [ 23%]\n........................................................................ [ 46%]\n..........................F............................................. [ 69%]\n........................................................................ [ 92%]\n.........................                                                [100%]\n=================================== FAILURES ===================================\n______________________ test_ttl_cache_default_ttl_is_600 _______________________\n\n    def test_ttl_cache_default_ttl_is_600():\n        import cachetools.func\n    \n        # Capture the TTL used when ttl_cache is called with default arguments\n        # by inspecting the underlying cache object.\n        cached_func = cachetools.func.ttl_cache(lambda n: n)\n>       cache = cached_func.__wrapped__.__self__ if hasattr(cached_func, '__wrapped__') else None\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       AttributeError: 'function' object has no attribute '__self__'. Did you mean: '__call__'?\n\ntests/test_func.py:154: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_func.py::test_ttl_cache_default_ttl_is_600 - AttributeError...\n1 failed, 312 passed in 4.64s\n",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 59
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-9c428e15",
+            "attempt": 2,
+            "test_source": "def test_ttl_cache_default_ttl_is_600():\n    import cachetools.func\n\n    # Use ttl_cache with default arguments (callable form)\n    cached_func = cachetools.func.ttl_cache(lambda n: n)\n    \n    # The cache object is accessible via the .cache attribute\n    underlying_cache = cached_func.cache\n    \n    assert underlying_cache.ttl == 600, (\n        f\"Expected default ttl=600, got ttl={underlying_cache.ttl}\"\n    )",
+            "test_name": "test_ttl_cache_default_ttl_is_600",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3931,
+            "tokens_out": 137,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 42
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-c662a811",
+        "function": "fifo_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-c662a811",
+            "attempt": 1,
+            "test_source": "def test_fifo_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.fifo_cache(lambda n: n)\n    assert cached.cache_parameters()[\"maxsize\"] == 128, (\n        f\"Expected default maxsize of 128, got {cached.cache_parameters()['maxsize']}\"\n    )\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache_info maxsize of 128, got {info.maxsize}\"",
+            "test_name": "test_fifo_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3369,
+            "tokens_out": 139,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 66
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-c662a811",
+            "attempt": 2,
+            "test_source": "def test_fifo_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.fifo_cache()(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, (\n        f\"Expected default maxsize of 128, got {params['maxsize']}\"\n    )\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache_info maxsize of 128, got {info.maxsize}\"",
+            "test_name": "test_fifo_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3611,
+            "tokens_out": 385,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 69
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-d92d6ba3",
+        "function": "lfu_cache",
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-d92d6ba3",
+            "attempt": 1,
+            "test_source": "def test_lfu_cache_default_maxsize_is_128():\n    import cachetools.func\n\n    cached = cachetools.func.lfu_cache(lambda n: n)\n    assert cached.cache_parameters()[\"maxsize\"] == 128, (\n        f\"Expected default maxsize of 128, got {cached.cache_parameters()['maxsize']}\"\n    )\n    info = cached.cache_info()\n    assert info.maxsize == 128, f\"Expected cache_info maxsize of 128, got {info.maxsize}\"",
+            "test_name": "test_lfu_cache_default_maxsize_is_128",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3385,
+            "tokens_out": 139,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 66
+          },
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-d92d6ba3",
+            "attempt": 2,
+            "test_source": "def test_lfu_cache_user_function_default_maxsize():\n    import cachetools.func\n\n    # When lfu_cache is called with a callable as the first argument (user function style),\n    # it should use the default maxsize of 128, not 129 or any other value.\n    cached = cachetools.func.lfu_cache(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, (\n        f\"lfu_cache default maxsize should be 128, got {params['maxsize']}\"\n    )\n    info = cached.cache_info()\n    assert info.maxsize == 128, (\n        f\"lfu_cache cache_info maxsize should be 128, got {info.maxsize}\"\n    )",
+            "test_name": "test_lfu_cache_user_function_default_maxsize",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3627,
+            "tokens_out": 257,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 68
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-f082e6c3",
+        "function": null,
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-f082e6c3",
+            "attempt": 1,
+            "test_source": "def test_rr_cache_in_all():\n    import cachetools.func\n    assert \"rr_cache\" in cachetools.func.__all__",
+            "test_name": "test_rr_cache_in_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3421,
+            "tokens_out": 46,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-f35ac122",
+        "function": null,
+        "attempts": [
+          {
+            "target": "cachetools-func",
+            "mutant_id": "M-f35ac122",
+            "attempt": 1,
+            "test_source": "def test_lru_cache_in_all():\n    import cachetools.func\n    assert \"lru_cache\" in cachetools.func.__all__",
+            "test_name": "test_lru_cache_in_all",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3432,
+            "tokens_out": 46,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-00bf45e5": null,
+      "M-090696dc": "lru_cache",
+      "M-3e39f1e1": null,
+      "M-57411849": "ttl_cache",
+      "M-7bda0d1a": null,
+      "M-7c947327": "rr_cache",
+      "M-9c428e15": "ttl_cache",
+      "M-c662a811": "fifo_cache",
+      "M-d92d6ba3": "lfu_cache",
+      "M-f082e6c3": null,
+      "M-f35ac122": null
+    },
+    "tokens_in": 58733,
+    "tokens_out": 2947,
+    "wall_clock_s": 311.6,
+    "test_file": "tests/test_func.py"
+  },
+  {
+    "target": "shortuuid-main",
+    "reachable_survivors": 7,
+    "drafts": 8,
+    "kept": 6,
+    "discarded": 1,
+    "retries_fired": 1,
+    "retries_succeeded": 0,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 6,
+    "official_per_mutant": {
+      "M-2343fbe2": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_string_to_int_error_message_contains_invalid_char",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-2537e138": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-28e7b1e8": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_https_name_uses_url_namespace",
+            "plugin_outcome": "call-phase AssertionError"
+          },
+          {
+            "test_name": "test_http_name_uses_url_namespace",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-2aade299": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_decode_non_string_error_message",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-433759d7": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_https_name_uses_url_namespace",
+            "plugin_outcome": "call-phase AssertionError"
+          },
+          {
+            "test_name": "test_http_name_uses_url_namespace",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-bc325ca4": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_encode_non_uuid_error_message_contains_description",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-c9b0a273": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_set_alphabet_default_sorts",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-2343fbe2",
+        "function": "string_to_int",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-2343fbe2",
+            "attempt": 1,
+            "test_source": "def test_string_to_int_error_message_contains_invalid_char():\n    from shortuuid.main import string_to_int\n    try:\n        string_to_int(\"xyz\", alphabet=list(\"abc\"))\n    except ValueError as e:\n        assert \"x\" in str(e), f\"Expected 'x' in error message, got: {str(e)!r}\"\n    else:\n        raise AssertionError(\"Expected ValueError to be raised\")",
+            "test_name": "test_string_to_int_error_message_contains_invalid_char",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4873,
+            "tokens_out": 118,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 41
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-2537e138",
+        "function": "uuid",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-2537e138",
+            "attempt": 1,
+            "test_source": "import unittest\nfrom uuid import UUID\nfrom shortuuid.main import ShortUUID\n\n\nclass TestEncodeDefaultPadLengthMutation(unittest.TestCase):\n    def test_encode_without_explicit_pad_length_uses_full_length(self):\n        \"\"\"\n        When pad_length is not provided, encode() should use self._length (22 for\n        the default alphabet) to pad the result.  The mutation flips the condition\n        so that the default pad_length IS applied only when pad_length is not None,\n        meaning a call without pad_length gets no padding and short UUIDs (e.g.\n        UUID(int=0)) come out too short.\n        \"\"\"\n        su = ShortUUID()\n        # UUID(int=0) encodes to all leading-alphabet characters; without padding\n        # the result would be a single character (or empty), not the full _length.\n        smallest_uid = UUID(int=0)\n        encoded = su.encode(smallest_uid)\n        # Must be exactly _length characters (22 for default alphabet)\n        self.assertEqual(len(encoded), su._length)\n        # And must decode back correctly\n        self.assertEqual(su.decode(encoded), smallest_uid)",
+            "test_name": "test_encode_without_explicit_pad_length_uses_full_length",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4898,
+            "tokens_out": 296,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 71
+          },
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-2537e138",
+            "attempt": 2,
+            "test_source": "import unittest\nfrom uuid import UUID\nfrom shortuuid.main import ShortUUID\n\n\nclass TestEncodeDefaultPaddingMutation(unittest.TestCase):\n    def test_encode_no_pad_length_pads_to_full_length(self):\n        # UUID(int=0) has no significant digits in any base, so without padding\n        # int_to_string returns \"\". The original code sets pad_length = self._length\n        # when pad_length is None, giving a properly padded result.\n        # The mutation (if pad_length is not None) skips this assignment,\n        # leaving pad_length=None, so no padding is applied and the result is \"\".\n        su = ShortUUID()\n        smallest_uid = UUID(int=0)\n        # Call encode with NO explicit pad_length argument\n        encoded = su.encode(smallest_uid)\n        expected_length = su._length  # 22 for default alphabet\n        self.assertEqual(\n            len(encoded),\n            expected_length,\n            f\"encode() without explicit pad_length should pad to {expected_length} chars, got {len(encoded)!r}\",\n        )\n        # Verify the encoded string consists only of the first alphabet character (padding char)\n        first_char = su._alphabet[0]\n        self.assertEqual(\n            encoded,\n            first_char * expected_length,\n            f\"UUID(int=0) should encode to '{first_char * expected_length}'\",\n        )",
+            "test_name": "test_encode_no_pad_length_pads_to_full_length",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 5263,
+            "tokens_out": 766,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 105
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-28e7b1e8",
+        "function": "uuid",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-28e7b1e8",
+            "attempt": 1,
+            "test_source": "def test_https_name_uses_url_namespace():\n    \"\"\"\n    A name starting with 'https://' should use NAMESPACE_URL (same as 'http://').\n    The mutation replaces 'https://' with '' in the startswith check, causing\n    any non-empty name to match the URL branch instead of the DNS branch,\n    which would change the UUID generated for plain DNS names.\n    \n    We verify that a plain domain name (no http/https prefix) produces a\n    different UUID than the same name passed with an 'https://' prefix,\n    AND that two calls with 'https://' produce the same UUID (deterministic).\n    Also verify that 'https://' names produce the same UUID as 'http://' names\n    for the same resource, which is the documented behaviour using NAMESPACE_URL.\n    \"\"\"\n    import uuid as _uu\n    from shortuuid.main import ShortUUID\n\n    su = ShortUUID()\n\n    # With 'http://' prefix -> uses NAMESPACE_URL\n    http_result = su.uuid(\"http://example.com/\")\n    # With 'https://' prefix -> should also use NAMESPACE_URL (same namespace, same name = same UUID)\n    https_result = su.uuid(\"https://example.com/\")\n    # Plain domain -> uses NAMESPACE_DNS\n    dns_result = su.uuid(\"example.com/\")\n\n    # http and https with the same path use different namespaces in UUID5,\n    # so they won't be equal, but both must be deterministic\n    assert http_result == su.uuid(\"http://example.com/\"), \\\n        \"http:// UUID must be deterministic\"\n    assert https_result == su.uuid(\"https://example.com/\"), \\\n        \"https:// UUID must be deterministic\"\n    assert dns_result == su.uuid(\"example.com/\"), \\\n        \"DNS UUID must be deterministic\"\n\n    # Under the mutation, '' matches everything, so dns_result would be\n    # computed with NAMESPACE_URL instead of NAMESPACE_DNS, making it\n    # equal to what the URL branch would produce for \"example.com/\".\n    # We verify the DNS result differs from what the URL branch produces.\n    url_for_plain = su.encode(\n        _uu.uuid5(_uu.NAMESPACE_URL, \"example.com/\")\n    )\n    dns_for_plain = su.encode(\n        _uu.uuid5(_uu.NAMESPACE_DNS, \"example.com/\")\n    )\n    # These must be different (sanity check on the namespaces)\n    assert url_for_plain != dns_for_plain, \\\n        \"URL and DNS namespaces should produce different UUIDs\"\n\n    # The actual result for a plain name must match the DNS namespace\n    assert dns_result == dns_for_plain, \\\n        \"Plain name should use NAMESPACE_DNS\"\n\n    # Under the mutation, '' startswith check matches everything, so\n    # dns_result would equal url_for_plain instead of dns_for_plain.\n    assert dns_result != url_for_plain, \\\n        \"Plain name must NOT use NAMESPACE_URL (mutation would break this)\"",
+            "test_name": "test_https_name_uses_url_namespace",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4912,
+            "tokens_out": 762,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 6,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 138
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-2aade299",
+        "function": "decode",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-2aade299",
+            "attempt": 1,
+            "test_source": "def test_decode_non_string_error_message():\n    from shortuuid.main import ShortUUID\n    su = ShortUUID()\n    try:\n        su.decode(42)\n        assert False, \"Expected ValueError\"\n    except ValueError as e:\n        assert \"string\" in str(e).lower(), (\n            f\"Expected error message to mention 'string', got: {str(e)!r}\"\n        )",
+            "test_name": "test_decode_non_string_error_message",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4908,
+            "tokens_out": 111,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 45
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-433759d7",
+        "function": "uuid",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-433759d7",
+            "attempt": 1,
+            "test_source": "def test_http_name_uses_url_namespace():\n    \"\"\"http:// URLs must use NAMESPACE_URL, not NAMESPACE_DNS.\n\n    The mutation changes 'http://' to '' in the startswith check, which means\n    any non-empty string (including plain domain names) would match the URL\n    branch, altering the UUID generated for plain names.  We verify that:\n    1. A plain domain name produces the NAMESPACE_DNS-based UUID.\n    2. An http:// URL produces the NAMESPACE_URL-based UUID.\n    3. The two are different from each other.\n    \"\"\"\n    import uuid as _uu\n    from shortuuid.main import ShortUUID\n\n    su = ShortUUID()\n\n    plain_name = \"example.com\"\n    http_name = \"http://example.com\"\n\n    expected_dns = su.encode(_uu.uuid5(_uu.NAMESPACE_DNS, plain_name))\n    expected_url = su.encode(_uu.uuid5(_uu.NAMESPACE_URL, http_name))\n\n    # They must be different (sanity check)\n    assert expected_dns != expected_url\n\n    # Plain domain \u2192 NAMESPACE_DNS\n    result_plain = su.uuid(plain_name)\n    assert result_plain == expected_dns, (\n        f\"Plain name should use NAMESPACE_DNS: got {result_plain!r}, \"\n        f\"expected {expected_dns!r}\"\n    )\n\n    # http:// URL \u2192 NAMESPACE_URL\n    result_http = su.uuid(http_name)\n    assert result_http == expected_url, (\n        f\"http:// URL should use NAMESPACE_URL: got {result_http!r}, \"\n        f\"expected {expected_url!r}\"\n    )",
+            "test_name": "test_http_name_uses_url_namespace",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4938,
+            "tokens_out": 430,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 3,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 120
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-bc325ca4",
+        "function": "encode",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-bc325ca4",
+            "attempt": 1,
+            "test_source": "def test_encode_non_uuid_error_message_contains_description():\n    from shortuuid.main import ShortUUID\n    su = ShortUUID()\n    try:\n        su.encode(\"not-a-uuid\")\n        assert False, \"Expected ValueError was not raised\"\n    except ValueError as e:\n        assert \"uuid\" in str(e).lower(), (\n            f\"Expected error message to mention 'uuid', got: {str(e)!r}\"\n        )",
+            "test_name": "test_encode_non_uuid_error_message_contains_description",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4933,
+            "tokens_out": 122,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 45
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-c9b0a273",
+        "function": "set_alphabet",
+        "attempts": [
+          {
+            "target": "shortuuid-main",
+            "mutant_id": "M-c9b0a273",
+            "attempt": 1,
+            "test_source": "def test_set_alphabet_default_sorts():\n    \"\"\"set_alphabet should sort the alphabet by default (dont_sort_alphabet=False).\"\"\"\n    from shortuuid.main import ShortUUID\n\n    su = ShortUUID()\n    # Use a deliberately unsorted alphabet\n    unsorted_alphabet = \"zyxwvutsrqponmlkjihgfedcba\"\n    su.set_alphabet(unsorted_alphabet)\n    # With dont_sort_alphabet=False (the default), the alphabet should be sorted\n    expected_sorted = \"\".join(sorted(set(unsorted_alphabet)))\n    assert su.get_alphabet() == expected_sorted, (\n        f\"Expected sorted alphabet '{expected_sorted}', got '{su.get_alphabet()}'\"\n    )",
+            "test_name": "test_set_alphabet_default_sorts",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 4981,
+            "tokens_out": 192,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 63
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-2343fbe2": "string_to_int",
+      "M-2537e138": "uuid",
+      "M-28e7b1e8": "uuid",
+      "M-2aade299": "decode",
+      "M-433759d7": "uuid",
+      "M-bc325ca4": "encode",
+      "M-c9b0a273": "set_alphabet"
+    },
+    "tokens_in": 39706,
+    "tokens_out": 2797,
+    "wall_clock_s": 74.0,
+    "test_file": "shortuuid/test_shortuuid.py"
+  },
+  {
+    "target": "toolz-dicttoolz",
+    "reachable_survivors": 4,
+    "drafts": 6,
+    "kept": 4,
+    "discarded": 0,
+    "retries_fired": 2,
+    "retries_succeeded": 2,
+    "overflow_count": 1,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 4,
+    "official_per_mutant": {
+      "M-1360ba68": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_get_in_default_no_default_is_false",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-2492a308": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_dissoc_path_selection",
+            "plugin_outcome": "call-phase other exception"
+          },
+          {
+            "test_name": "test_dissoc_boundary_uses_remaining_path",
+            "plugin_outcome": "call-phase other exception"
+          },
+          {
+            "test_name": "test_dissoc_path_selection_threshold",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-8a4fd6d0": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_dissoc_path_selection",
+            "plugin_outcome": "call-phase other exception"
+          },
+          {
+            "test_name": "test_dissoc_boundary_uses_remaining_path",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-917ca6a1": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_dissoc_path_selection",
+            "plugin_outcome": "call-phase other exception"
+          },
+          {
+            "test_name": "test_dissoc_boundary_uses_remaining_path",
+            "plugin_outcome": "call-phase other exception"
+          },
+          {
+            "test_name": "test_dissoc_path_selection_threshold",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-1360ba68",
+        "function": "get_in",
+        "attempts": [
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-1360ba68",
+            "attempt": 1,
+            "test_source": "def test_get_in_default_no_default_is_false():\n    from toolz.dicttoolz import get_in\n    # When a key is missing and no_default is not specified (defaults to False),\n    # get_in should return the default value (None) rather than raising an exception.\n    result = get_in(['missing_key'], {})\n    assert result is None\n\n    # Also verify that a custom default is returned when key is missing\n    result2 = get_in(['missing_key'], {}, default=42)\n    assert result2 == 42\n\n    # Verify no exception is raised for nested missing keys\n    result3 = get_in(['a', 'b'], {'a': {}})\n    assert result3 is None",
+            "test_name": "test_get_in_default_no_default_is_false",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 7000,
+            "tokens_out": 185,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 3,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 58
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-2492a308",
+        "function": "dissoc",
+        "attempts": [
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-2492a308",
+            "attempt": 1,
+            "test_source": "def test_dissoc_path_selection():\n    from toolz.dicttoolz import dissoc\n\n    class NoDeleteMapping(dict):\n        def __delitem__(self, key):\n            raise RuntimeError(\"delete should not be called\")\n\n    # d has 5 items, keys has 3 items to remove\n    # Before mutation: 3 < 5 * 0.6 = 3.0 \u2192 False \u2192 uses remaining set path (no delete)\n    # After mutation:  3 < 5 // 0.6 = 8.0 \u2192 True  \u2192 uses update+delete path (calls __delitem__)\n    d = NoDeleteMapping({'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5})\n    result = dissoc(d, 'a', 'b', 'c', factory=NoDeleteMapping)\n    assert result == NoDeleteMapping({'d': 4, 'e': 5})",
+            "test_name": "test_dissoc_path_selection",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 7020,
+            "tokens_out": 1065,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 61
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-8a4fd6d0",
+        "function": "dissoc",
+        "attempts": [
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-8a4fd6d0",
+            "attempt": 1,
+            "test_source": "def test_dissoc_boundary_path_selection():\n    # With len(keys) == len(d) * 0.6 exactly: len(keys)=3, len(d)=5\n    # Original: 3 < 3.0 is False -> uses 'remaining' path\n    # Mutated:  3 <= 3.0 is True  -> uses 'update then delete' path\n    # Both paths should give same result, so make a mapping where\n    # one path fails: use a factory that produces a dict-like object\n    # that doesn't support deletion but does support set operations.\n    # Actually, test correctness at the boundary:\n    d = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e'}\n    # len(keys)=3, len(d)=5, 3 == 5*0.6\n    result = dissoc(d, 1, 2, 3)\n    assert result == {4: 'd', 5: 'e'}\n    assert 1 not in result\n    assert 2 not in result\n    assert 3 not in result\n    # Ensure original unchanged\n    assert len(d) == 5",
+            "test_name": "test_dissoc_boundary_path_selection",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": true,
+            "truncated": false,
+            "tokens_in": 7030,
+            "tokens_out": 1247,
+            "assertion_class": "value",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 5,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 65
+          },
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-8a4fd6d0",
+            "attempt": 2,
+            "test_source": "def test_dissoc_boundary_uses_remaining_path():\n    from toolz.dicttoolz import dissoc\n\n    class NoDeletionDict(dict):\n        def __delitem__(self, key):\n            raise RuntimeError(\"deletion not allowed\")\n\n    factory = NoDeletionDict\n\n    # len(keys)=3, len(d)=5, 3 == 5*0.6 exactly\n    # Original (<): 3 < 3.0 is False -> uses remaining path (no deletion) -> OK\n    # Mutated (<=): 3 <= 3.0 is True  -> uses update+delete path -> RuntimeError\n    d = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e'}\n    result = dissoc(d, 1, 2, 3, factory=factory)\n    assert result == {4: 'd', 5: 'e'}",
+            "test_name": "test_dissoc_boundary_uses_remaining_path",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 7423,
+            "tokens_out": 623,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 60
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-917ca6a1",
+        "function": "dissoc",
+        "attempts": [
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-917ca6a1",
+            "attempt": 1,
+            "test_source": "# before (original):\nif len(keys) < len(d) * .6:\n\n# after (mutation):\nif len(keys) < len(d) * 1.6:\n\ndef test_dissoc_path_selection_threshold():\n    # With len(keys)=1, len(d)=2: 1 < 2*0.6=1.2 \u2192 True (path1, original)\n    # With mutation: 1 < 2*1.6=3.2 \u2192 True (path1, same - not helpful)\n    # Need len(keys) where original\u2192path2, mutation\u2192path1\n    # len(keys)=1, len(d)=1: original: 1<0.6\u2192False(path2), mutation: 1<1.6\u2192True(path1)\n    # Both paths give same result for standard dict...\n    # Use a key that's in `keys` but NOT in `d` - path2 handles via set difference\n    d = {1: 'a'}\n    result = dissoc(d, 1)\n    assert result == {}\n    assert 1 not in result\n\ndef test_dissoc_path_selection_threshold():\n    from toolz.dicttoolz import dissoc\n    # len(keys)=1, len(d)=1: original uses path2 (remaining set), mutation uses path1\n    # Verify correct result either way - but they should be same...\n    # Actually test with non-existent key where behavior might differ\n    d = {'a': 1, 'b': 2}\n    # len(keys)=2, len(d)=2: original: 2 < 2*0.6=1.2 \u2192 False (path2)\n    # mutation: 2 < 2*1.6=3.2 \u2192 True (path1)\n    result = dissoc(d, 'a', 'b')\n    assert result == {}\n\ndef test_dissoc_path_threshold_mutation():\n    from toolz.dicttoolz import dissoc\n    # len(keys)=1, len(d)=1: original 1<0.6 False\u2192path2; mutant 1<1.6 True\u2192path1\n    # Both give {}. Need observable difference via factory side effects.\n    updates = []\n    class TrackingDict(dict):\n        def update(self, other):\n            updates.append(list(other.keys()))\n            super().update(other)\n    result = dissoc({'x': 1}, 'x', factory=TrackingDict)\n    assert result == {}\n    assert 'x' not in result\n\ndef test_dissoc_path_selection_boundary():\n    from toolz.dicttoolz import dissoc\n    # At len(keys)=2, len(d)=3: original: 2<1.8\u2192False(path2); mutant: 2<4.8\u2192True(path1)  \n    # At len(keys)=1, len(d)=2: original: 1<1.2\u2192True(path1); mutant: 1<3.2\u2192True(path1) - same\n    # Need a case where original\u2192path2, mutant\u2192path1, with different observable output\n    # For standard dict, both paths are equivalent. Use factory that tracks behavior.\n    deleted = []\n    class MyDict(dict):\n        def __delitem__(self, key):\n            deleted.append(key)\n            super().__delitem__(key)\n    result = dissoc({'a':1,'b':2,'c':3}, 'a', 'b', factory=MyDict)\n    assert result == {'c': 3}\n\ndef test_dissoc_factory_no_delete():\n    from toolz.dicttoolz import dissoc\n    class NoDelDict(dict):\n        def __delitem__(self, key):\n            raise NotImplementedError(\"no delete!\")\n    # len(keys)=2, len(d)=3: original uses path2 (no delete needed)\n    # mutant uses path1 (tries to delete \u2192 raises error)\n    d = {'a': 1, 'b': 2, 'c': 3}\n    result = dissoc(d, 'a', 'b', factory=NoDelDict)\n    assert result == {'c': 3}\n\ndef test_dissoc_path_selection_threshold():\n    from toolz.dicttoolz import dissoc\n\n    class NoDelDict(dict):\n        def __delitem__(self, key):\n            raise AssertionError(\"delete should not be called on this path\")\n\n    d = {'a': 1, 'b': 2, 'c': 3}\n    # len(keys)=2, len(d)=3\n    # Original: 2 < 3*0.6=1.8 \u2192 False \u2192 path2 (no __delitem__ called) \u2713\n    # Mutant:   2 < 3*1.6=4.8 \u2192 True  \u2192 path1 (__delitem__ called \u2192 error) \u2717\n    result = dissoc(d, 'a', 'b', factory=NoDelDict)\n    assert result == {'c': 3}\n\ndef test_dissoc_path_selection_threshold():\n    from toolz.dicttoolz import dissoc\n\n    class NoDelDict(dict):\n        def __delitem__(self, key):\n            raise AssertionError(\"__delitem__ should not be called\")\n\n    d = {'a': 1, 'b': 2, 'c': 3}\n    result = dissoc(d, 'a', 'b', factory=NoDelDict)\n    assert result == {'c': 3}",
+            "test_name": null,
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 7041,
+            "tokens_out": 3070,
+            "assertion_class": "none",
+            "plugin_outcome": "n/a",
+            "clean_output": "no test function found",
+            "parses": false,
+            "calls_mutated_function": false,
+            "assert_count": 0,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 0
+          },
+          {
+            "target": "toolz-dicttoolz",
+            "mutant_id": "M-917ca6a1",
+            "attempt": 2,
+            "test_source": "def test_dissoc_path_selection_threshold():\n    from toolz.dicttoolz import dissoc\n\n    class NoDelDict(dict):\n        def __delitem__(self, key):\n            raise AssertionError(\"__delitem__ should not be called\")\n\n    d = {'a': 1, 'b': 2, 'c': 3}\n    # len(keys)=2, len(d)=3\n    # Original: 2 < 3*0.6=1.8 \u2192 False \u2192 path2 (uses remaining set, no __delitem__) \u2713\n    # Mutant:   2 < 3*1.6=4.8 \u2192 True  \u2192 path1 (calls __delitem__ \u2192 AssertionError) \u2717\n    result = dissoc(d, 'a', 'b', factory=NoDelDict)\n    assert result == {'c': 3}",
+            "test_name": "test_dissoc_path_selection_threshold",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 8472,
+            "tokens_out": 228,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 48
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-1360ba68": "get_in",
+      "M-2492a308": "dissoc",
+      "M-8a4fd6d0": "dissoc",
+      "M-917ca6a1": "dissoc"
+    },
+    "tokens_in": 43986,
+    "tokens_out": 6418,
+    "wall_clock_s": 133.5,
+    "test_file": "toolz/tests/test_dicttoolz.py"
+  },
+  {
+    "target": "validators-card",
+    "reachable_survivors": 2,
+    "drafts": 3,
+    "kept": 1,
+    "discarded": 1,
+    "retries_fired": 1,
+    "retries_succeeded": 0,
+    "overflow_count": 1,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 1,
+    "official_per_mutant": {
+      "M-8e984385": {
+        "outcome": "survived",
+        "responsible_tests": []
+      },
+      "M-bb4463a5": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_amex_rejects_non_amex_prefix",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-8e984385",
+        "function": "card_number",
+        "attempts": [
+          {
+            "target": "validators-card",
+            "mutant_id": "M-8e984385",
+            "attempt": 1,
+            "test_source": "def test_card_number_returns_false_not_none_on_empty_string():\n    \"\"\"Test that card_number returns a ValidationError (not None) for empty string.\"\"\"\n    from validators import card_number, ValidationError\n    result = card_number('')\n    # Before mutation: returns False, which gets wrapped into ValidationError by @validator\n    # After mutation: returns None, which may behave differently\n    assert isinstance(result, ValidationError)",
+            "test_name": "test_card_number_returns_false_not_none_on_empty_string",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3840,
+            "tokens_out": 110,
+            "assertion_class": "existence",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 23
+          },
+          {
+            "target": "validators-card",
+            "mutant_id": "M-8e984385",
+            "attempt": 2,
+            "test_source": "def test_card_number_empty_string_not_none():\n    from validators import card_number\n    result = card_number('')\n    assert result is not None",
+            "test_name": "test_card_number_empty_string_not_none",
+            "passed_on_clean": true,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": true,
+            "truncated": false,
+            "tokens_in": 4116,
+            "tokens_out": 481,
+            "assertion_class": "existence",
+            "plugin_outcome": "not-this-test",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 18
+          }
+        ],
+        "kept": false
+      },
+      {
+        "mutant_id": "M-bb4463a5",
+        "function": "amex",
+        "attempts": [
+          {
+            "target": "validators-card",
+            "mutant_id": "M-bb4463a5",
+            "attempt": 1,
+            "test_source": "def test_amex_rejects_non_amex_prefix():\n    \"\"\"Test that amex validator rejects cards not starting with 34 or 37.\"\"\"\n    from validators import amex, ValidationError\n    # A valid Visa card number (passes Luhn, 16 digits, starts with 4)\n    # The mutated pattern re.compile('') matches everything, so amex would\n    # incorrectly accept this if the only check were the pattern.\n    # But amex also checks len == 15, so we need a 15-digit non-amex card.\n    # Let's use a card that starts with something other than 34/37 but has 15 digits and passes Luhn.\n    # A card starting with '4' and 15 digits with valid Luhn check.\n    # Actually, with the empty pattern '', pattern.match(value) always returns a match object (truthy),\n    # so the mutated code would accept any 15-digit Luhn-valid card.\n    # We need a 15-digit Luhn-valid card that does NOT start with 34 or 37.\n    # Let's construct one: start with '30' (Diners prefix), length 15, Luhn valid.\n    # 3056930009020004 is 16 digits (Diners). Let's find a 15-digit one.\n    # Actually let's just verify a known amex card is accepted (already tested),\n    # and also test that a non-amex 15-digit card is rejected.\n    # \n    # Known valid Amex cards start with 34 or 37.\n    # With mutation: pattern = re.compile('') matches any string,\n    # so amex('300000000000004') would be True if Luhn-valid.\n    # Let's pick a non-amex 15-digit card that passes Luhn.\n    # \n    # The real test: a valid amex must start with 34 or 37.\n    # The mutation makes the pattern match anything.\n    # So we test that a 15-digit, Luhn-valid card starting with '30' is rejected.\n    #\n    # Build a 15-digit card starting with '30':\n    # prefix: 300000000000000 -> compute check digit\n    # digits: 3,0,0,0,0,0,0,0,0,0,0,0,0,0,?\n    # Luhn: odd positions from right (1-indexed) sum, even positions doubled\n    # For 15 digits, last digit is check digit at position 1 (odd)\n    # digits[-1::-2] = positions 1,3,5,... from right = indices 14,12,10,8,6,4,2,0\n    # digits[-2::-2] = positions 2,4,6,... from right = indices 13,11,9,7,5,3,1\n    # Let prefix = [3,0,0,0,0,0,0,0,0,0,0,0,0,0] (14 digits)\n    # even_sum (digits at indices 13,11,9,7,5,3,1) = 0\n    # odd_sum without check = digits at indices 12,10,8,6,4,2,0 = 0+0+0+0+0+0+3 = 3\n    # total without check digit: odd_part(no check) + check + even_sum = 3 + check + 0\n    # We need (3 + check + 0) % 10 == 0 => check = 7\n    # So card = '300000000000007'\n    \n    non_amex_15_digit = '300000000000007'\n    \n    # Verify it's 15 digits\n    assert len(non_amex_15_digit) == 15\n    \n    # This should be rejected by the real amex validator (doesn't start with 34/37)\n    # but would be accepted by the mutated one (empty pattern matches everything)\n    result = amex(non_amex_15_digit)\n    assert isinstance(result, ValidationError), (\n        f\"amex('{non_amex_15_digit}') should return ValidationError but got {result}\"\n    )",
+            "test_name": "test_amex_rejects_non_amex_prefix",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3852,
+            "tokens_out": 1039,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 46
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-8e984385": "card_number",
+      "M-bb4463a5": "amex"
+    },
+    "tokens_in": 11808,
+    "tokens_out": 1630,
+    "wall_clock_s": 49.4,
+    "test_file": "tests/test_card.py"
+  },
+  {
+    "target": "natsort-ns-enum",
+    "reachable_survivors": 2,
+    "drafts": 2,
+    "kept": 2,
+    "discarded": 0,
+    "retries_fired": 0,
+    "retries_succeeded": 0,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 2,
+    "official_per_mutant": {
+      "M-ed2efb0a": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_ns_dumb_value",
+            "plugin_outcome": "call-phase AssertionError"
+          },
+          {
+            "test_name": "test_ns_dumb_is_one_shifted_by_31",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-f7a92676": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_ns_dumb_value",
+            "plugin_outcome": "call-phase AssertionError"
+          },
+          {
+            "test_name": "test_ns_dumb_is_one_shifted_by_31",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-ed2efb0a",
+        "function": null,
+        "attempts": [
+          {
+            "target": "natsort-ns-enum",
+            "mutant_id": "M-ed2efb0a",
+            "attempt": 1,
+            "test_source": "from __future__ import annotations\n\nfrom natsort.ns_enum import NS_DUMB\n\n\ndef test_ns_dumb_value() -> None:\n    assert NS_DUMB == 1 << 31\n    assert NS_DUMB == 2147483648",
+            "test_name": "test_ns_dumb_value",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3005,
+            "tokens_out": 72,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 23
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-f7a92676",
+        "function": null,
+        "attempts": [
+          {
+            "target": "natsort-ns-enum",
+            "mutant_id": "M-f7a92676",
+            "attempt": 1,
+            "test_source": "from natsort.ns_enum import NS_DUMB\n\n\ndef test_ns_dumb_is_one_shifted_by_31() -> None:\n    assert NS_DUMB == (1 << 31)",
+            "test_name": "test_ns_dumb_is_one_shifted_by_31",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3027,
+            "tokens_out": 60,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 15
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-ed2efb0a": null,
+      "M-f7a92676": null
+    },
+    "tokens_in": 6032,
+    "tokens_out": 132,
+    "wall_clock_s": 40.0,
+    "test_file": "tests/test_ns_enum.py"
+  },
+  {
+    "target": "dictdiffer-resolve",
+    "reachable_survivors": 2,
+    "drafts": 2,
+    "kept": 2,
+    "discarded": 0,
+    "retries_fired": 0,
+    "retries_succeeded": 0,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 2,
+    "official_per_mutant": {
+      "M-34078ff3": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_auto_resolve_returns_false_not_none",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-b93de388": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_find_conflicting_path_equal_length",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-34078ff3",
+        "function": "_auto_resolve",
+        "attempts": [
+          {
+            "target": "dictdiffer-resolve",
+            "mutant_id": "M-34078ff3",
+            "attempt": 1,
+            "test_source": "def test_auto_resolve_returns_false_not_none():\n    import unittest\n    from dictdiffer.conflict import Conflict\n    from dictdiffer.resolve import Resolver\n\n    r = Resolver({})\n    p1 = ('add', 'foo', [(0, 0)])\n    p2 = ('add', 'foo', [(0, 1)])\n    c = Conflict(p1, p2)\n\n    result = r._auto_resolve(c)\n    # Must be exactly False, not None (which is also falsy but != False)\n    assert result is False, f\"Expected False but got {result!r}\"",
+            "test_name": "test_auto_resolve_returns_false_not_none",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3064,
+            "tokens_out": 158,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 73
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-b93de388",
+        "function": "_find_conflicting_path",
+        "attempts": [
+          {
+            "target": "dictdiffer-resolve",
+            "mutant_id": "M-b93de388",
+            "attempt": 1,
+            "test_source": "def test_find_conflicting_path_equal_length():\n    from dictdiffer.conflict import Conflict\n    from dictdiffer.resolve import Resolver\n\n    # When both paths have equal length, the original code returns p1p (<=),\n    # but the mutated code would return p2p (<).\n    # p1 path: get_path(('add', 'foo', [(0, 0)])) => ('foo', 0)  (length 2)\n    # p2 path: get_path(('add', 'bar', [(1, 1)])) => ('bar', 1)  (length 2)\n    # Equal lengths: original returns p1p ('foo', 0), mutated returns p2p ('bar', 1)\n    p1 = ('add', 'foo', [(0, 0)])\n    p2 = ('add', 'bar', [(1, 1)])\n    c = Conflict(p1, p2)\n\n    r = Resolver({})\n    result = r._find_conflicting_path(c)\n\n    from dictdiffer.utils import get_path\n    p1p = get_path(p1)\n    p2p = get_path(p2)\n\n    # Both paths have the same length, so original (<=) returns p1p\n    assert len(p1p) == len(p2p), \"Paths must have equal length for this test\"\n    assert result == p1p, f\"Expected {p1p} but got {result}\"",
+            "test_name": "test_find_conflicting_path_equal_length",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3129,
+            "tokens_out": 366,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 108
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-34078ff3": "_auto_resolve",
+      "M-b93de388": "_find_conflicting_path"
+    },
+    "tokens_in": 6193,
+    "tokens_out": 524,
+    "wall_clock_s": 17.4,
+    "test_file": "tests/test_resolve.py"
+  },
+  {
+    "target": "boltons-typeutils",
+    "reachable_survivors": 2,
+    "drafts": 2,
+    "kept": 2,
+    "discarded": 0,
+    "retries_fired": 0,
+    "retries_succeeded": 0,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 2,
+    "official_per_mutant": {
+      "M-7f6b5f20": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_sentinel_pickleable_from_invalid_module",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-c63b701e": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_sentinel_default_name",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-7f6b5f20",
+        "function": "make_sentinel",
+        "attempts": [
+          {
+            "target": "boltons-typeutils",
+            "mutant_id": "M-7f6b5f20",
+            "attempt": 1,
+            "test_source": "def test_sentinel_pickleable_from_invalid_module():\n    \"\"\"Test that make_sentinel raises ValueError when called from a context\n    where module is not in sys.modules (or module is None/empty).\n    \n    The original code: if not module or module not in sys.modules\n    The mutation:      if not module and module not in sys.modules\n    \n    We need to trigger a case where module is truthy but NOT in sys.modules.\n    We can do this by temporarily removing the current module from sys.modules.\n    \"\"\"\n    import sys\n    import types\n    from boltons.typeutils import make_sentinel\n\n    # Create a fake module that is NOT in sys.modules\n    fake_module_name = '__fake_test_module_xyz_12345__'\n    assert fake_module_name not in sys.modules\n\n    fake_module = types.ModuleType(fake_module_name)\n    fake_module.__name__ = fake_module_name\n\n    # We need to execute make_sentinel in a frame that has __name__ = fake_module_name\n    # but that module is not in sys.modules\n    # We can do this by exec-ing code in a custom globals dict\n    \n    code = \"\"\"\nfrom boltons.typeutils import make_sentinel\nresult = make_sentinel('TEST', var_name='TEST')\n\"\"\"\n    fake_globals = {\n        '__name__': fake_module_name,\n        '__builtins__': __builtins__,\n    }\n    \n    # With the original code (or), this should raise ValueError because\n    # module ('__fake_test_module_xyz_12345__') is not in sys.modules.\n    # With the mutated code (and), it would NOT raise because:\n    #   not module => False (module is truthy)\n    #   False and ... => False (short-circuit, no error raised)\n    \n    try:\n        exec(code, fake_globals)\n        # If we get here, no exception was raised - this means the mutation is active\n        raise AssertionError(\"Expected ValueError to be raised but it was not\")\n    except ValueError as e:\n        # This is the expected behavior with the original code\n        assert 'top-level module' in str(e) or 'Pickleable' in str(e)",
+            "test_name": "test_sentinel_pickleable_from_invalid_module",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 1936,
+            "tokens_out": 547,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 91
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-c63b701e",
+        "function": "make_sentinel",
+        "attempts": [
+          {
+            "target": "boltons-typeutils",
+            "mutant_id": "M-c63b701e",
+            "attempt": 1,
+            "test_source": "def test_sentinel_default_name():\n    from boltons.typeutils import make_sentinel\n    s = make_sentinel()\n    assert '_MISSING' in repr(s)",
+            "test_name": "test_sentinel_default_name",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 1969,
+            "tokens_out": 49,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 20
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-7f6b5f20": "make_sentinel",
+      "M-c63b701e": "make_sentinel"
+    },
+    "tokens_in": 3905,
+    "tokens_out": 596,
+    "wall_clock_s": 33.1,
+    "test_file": "tests/test_typeutils.py"
+  },
+  {
+    "target": "aiofiles-temptypes",
+    "reachable_survivors": 8,
+    "drafts": 10,
+    "kept": 8,
+    "discarded": 0,
+    "retries_fired": 2,
+    "retries_succeeded": 2,
+    "overflow_count": 0,
+    "official_clean_pass": true,
+    "official_clean_output": "",
+    "official_killed": 8,
+    "official_per_mutant": {
+      "M-08aa7867": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_encoding_property",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-24861dfc": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_mode_property",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-2a5a2936": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_fileno_delegates",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-315eefd5": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_no_rollover_at_exact_size",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-6d30ae84": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_temporary_directory_cleanup_explicit",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-78d684df": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_name_property_accessible",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      },
+      "M-a439369c": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_write_returns_byte_count",
+            "plugin_outcome": "call-phase AssertionError"
+          }
+        ]
+      },
+      "M-e9844aa0": {
+        "outcome": "killed",
+        "responsible_tests": [
+          {
+            "test_name": "test_spooled_temporary_file_closed_property",
+            "plugin_outcome": "call-phase other exception"
+          }
+        ]
+      }
+    },
+    "per_mutant_drafts": [
+      {
+        "mutant_id": "M-08aa7867",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-08aa7867",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_encoding_property():\n    \"\"\"Test that the encoding property is correctly proxied for SpooledTemporaryFile.\"\"\"\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\", encoding=\"utf-8\") as f:\n        # The encoding property should be proxied directly from the underlying file.\n        # With the mutation, 'encoding' is replaced by '' so the property won't be\n        # accessible as f.encoding (it would be f. or simply not proxied correctly).\n        enc = f.encoding\n        assert enc == \"utf-8\"",
+            "test_name": "test_spooled_temporary_file_encoding_property",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2528,
+            "tokens_out": 160,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 35
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-24861dfc",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-24861dfc",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_mode_property():\n    \"\"\"Test that the mode property is correctly proxied from SpooledTemporaryFile.\"\"\"\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        assert f.mode == \"w+\"",
+            "test_name": "test_spooled_temporary_file_mode_property",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2555,
+            "tokens_out": 89,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 28
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-2a5a2936",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-2a5a2936",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_fileno_delegates():\n    \"\"\"Test that fileno is properly delegated (not empty string).\"\"\"\n    # After rollover, the spooled file has a real file descriptor accessible via fileno()\n    async with tempfile.SpooledTemporaryFile(max_size=1, mode=\"wb+\") as f:\n        # Write enough data to trigger rollover\n        await f.write(b\"Hello World! This is enough to trigger rollover.\")\n        # Verify it rolled over\n        assert f._file._rolled, \"File should have rolled over\"\n        # Now call fileno() - this should work if 'fileno' is properly delegated\n        # If the mutation changes 'fileno' to '', then fileno() won't be delegated\n        # and will raise an AttributeError or similar error\n        fd = await f.fileno()\n        assert isinstance(fd, int)\n        assert fd >= 0",
+            "test_name": "test_spooled_temporary_file_fileno_delegates",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2551,
+            "tokens_out": 242,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 3,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 61
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-315eefd5",
+        "function": "_check",
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-315eefd5",
+            "attempt": 1,
+            "test_source": "import io\nimport pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_no_rollover_at_exact_size():\n    \"\"\"\n    When exactly max_size bytes are written, no rollover should occur.\n    The condition `tell() > max_size` means rollover only happens when\n    the position *exceeds* max_size, not when it equals it.\n    The mutated version uses `>=` which would cause premature rollover.\n    \"\"\"\n    data = b\"Hello\"  # 5 bytes\n    max_size = len(data)  # exactly 5\n\n    async with tempfile.SpooledTemporaryFile(max_size=max_size, mode=\"wb+\") as f:\n        await f.write(data)\n        # After writing exactly max_size bytes, tell() == max_size\n        # With correct code (>): no rollover should have happened yet\n        # With mutated code (>=): rollover would have happened\n        assert type(f._file._file) is io.BytesIO, (\n            \"File should NOT have rolled over when written bytes == max_size\"\n        )",
+            "test_name": "test_spooled_temporary_file_no_rollover_at_exact_size",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2573,
+            "tokens_out": 278,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 63
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-6d30ae84",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-6d30ae84",
+            "attempt": 1,
+            "test_source": "import os\nimport pytest\nfrom aiofiles import tempfile\n\n\nasync def test_temporary_directory_cleanup_method(tmp_path):\n    \"\"\"Test that cleanup() method works on AsyncTemporaryDirectory.\"\"\"\n    async with tempfile.TemporaryDirectory(dir=tmp_path) as d:\n        dir_path = d\n        assert os.path.exists(dir_path)\n    # After exiting context (which calls close -> cleanup), directory should be gone\n    assert not os.path.exists(dir_path)\n\n    # Also test calling cleanup explicitly\n    td = tempfile.TemporaryDirectory(dir=tmp_path)\n    async with td as d:\n        dir_path2 = d\n        assert os.path.exists(dir_path2)\n        # Call cleanup directly before context exit\n        await td.cleanup()\n        assert not os.path.exists(dir_path2)",
+            "test_name": "test_temporary_directory_cleanup_method",
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2576,
+            "tokens_out": 217,
+            "assertion_class": "existence",
+            "plugin_outcome": "n/a",
+            "clean_output": "................................ [ 97%]\n......                                                                   [100%]\n=================================== FAILURES ===================================\n___________________ test_temporary_directory_cleanup_method ____________________\n\ntmp_path = PosixPath('/private/var/folders/zw/q4mf0rlx1mg07xn6wk5dd1_w0000gn/T/pytest-of-marvinoka4/pytest-97/test_temporary_directory_clean0')\n\n    async def test_temporary_directory_cleanup_method(tmp_path):\n        \"\"\"Test that cleanup() method works on AsyncTemporaryDirectory.\"\"\"\n        async with tempfile.TemporaryDirectory(dir=tmp_path) as d:\n            dir_path = d\n            assert os.path.exists(dir_path)\n        # After exiting context (which calls close -> cleanup), directory should be gone\n        assert not os.path.exists(dir_path)\n    \n        # Also test calling cleanup explicitly\n        td = tempfile.TemporaryDirectory(dir=tmp_path)\n        async with td as d:\n            dir_path2 = d\n            assert os.path.exists(dir_path2)\n            # Call cleanup directly before context exit\n>           await td.cleanup()\n                  ^^^^^^^^^^\nE           AttributeError: 'AiofilesContextManagerTempDir' object has no attribute 'cleanup'\n\ntests/test_tempfile.py:200: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_tempfile.py::test_temporary_directory_cleanup_method - Attr...\n1 failed, 216 passed, 5 skipped in 1.97s\n",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 4,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 102
+          },
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-6d30ae84",
+            "attempt": 2,
+            "test_source": "import os\nimport pytest\nfrom aiofiles import tempfile\n\n\nasync def test_temporary_directory_cleanup_explicit(tmp_path):\n    \"\"\"Test that cleanup() method works on AsyncTemporaryDirectory directly.\"\"\"\n    # Open the TemporaryDirectory without using the async context manager\n    # so we get direct access to the AsyncTemporaryDirectory object\n    import tempfile as stdlib_tempfile\n    from aiofiles.tempfile.temptypes import AsyncTemporaryDirectory\n    import asyncio\n\n    loop = asyncio.get_event_loop()\n    \n    # Create underlying stdlib TemporaryDirectory\n    underlying = stdlib_tempfile.TemporaryDirectory(dir=tmp_path)\n    dir_path = underlying.name\n    assert os.path.exists(dir_path)\n\n    # Create AsyncTemporaryDirectory wrapper directly\n    async_td = AsyncTemporaryDirectory(underlying, loop, None)\n    \n    # Call cleanup explicitly - this should remove the directory\n    await async_td.cleanup()\n    \n    assert not os.path.exists(dir_path)",
+            "test_name": "test_temporary_directory_cleanup_explicit",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3243,
+            "tokens_out": 258,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": false,
+            "ast_node_count": 84
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-78d684df",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-78d684df",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_name_property():\n    \"\"\"Test that the name property is correctly proxied for SpooledTemporaryFile.\"\"\"\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        # The name property should be accessible and non-empty\n        name = f.name\n        assert name is not None\n        assert name != \"\"",
+            "test_name": "test_spooled_temporary_file_name_property",
+            "passed_on_clean": false,
+            "killed_target": false,
+            "kept": false,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2615,
+            "tokens_out": 112,
+            "assertion_class": "value",
+            "plugin_outcome": "n/a",
+            "clean_output": "........s.....................................ssss..................F... [ 32%]\n........................................................................ [ 64%]\n........................................................................ [ 97%]\n......                                                                   [100%]\n=================================== FAILURES ===================================\n__________________ test_spooled_temporary_file_name_property ___________________\n\n    async def test_spooled_temporary_file_name_property():\n        \"\"\"Test that the name property is correctly proxied for SpooledTemporaryFile.\"\"\"\n        async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n            # The name property should be accessible and non-empty\n            name = f.name\n>           assert name is not None\nE           assert None is not None\n\ntests/test_tempfile.py:190: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_tempfile.py::test_spooled_temporary_file_name_property - as...\n1 failed, 216 passed, 5 skipped in 1.92s\n",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": true,
+            "ast_node_count": 39
+          },
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-78d684df",
+            "attempt": 2,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_name_property_accessible():\n    \"\"\"Test that the name property is correctly proxied for SpooledTemporaryFile.\"\"\"\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        # The name property should be accessible without raising AttributeError.\n        # With the mutation, 'name' is replaced by '' in proxy_property_directly,\n        # so accessing f.name would raise AttributeError.\n        try:\n            name = f.name\n        except AttributeError:\n            pytest.fail(\"f.name raised AttributeError; name property not proxied correctly\")\n        # name is None for an in-memory spooled file (not yet rolled over)\n        assert name is None",
+            "test_name": "test_spooled_temporary_file_name_property_accessible",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 3021,
+            "tokens_out": 351,
+            "assertion_class": "existence",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 1,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 44
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-a439369c",
+        "function": "write",
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-a439369c",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_write_returns_byte_count():\n    \"\"\"Test that write() returns the number of bytes/characters written (not None).\"\"\"\n    data = b\"Hello World!\"\n\n    async with tempfile.SpooledTemporaryFile(max_size=len(data) * 10, mode=\"wb+\") as f:\n        # File is not rolled over yet (max_size is large enough)\n        result = await f.write(data)\n        assert result is not None\n        assert result == len(data)",
+            "test_name": "test_spooled_temporary_file_write_returns_byte_count",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2594,
+            "tokens_out": 147,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase AssertionError",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": true,
+            "assert_count": 2,
+            "has_equality_to_literal": false,
+            "has_other_comparison": true,
+            "ast_node_count": 60
+          }
+        ],
+        "kept": true
+      },
+      {
+        "mutant_id": "M-e9844aa0",
+        "function": null,
+        "attempts": [
+          {
+            "target": "aiofiles-temptypes",
+            "mutant_id": "M-e9844aa0",
+            "attempt": 1,
+            "test_source": "import pytest\nfrom aiofiles import tempfile\n\n\nasync def test_spooled_temporary_file_closed_property():\n    \"\"\"Test that the 'closed' property is correctly proxied.\"\"\"\n    async with tempfile.SpooledTemporaryFile(mode=\"w+\") as f:\n        # While open, closed should be False\n        assert f.closed == False\n    # After exiting the context manager, closed should be True\n    assert f.closed == True",
+            "test_name": "test_spooled_temporary_file_closed_property",
+            "passed_on_clean": true,
+            "killed_target": true,
+            "kept": true,
+            "overflowed": false,
+            "truncated": false,
+            "tokens_in": 2651,
+            "tokens_out": 114,
+            "assertion_class": "value",
+            "plugin_outcome": "call-phase other exception",
+            "clean_output": "",
+            "parses": true,
+            "calls_mutated_function": false,
+            "assert_count": 2,
+            "has_equality_to_literal": true,
+            "has_other_comparison": false,
+            "ast_node_count": 36
+          }
+        ],
+        "kept": true
+      }
+    ],
+    "mutant_function": {
+      "M-08aa7867": null,
+      "M-24861dfc": null,
+      "M-2a5a2936": null,
+      "M-315eefd5": "_check",
+      "M-6d30ae84": null,
+      "M-78d684df": null,
+      "M-a439369c": "write",
+      "M-e9844aa0": null
+    },
+    "tokens_in": 26907,
+    "tokens_out": 1968,
+    "wall_clock_s": 121.2,
+    "test_file": "tests/test_tempfile.py"
   }
 ]
