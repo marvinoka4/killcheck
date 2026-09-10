@@ -99,12 +99,16 @@ CHANGELOG.md for the numbers.
 
 ## Results
 
-Arm C ran on 2 of 10 scoring targets before the API budget was exhausted. The
-remaining 8 targets, holding 38 reachable survivors, were not run. We did not
-substitute a different generator to fill the gap, because the comparison would
-no longer be identified. Everything below is restricted to the 15 reachable
-survivors arm C actually covered, with arms A and B recomputed over that
-identical mutant set rather than over all 53.
+Arm C completed all 10 scoring targets and all 53 reachable survivors. Arms A
+and B are reported from their original runs, unmodified, scored against
+byte-identical mutant sets.
+
+The run stopped once, part way through, when the API budget was exhausted
+after 2 of 10 targets; it resumed under a topped-up budget and completed the
+remaining 8. That is provenance, not a caveat — the pre-run instrument checks
+(canary, determinism, frozen-core diff) were re-run before the resumed calls,
+and the two halves were scored identically. See CHANGELOG.md for the full
+timeline.
 
 ### The three arms
 
@@ -117,66 +121,108 @@ identical mutant set rather than over all 53.
 - **Arm C** — the agent. One mutant per call, one test per call, the mutant
   diff in context, an execution gate, and exactly one retry on gate failure.
 
-Arm B exists so that a C result cannot be attributed to compute alone. It is
-*not* budget-matched in any general sense — see the resource vector below.
+Arm B exists so a C result cannot be attributed to compute alone. It is *not*
+budget-matched in any general sense — see the resource vector below.
 
-### Head to head, the 15 survivors arm C covered
+### Head to head, all 53 reachable survivors
 
-| target | reachable | A official | A repaired | B | C |
-| --- | --- | --- | --- | --- | --- |
-| slugify-special | 1 | 0 | 1 | 0 | 1 |
-| tenacity-stop | 14 | 0 | 1 | 1 | 8 |
-| **pooled** | **15** | **0** | **2** | **1** | **9** |
-
-Arm B needed no repair: its batches passed clean on both targets.
+| arm | killed / reachable | SKR | clean-pass failures |
+| --- | --- | --- | --- |
+| A official | 9 / 53 | 0.170 | 6 of 10 targets |
+| A repaired *(diagnostic only)* | 18 / 53 | 0.340 | — |
+| B official | 2 / 53 | 0.038 | 3 of 10 targets |
+| **C official** | **44 / 53** | **0.830** | **0 of 10 targets** |
 
 The identified comparison is **B vs C** — same one-test-per-call regime, same
 model, same token ceiling, differing only in the mutant hint, the gate, and one
-retry. On these 15 survivors that is **1 kill against 9**. Arm A is shown for
-description only: it writes an unbounded batch per call, so a C-vs-A gap moves
-two mechanisms at once and identifies neither.
+retry. That is 2 kills against 44.
 
-**The sample is not random, and this is the caveat to reach for first.** These
-two targets are where arm A did worst. `tenacity-stop` was its 0/14 official
-and 1/14 repaired — a module requiring time mocking, designated a hard case
-before any arm ran. The 38 unrun survivors include `cachetools-func`, where arm
-A wrote 69 tests that all passed clean and killed 0 of 11. Whether arm C would
-have done better there is unknown. A 9/15 on the hardest module in the set is
-not evidence of 9/15 on the easiest.
+Arm A is shown for description only. It writes an unbounded batch per call, so
+a C-vs-A gap moves two mechanisms at once and identifies neither. Its official
+9/53 is also a floor rather than a capability measure: clean-pass is evaluated
+per batch, so one broken test invalidates every other test generated for that
+target, and arm A failed clean-pass on 6 of 10 targets. The repaired diagnostic
+removes only the individually-failing test functions and rescores; it is
+reported alongside, never instead of, the official number.
 
-### What the gate did
+**Arm C failed clean-pass on zero targets.** That is a structural property of
+per-test inclusion rather than a quality difference: a draft that fails on
+clean source is discarded as a wasted call and never enters the suite, so it
+cannot invalidate its siblings.
 
-| target | reachable | drafts | kept | discarded | keep rate | retries fired | retries succeeded | official killed |
+### The single most informative row
+
+`cachetools-func`. Arm A wrote **69 tests** there. Every one passed on clean
+source. They killed **0 of 11** reachable survivors. Arm C used 17 drafts and
+killed **10 of 11**.
+
+That is the existence proof this project was built to look for: a large batch
+of runnable, assertion-bearing, entirely reasonable tests need not touch the
+residue of faults the existing suite already misses. Volume did not find them.
+Being shown the specific fault did.
+
+### What the gate did, per target
+
+| target | reachable | drafts | kept | discarded | keep rate | retries fired | retries succeeded | official kills |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | slugify-special | 1 | 1 | 1 | 0 | 100% | 0 | 0 | 1/1 |
+| natsort-ns-enum | 2 | 2 | 2 | 0 | 100% | 0 | 0 | 2/2 |
+| dictdiffer-resolve | 2 | 2 | 2 | 0 | 100% | 0 | 0 | 2/2 |
+| boltons-typeutils | 2 | 2 | 2 | 0 | 100% | 0 | 0 | 2/2 |
+| toolz-dicttoolz | 4 | 6 | 4 | 0 | 100% | 2 | 2 | 4/4 |
+| aiofiles-temptypes | 8 | 10 | 8 | 0 | 100% | 2 | 2 | 8/8 |
+| cachetools-func | 11 | 17 | 10 | 1 | 90.9% | 6 | 5 | 10/11 |
+| shortuuid-main | 7 | 8 | 6 | 1 | 85.7% | 1 | 0 | 6/7 |
 | tenacity-stop | 14 | 23 | 8 | 6 | 57.1% | 9 | 3 | 8/14 |
-| **pooled** | **15** | **24** | **9** | **6** | **60.0%** | **9** | **3** | **9/15** |
+| validators-card | 2 | 3 | 1 | 1 | 50.0% | 1 | 0 | 1/2 |
+| **pooled** | **53** | **74** | **44** | **9** | **83.0%** | **21** | **12** | **44/53** |
 
-Per-call gate outcomes and the one-pass batch rescore agree on every mutant, on
-both targets. That matters here specifically: arm A broke `tenacity-stop`'s
-existing suite through a naming collision — its own `make_retry_state()` helper
-shadowed the pre-existing one and broke 12 tests that had nothing to do with
-the module under test. Arm C wrote 14 tests into the same file, one at a time,
-and its kept set runs clean together. The per-test gate rejects before damage
-compounds, which is a mechanical property of the design rather than luck.
+**The pooled keep rate is not a uniform filtering rate and should not be read
+as one.** Six of ten targets rejected nothing at all. Excluding
+`tenacity-stop`, the keep rate is 92.3% (36/39); `tenacity-stop` alone accounts
+for 6 of the 9 discards. The gate did real filtering on the eval set's
+designated hard case — time-mocked retry logic — and comparatively little
+elsewhere, though not nothing: `cachetools-func`, `validators-card` and
+`shortuuid-main` each contributed one genuine discard.
 
-### The gate rejects valid tests that miss, not broken tests
+Retries fired 21 times and succeeded 12. Feeding the actual pytest output back
+into a second attempt recovered roughly a quarter of all kept tests.
 
-Of the 6 discarded drafts, **0 failed the clean-source check and 6 passed clean
-but failed to kill their target mutant.**
+### The gate never once caught a broken test
 
-This is the most informative number in the run and it was not the expected one.
-The gate was designed with two jobs: screen out tests that do not work, and
-screen out tests that work but do not detect the fault. In this sample it only
-ever did the second. Every draft the model produced was a runnable, passing
-test. Six of them simply did not go red when the code was wrong.
+Across the whole run — 74 drafts, 9 discards, 21 retries — **every discarded
+draft passed on clean source and failed to kill its target mutant. Not one
+discard was a test that didn't work.**
+
+The gate was designed with two jobs: reject tests that don't run, and reject
+tests that run but don't detect the fault. In practice it only ever did the
+second. Every draft the model produced was a runnable, passing test. Nine of
+them simply did not go red when the code was wrong.
+
+### The nine survivors it could not kill
+
+| target | mutant | operator |
+| --- | --- | --- |
+| tenacity-stop | M-25c3ab92, M-29b584b1, M-369f6698, M-528515c3, M-950b9bd4, M-b0304ae2 | constant ×6 |
+| cachetools-func | M-d92d6ba3 | constant |
+| validators-card | M-8e984385 | return_none |
+| shortuuid-main | M-2537e138 | compare |
+
+Every survivor received a draft — work-queue coverage matches the
+reachable-survivor set exactly on all 10 targets. All nine exhausted both
+attempts, and every final draft passed clean and failed to kill. Seven of the
+nine are `constant` mutants. Against 36 of 43 constant mutants killed overall,
+that describes a residue the model cannot reach even when shown the exact diff
+and given a retry with real failure output. Some of that residue is likely
+semantically equivalent mutants, which this project does not attempt to detect
+(see Limitations).
 
 ### Assertion class, kept versus discarded
 
 | class | kept | discarded |
 | --- | --- | --- |
-| value | 7 | 6 |
-| existence | 2 | 0 |
+| value | 38 | 8 |
+| existence | 6 | 1 |
 | exception | 0 | 0 |
 | mock | 0 | 0 |
 | none | 0 | 0 |
@@ -184,68 +230,84 @@ test. Six of them simply did not go red when the code was wrong.
 The pre-registered hypothesis, recorded in CLAUDE.md before any test existed,
 was that a meaningful share of gate-passing tests would be `none` or
 `existence` class — that the gate would select differential probes rather than
-specifications. **On this sample that hypothesis is not supported, and the
-result runs the other way.** The `none` bin is empty. Every discarded draft is
-`value` class, while both `existence` drafts were kept.
+specifications. **On the full sample that hypothesis is not supported.** The
+`none` bin is empty in the final 53-mutant disposition — no mutant's winning or
+final-losing draft was ever classified `none`. Two of the 74 raw attempts were
+`none`-class on a first try (`tenacity-stop`'s M-22369c8f, `toolz-dicttoolz`'s
+M-917ca6a1), both superseded once a retry, given the real pytest output,
+produced a `value`-class kept test instead. There are no assertion-free tests
+and no crash-only oracles among the kept set: of 44 kills, 35 are call-phase
+`AssertionError` and 9 are call-phase other exceptions.
 
-The honest reading is not that the gate selects for quality. It is that the
-gate does not select on assertion class at all in this sample: `value` tests
-appear on both sides of the keep decision, and n=15 with 6 discards cannot
-support a claim about class either way. What the numbers do rule out is the
-specific failure mode we set out to find. There are no assertion-free tests
-here and no crash-only oracles: 8 of 9 kills are call-phase `AssertionError`,
-one is a call-phase other exception. Coverage gaming did not migrate to process
-status in this sample.
+Nor does the gate appear to select *on* assertion class: kept and discarded
+drafts have nearly identical class mixes (86% vs 89% `value`). Per the
+pre-registered analysis plan, a flat class mix combined with flat within-class
+mechanical features indicates the gate is not filtering on assertion style at
+all. Within `value` class, discarded drafts do differ from kept ones — more
+assertions on average (2.50 vs 1.76), far more likely to compare against a
+literal (87.5% vs 42.1%), and longer (67.4 vs 53.8 AST nodes). With n=8
+discards that is a direction, not a result, but it is consistent with
+over-specific snapshot-style assertions failing to isolate the mutated
+behaviour.
 
 ### Kills by operator family
 
-| operator | call-phase AssertionError | call-phase other | total |
-| --- | --- | --- | --- |
-| constant | 7 | 1 | 8 |
-| return_none | 1 | 0 | 1 |
+| operator | mutants | killed | call-phase AssertionError | call-phase other |
+| --- | --- | --- | --- | --- |
+| constant | 43 | 36 | 28 | 8 |
+| compare | 4 | 3 | 2 | 1 |
+| return_none | 4 | 3 | 3 | 0 |
+| binop | 1 | 1 | 1 | 0 |
+| boolop | 1 | 1 | 1 | 0 |
+| **total** | **53** | **44** | **35** | **9** |
 
-All 9 kills are `constant` or `return_none` — the cheap end of the fault model,
-and the same two families that dominated both baseline arms. No `compare`,
-`binop`, `boolop`, `unary_not` or `raise_removed` mutant was killed by any arm
-on these targets. Given `constant` is 54% of the whole mutant population
-(247/455) and `return_none` 23% (105/455), this is partly population shape. It
-is also a real limit on what a kill demonstrates.
+The reachable-survivor population is 81% `constant`, so the headline number is
+substantially a statement about constant mutations. The other four families
+contribute 10 mutants between them, of which 8 were killed — directionally
+consistent, but far too few to support a per-family claim.
 
-### Transfer probes
+### Transfer: the uncomfortable result
 
-Collateral kills: 10 total kills across 9 kept tests. One same-function
-collateral kill, **zero cross-function**. Since survivors cluster densely
-within functions, same-function collateral is largely geometry. Cross-function
-collateral was the only remaining transfer signal after both holdout designs
-were abandoned, and it is zero here.
+Collateral kills across all 44 kept tests: **10 same-function, 0
+cross-function.**
 
-Breadth, kept tests, no threshold cut: 1/1, 1/9, 1/9, 1/9, 1/2, 2/2, 1/1, 1/2,
-1/2. Seven of nine kept tests kill exactly the one mutant they were written for.
+Breadth — how many mutants each kept test is responsible for, including its
+own — is 1 for 36 of 44 kept tests. Five kill two, two kill three (all `value`
+class); one `existence` test kills two.
 
-**Read together, these two lines are the closest thing to an answer we have on
-the original question, and it is not favourable.** The gate produces tests that
-detect the edit they were shown and, with one exception, nothing else. That is
-consistent with the framing written before the run: the suite goes red when
-this rewrite is applied, and need not go red when the behaviour is wrong in any
-way the rewrite does not encode. It is not a control, and it cannot be — no
-holdout survived. It is a weak probe pointing in one direction on 15 mutants.
+Since survivors cluster densely within functions, same-function collateral is
+largely geometry. Cross-function collateral was the only transfer signal left
+after both holdout designs were abandoned, and across 53 mutants, 10 targets
+and 44 kept tests it is **zero**.
 
-### Resource vector, these 2 targets
+**This is the finding that sits least comfortably beside the 0.830, and it
+belongs next to it rather than below it.** The gate produces tests that detect
+the edit they were shown and, within a function, occasionally a neighbour. It
+produced no evidence of a test that constrains behaviour anywhere the mutation
+did not point. The framing written before the run stands: the suite goes red
+when this rewrite is applied, and need not go red when the behaviour is wrong
+in any way the rewrite does not encode.
 
-| arm | calls | tokens in | tokens out | tests emitted | tests passing clean | wall clock |
-| --- | --- | --- | --- | --- | --- | --- |
-| A | 2 | 37,767 | 9,318 | 128 | 126 | 118s |
-| B | 15 | 410,147 | 3,122 | 15 | 15 | 127s |
-| C | 24 | 672,218 | 7,799 | 24 | 21 | 404s |
+That is not a control and cannot be — no holdout survived. It is a weak probe,
+now measured over 44 kept tests instead of 9, pointing consistently in one
+direction.
+
+### Resource vector
+
+| arm | calls | tokens in | tokens out | tests emitted | wall clock |
+| --- | --- | --- | --- | --- | --- |
+| A | 10 | 66,539 | 42,116 | 556 | ~10 min |
+| B | 53 | 550,093 | 11,291 | 53 | ~7 min |
+| C | 74 | 869,488 | 24,811 | 74 | ~20 min |
 
 No two arms spent the same amount of anything except calls, and only B and C
 are call-aligned. Arm B resends the full module and test file on every call,
-which is why it consumes 11× arm A's input tokens to emit a third as many
-output tokens. Arm C carries the same context tax plus the mutant diff and
-retry feedback.
+which is why it consumes over eight times arm A's input tokens to emit a
+quarter as many output tokens. Arm C carries the same context tax plus the
+mutant diff and retry feedback.
 
 There is no neutral budget unit here: matching on output tokens would let B
-emit 128 tests in 15 calls, which is arm A with extra steps; matching on input
+emit 556 tests in 53 calls, which is arm A with extra steps; matching on input
 tokens would fine C for showing the diff, which is information rather than
 padding. The unit was fixed before any arm ran and is reported as a policy, not
 as a fairness claim.
@@ -254,26 +316,12 @@ as a fairness claim.
 
 `calls_mutated_function` — whether a generated test names the mutated function
 — is undefined for `tenacity-stop`. All 14 mutated functions there are dunders
-(`__call__` ×9, `__or__` ×2, `__and__` ×2, `__init__` ×1), and Python's call and
-operator syntax never spells the dunder name, so an AST name match reads
-near-zero by construction rather than because the tests miss the code. It is
-reported as not computable rather than as a low rate. Pre-registration protects
-against choosing a feature after seeing results; it does not guarantee the
-feature is measurable on every target.
-
-### What did not run
-
-| target | reachable survivors |
-| --- | --- |
-| cachetools-func | 11 |
-| aiofiles-temptypes | 8 |
-| shortuuid-main | 7 |
-| toolz-dicttoolz | 4 |
-| validators-card | 2 |
-| natsort-ns-enum | 2 |
-| dictdiffer-resolve | 2 |
-| boltons-typeutils | 2 |
-| **total** | **38** |
+(`__call__` ×9, `__or__` ×2, `__and__` ×2, `__init__` ×1), and Python's call
+and operator syntax never spells the dunder name, so an AST name match reads
+near-zero by construction rather than because the tests miss the code. Those 14
+mutants are excluded from that column only. Pre-registration protects against
+choosing a feature after seeing results; it does not guarantee the feature is
+measurable on every target.
 
 ---
 
@@ -314,7 +362,7 @@ produced a confident, wrong, publishable number.
    precisely the finding we were hypothesising.
 8. **An unmeasurable pre-registered feature.** `calls_mutated_function` is
    undefined for dunder-dispatched code, and would have read as a real
-   near-zero rate on the target carrying 14 of 15 survivors.
+   near-zero rate on the target carrying 14 of the 53 reachable survivors.
 
 Two patterns matter more than the individual bugs.
 
@@ -395,37 +443,44 @@ cp .env.example .env        # then add a real ANTHROPIC_API_KEY
    keep-rules from arm C's draft log without additional calls.
 
 **Approximate cost of a full reproduction:** the harness steps (1–4) are free.
-The three arms together ran roughly 90 model calls for this submission at
-Sonnet rates; a complete arm C across all 10 scoring targets would add ~38 more
-plus retries. Expect a few US dollars total.
+The three arms together made 137 model calls for this submission at Sonnet
+rates (10 arm A, 53 arm B, 74 arm C including retries). Expect a few US
+dollars total.
 
-### One target does not reproduce deterministically
+### One target reproduced non-deterministically once, then passed on re-check
 
-A clean-clone reproduction run of `scripts/verify_targets.py` three hours
-before submission reproduced 11 of 12 targets exactly against the committed
-`results/target_verification.json`: all 12 pass the canary, and 11 produce
-byte-identical survivor sets across three serial runs. The twelfth,
-`aiofiles-temptypes`, varied — survivor set sizes 19, 18, 19 across three
-runs, one mutant flipping from survived to killed in a single run. The
-determinism gate quarantined it rather than accepting the 2-of-3 majority,
-which is what the gate is for.
+A clean-clone reproduction run of `scripts/verify_targets.py`, done partway
+through this submission's work, reproduced 11 of 12 targets exactly against
+the committed `results/target_verification.json`: all 12 pass the canary, and
+11 produce byte-identical survivor sets across three serial runs. The
+twelfth, `aiofiles-temptypes`, varied at the time — survivor set sizes 19, 18,
+19 across three runs, one mutant flipping from survived to killed in a single
+run. The determinism gate quarantined it rather than accepting the 2-of-3
+majority, which is what the gate is for.
 
 This is the same target that motivated the `workers=1` fix: it drives real
 async I/O against real temporary files. Serial execution removed the large,
 result-changing non-determinism documented above — its kill score moved from
 a 0.27/0.77 spread under concurrency to a stable 0.2692 on the original
-machine — but a residual single-mutant flake remains and is
-environment-dependent. We are reporting it rather than fixing it three hours
-before the deadline, and rather than re-running until it agreed.
+machine — but this smaller, single-mutant flake reproduced once more, on a
+fresh clone, in a different environment. It was reported rather than
+investigated or fixed at the time, and rather than re-run until it agreed.
 
-It does not affect any reported result. `aiofiles-temptypes` is one of the
-eight targets arm C did not run. It contributes 0 of the 15 reachable
-survivors in the head-to-head, and 0 of the 9 kills. It does contribute 8
-reachable survivors to the pooled 53 used in the arms A and B tables, so
-those pooled figures carry a one-target reproducibility caveat.
+**Re-checked before resuming arm C, and it passed.** The same three-serial
+check, run against `aiofiles-temptypes` alone immediately before the
+remaining 8 targets were scored, came back byte-identical (19/19/19), with no
+code changed between the quarantine and the re-check. Unquarantined per the
+pre-committed decision rule and scored as a normal target from there: 8/8
+official kills, folded into the pooled 44/53 above without qualification. A
+determinism check that has now fired twice on this same target, for two
+different reasons, against two different committed baselines, months apart,
+is not a check that has stopped working — see CHANGELOG.md for both firings.
+A reader re-running `verify_targets.py` today might still see it fire a third
+time; if it does, that is the gate working, not a regression.
 
 A reader reproducing this work should expect 11 of 12 targets to match
-exactly and `aiofiles-temptypes` to quarantine.
+exactly on the first try, and `aiofiles-temptypes` to either match or need
+one re-check.
 
 **Trajectories** for every arm are in `trajectories/`, one JSONL per run, one
 row per model turn, written live rather than reconstructed. Every generated
@@ -460,11 +515,6 @@ cross-function collateral is the only real transfer signal left), and breadth
 within the function. Neither is a control. An earlier draft of this file
 claimed anti-circularity rested on the assertion taxonomy. That claim was wrong
 and is corrected here.
-
-**Arm C is incomplete.** 2 of 10 scoring targets, 15 of 53 reachable survivors,
-stopped by an exhausted API budget. The two completed targets are not a random
-sample — they are among those where arm A performed worst. No general claim
-about arm C's performance is available from them.
 
 **No per-test kill attribution for arms A and B.** Arm C targets one mutant per
 call, so one generated test maps to one kill outcome. Arms A and B are scored

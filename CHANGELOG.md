@@ -17,9 +17,10 @@ do, what did we decide."
 | Both abandoned holdout designs | (1) operator-based holdout: exclude `boolop`/`unary_not` from the work queue, score anyway. (2) positional holdout: hold out a fixed fraction by index | 24 total `boolop`/`unary_not` mutants across all 12 targets, 4 of 12 have zero, only 1 pooled survivor-and-reachable | Both abandoned before any arm ran -- denominator too thin under either design to support a rate |
 | Concurrency bug + determinism gate | `score_target`'s default `workers=4` produced non-deterministic survivor sets on `aiofiles-temptypes` (real async I/O against real temp files) | 4 runs at `workers=4`: kill scores 0.7308/0.7308/0.7692/0.7308, different survivor sets each time; `workers=1`: 0.2692 identically, twice | `workers=1` as the new default; added a standing 3x-serial determinism check, quarantining (not averaging) any target that varies. All 12 targets pass, zero quarantined |
 | Arm A (single prompt) | One call per target, unbounded test count, no mutation info, no gate, no retry -- the baseline the challenge brief names | 556 tests from 10 calls; official pooled SKR 9/53 = 0.1698; 6 of 10 targets failed clean-pass | Official 9/53 stands per the never-repaired rule; a repair diagnostic run separately (below) to quantify how much of that is a batch-invalidation floor |
-| Arm B (budget-matched) | One-test-per-call, call count = target's reachable-survivor count, same model/tokens, no mutation info, no gate, no retry | 53 tests from 53 calls; official pooled SKR 2/53 = 0.0377; 0 clean-pass failures | Isolates what budget alone buys, holding the one-test-per-call regime fixed against arm C |
+| Arm B (budget-matched) | One-test-per-call, call count = target's reachable-survivor count, same model/tokens, no mutation info, no gate, no retry | 53 tests from 53 calls; official pooled SKR 2/53 = 0.0377; 3 of 10 targets failed clean-pass | Isolates what budget alone buys, holding the one-test-per-call regime fixed against arm C |
 | Batch-zero repair diagnostic | Re-scored arm A's 6 failing targets with only the individually-bad content removed, to separate "can't kill" from "batch invalidation hid a kill" | Capability diagnostic 0/26 -> 7/26; instrument correction (`natsort-ns-enum`) 0/2 -> 2/2; `tenacity-stop` resolved to a naming collision (`make_retry_state`), true repaired 1/14 | Diagnostic only, reported alongside -- never instead of -- the official 9/53; its own reconstruction bug (dropped shared imports) was caught by a predicted-outcome sanity check before any repaired number was trusted |
 | Arm C partial | One mutant per call, mutant diff in context, execution gate, exactly one retry on failure; ran until the API budget was exhausted | 2 of 10 scoring targets completed (15 of 53 reachable survivors); 9/15 killed, keep rate 60% pooled (57.1% on `tenacity-stop`); 8 of 9 kills call-phase `AssertionError` | Stopped and reported as partial, with the 8 unrun targets and 38 unrun survivors named explicitly; no substitute generator used -- that would not be an identified comparison |
+| Arm C complete | Same design, resumed under a topped-up API budget; pre-run instrument re-verified unchanged, `aiofiles-temptypes` re-checked and unquarantined; remaining 8 targets run, largest denominator first | All 10 scoring targets, 53/53 reachable survivors; 44/53 killed, SKR 0.830, zero clean-pass failures; keep rate 83.0% pooled (6 of 10 targets at 100%, 92.3% excluding `tenacity-stop`); 21 retries fired, 12 succeeded; all 9 discards passed clean and failed to kill -- zero broken drafts; zero cross-function collateral across 44 kept tests; `cachetools-func` 10/11 against arm A's 0/11 from 69 clean tests | Official 44/53 stands; B vs C is the identified comparison (2/53 vs 44/53); the gate filtered almost nothing outside the eval set's designated hard case and never once rejected a broken test -- full writeup below |
 
 ## Full detail, in the order things happened
 
@@ -989,3 +990,116 @@ target for the remainder of arm C on that basis: one clean pass after one
 quarantine, not three, because the instructed decision rule was "passes
 three times cleanly," which this run satisfied on its own three serial
 runs, not by combining with the earlier quarantine's runs.
+
+## Arm C complete: the remaining 8 targets, all 53 reachable survivors
+
+Before any call: `scripts_demo.py` reconfirmed `kill_score=0.0952`, the
+working tree matched the last commit, and `engine.py`/`runner.py`/`agent.py`
+(including the pytest plugin string) were confirmed unchanged since the
+original 2-target run via `git log` on each file -- `runner.py`'s last
+change predates `agent.py`'s creation, `agent.py` has exactly one commit
+total. Nothing to reopen, nothing to re-run for comparability reasons.
+
+Ran in the specified order, one target per process, serially:
+`cachetools-func` (11), `shortuuid-main` (7), `toolz-dicttoolz` (4),
+`validators-card` (2), `natsort-ns-enum` (2), `dictdiffer-resolve` (2),
+`boltons-typeutils` (2), `aiofiles-temptypes` (8). A per-target check ran
+after every target (batch-vs-per-call agreement, clean-pass-together,
+truncation correctness, retry sequencing, absence of "collected 0 items",
+the pytest plugin actually firing, retry-body-rename) against
+tripwires.md's HARNESS conditions; none fired anywhere. Keep rate varied
+50%-100% across the 8, ruling out the GENERATOR COLLAPSE flat-rate
+condition without waiting for the full pool.
+
+**Result: all 10 scoring targets, 53/53 reachable survivors, 44/53 official
+kills, SKR 0.830, zero clean-pass failures.** Arm A official 9/53 (0.170),
+arm A repaired (diagnostic only) 18/53 (0.340), arm B official 2/53
+(0.038) -- all three read directly from the original committed JSON,
+unmodified and unrecomputed this session; denominators cross-checked
+per-target against arm C's and found identical across all 10 (53=53=53
+pooled). `cachetools-func`, the target arm A's 69 clean-passing tests
+killed 0/11 on, went 10/11 under arm C.
+
+**The pooled 83.0% keep rate is not uniform and should not be read as
+one.** Six of ten targets kept 100% (`slugify-special`, `natsort-ns-enum`,
+`dictdiffer-resolve`, `toolz-dicttoolz`, `boltons-typeutils`,
+`aiofiles-temptypes`); `cachetools-func` 90.9%, `shortuuid-main` 85.7%,
+`tenacity-stop` 57.1%, `validators-card` 50.0%. Excluding `tenacity-stop`
+the pooled rate is 92.3% (36/39); `tenacity-stop` alone accounts for 6 of
+the 9 discards, `cachetools-func`/`validators-card`/`shortuuid-main` one
+each -- real discards, not zero, so "the gate rejected almost nothing
+outside the hard case" is directionally right but not literally nothing.
+
+**Every one of the 9 not-killed mutants was drafted and discarded by the
+gate -- none was a work-queue gap.** Checked explicitly: each target's
+drafted-mutant-ID set matches its reachable-survivor-ID set from
+`target_verification.json` exactly, all 10 targets. All 9 exhausted both
+attempts; every final draft passed clean and simply failed to kill its
+mutant (`passed_on_clean=True`, `killed_target=False`) -- not one was a
+broken test. 6 on `tenacity-stop` (all `constant`), 1 each on
+`cachetools-func` (`constant`), `validators-card` (`return_none`),
+`shortuuid-main` (`compare`).
+
+Full T1-T6 tables (per-target, assertion class, mechanical features,
+operator family, collateral kills, head-to-head), the breadth distribution,
+and the pooled keep rate are in README's Results section, replacing the
+2-target section entirely -- see the commit that follows this one.
+
+## Ninth and tenth instances of the same discipline: two figures in a delivered draft that did not match disk, both caught before paste
+
+The Results section for the completed run arrived as a separate drafted
+file (`results-section.md`), not written by the same process that produced
+the tables above, and it was audited against `results/` before being
+pasted into README rather than after -- the same discipline as the eight
+instrument bugs, applied to prose instead of code.
+
+**Ninth: the resource-vector table's arm B wall clock read "~12 min".**
+Summing `wall_clock_s` across all 12 targets in `results/baseline_arm_b.json`
+gives 399.0s = 6.65 min; `baseline.py`'s `run_arm()` starts the timer before
+the model-call loop and stops it after scoring, so this is the true
+end-to-end figure, not a partial measurement being rounded generously.
+Corrected to "~7 min", matching the round-to-nearest-minute convention the
+other two rows (A ~10 min, C ~20 min) already used correctly.
+
+**Tenth: "the `none` bin is empty across all 74 drafts" overstated a true
+claim about a smaller population.** The 53-mutant final disposition (44
+kept, 9 discarded) genuinely has zero `none`-class drafts on either side --
+but 2 of the 74 raw attempts were `none`-class on a first try
+(`tenacity-stop`'s M-22369c8f, `toolz-dicttoolz`'s M-917ca6a1), both
+superseded when a retry, given the real pytest output, produced a
+`value`-class kept test instead. Caught by checking assertion class across
+every attempt, not just the final one per mutant, after the "n=53 vs n=74"
+distinction from the ninth catch prompted checking whether the same
+draft-supplied text conflated the two populations elsewhere. It did. The
+same wrong "empty across all 74" framing had already been drafted into
+CLAUDE.md's hypothesis-outcome update before this check ran, and was
+corrected there too before being committed -- the error did not make it
+into two files by being caught in one and missed in the other.
+
+Both are the same failure mode this project has now caught nine and ten
+times: a plausible-sounding figure, arrived at by estimation or a
+population mix-up rather than a direct read of `results/`, checked before
+it could become the record rather than after.
+
+## Eleventh: a whole README subsection left describing the 2-target state after arm C completed
+
+`scripts/verify_targets.py`'s "one target does not reproduce
+deterministically" writeup, and the reproduction-cost estimate above it,
+were not on the step-2 grep list for superseded numbers (they don't contain
+the literal strings searched for) and were missed in the first pass. They
+said `aiofiles-temptypes` was "one of the eight targets arm C did not run"
+and contributed "0 of the 9 kills" -- both false once arm C's completed run
+covered it (8/8 official kills, folded into the pooled 44/53). Caught by
+reading the full README top to bottom for the numbers audit rather than
+trusting the step-2 grep list to be exhaustive; a literal string search
+finds only claims that repeat known superseded phrases, not claims that
+describe the same stale state in different words. Rewritten to report the
+quarantine as real history, the pre-arm-C-resume re-check that passed, and
+the standing fact that the gate may fire again on a future clone -- not
+smoothed over, but no longer describing a target as unrun that ran.
+
+**Twelfth, same pass:** the eight-instrument-bugs list's bug 8 said
+`calls_mutated_function` "would have read as a real near-zero rate on the
+target carrying 14 of 15 survivors" -- `15` was the 2-target partial-run
+denominator; `tenacity-stop`'s 14 mutants sit inside the pooled 53 now.
+Corrected to "14 of the 53 reachable survivors."

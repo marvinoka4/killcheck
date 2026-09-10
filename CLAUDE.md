@@ -329,20 +329,33 @@ gate-passing tests will be `none` or `existence`, meaning the gate selects
 differential probes rather than specifications. If the data contradicts
 this, say so plainly rather than reframing the hypothesis after the fact.
 
-**Outcome, on the completed sample: NOT supported, and it ran the other
-way.** Arm C completed 2 of its 10 targets (15 of 53 reachable survivors)
-before the run was stopped by an exhausted API budget -- not a random
-sample; see the arm C results entry in CHANGELOG.md. On those 15: kept 7
-`value` / 2 `existence` / 0 `none`; discarded 6 `value` / 0 `existence` / 0
-`none`. The `none` bin is empty on both sides of the keep decision, every
-discarded draft is `value` class, and both `existence` drafts were kept --
-the opposite of what was predicted above. 8 of 9 kills are call-phase
-`AssertionError`, not a crash-only oracle. n=15 with 6 discards cannot
-support a claim about assertion class in either direction; what it does
-rule out, on this sample, is the specific failure mode the hypothesis
-named. The hypothesis text above is left exactly as it was written before
-any test existed to classify -- a pre-registered hypothesis that was not
-supported is worth more than one quietly revised to match the data.
+**Outcome, on the full completed sample: NOT supported, and it ran the other
+way.** Arm C completed all 10 scoring targets and all 53 reachable survivors
+(74 drafts, 21 retries fired, 12 succeeded); see the arm C results entries in
+CHANGELOG.md. Final disposition: kept 38 `value` / 6 `existence` / 0 `none`;
+discarded 8 `value` / 1 `existence` / 0 `none` (44 kept, 9 discarded, 53
+total). The `none` bin is empty in that 53-mutant disposition -- no mutant's
+winning or final-losing draft was ever classified `none`. Two of the 74 raw
+attempts were `none`-class on a first try (`tenacity-stop`'s M-22369c8f,
+`toolz-dicttoolz`'s M-917ca6a1), both superseded once a retry, given the real
+pytest output, produced a `value`-class kept test instead -- so the bin is
+genuinely empty in the outcome that matters, but "empty across all 74 drafts"
+would overstate it, and an earlier draft of this section said exactly that
+before being caught auditing against `results/agent_arm_c.json`.
+
+The opposite of what was predicted above did not stop at the `none` bin.
+Kept and discarded drafts have nearly identical class mixes -- 86% `value`
+kept (38/44), 89% `value` discarded (8/9) -- so beyond ruling out the
+`none`/`existence` failure mode, the gate does not appear to select on
+assertion class at all. 35 of 44 kills are call-phase `AssertionError`, 9
+call-phase other exceptions -- no crash-only oracle. See README's Results
+section for the within-`value`-class mechanical-feature direction (more
+assertions, more literal comparisons, longer ASTs on the discarded side)
+that a flat class mix does not by itself explain, reported there as a
+direction on n=8, not a result. The hypothesis text above is left exactly as
+it was written before any test existed to classify -- a pre-registered
+hypothesis that was not supported is worth more than one quietly revised to
+match the data.
 
 **Limitation, binding on how arm A/B taxonomy numbers can be read: the
 classification unit and the scoring unit are not the same for arms A and
