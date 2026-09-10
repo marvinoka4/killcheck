@@ -967,3 +967,25 @@ reachable survivors to the pooled 53 arms A and B were scored against, so
 those pooled figures now carry a one-target reproducibility caveat, stated
 plainly in README rather than left for a reader to discover by re-running
 this themselves.
+
+## aiofiles-temptypes re-checked before resuming arm C: passed this time
+
+Before spending any of the topped-up API budget, the same three-serial
+determinism check that quarantined `aiofiles-temptypes` above was re-run
+against it alone, in isolation from the other 11 targets. This time it
+passed: survivor set identical across all three runs, 19 survivors each
+run -- the same size the third of the three earlier varying runs (19, 18,
+19) landed on, not re-run until it matched anything.
+
+No code changed between the quarantine and this re-check -- `engine.py`,
+`runner.py`, and the frozen scoring path are byte-identical to the commit
+that produced the 19/18/19 result. The prior non-determinism was real (the
+gate is not flaky; see "the determinism gate fired..." above for why a
+check firing twice for two different reasons is trusted, not dismissed),
+and this re-check does not explain or retract it -- it establishes that
+whatever caused it is not reproducing right now, on this run, on this
+machine. `aiofiles-temptypes` is unquarantined and scored as a normal
+target for the remainder of arm C on that basis: one clean pass after one
+quarantine, not three, because the instructed decision rule was "passes
+three times cleanly," which this run satisfied on its own three serial
+runs, not by combining with the earlier quarantine's runs.
