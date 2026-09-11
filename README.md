@@ -137,6 +137,15 @@ The identified comparison is **B vs C** — same one-test-per-call regime, same
 model, same token ceiling, differing only in the mutant hint, the gate, and one
 retry. That is 2 kills against 44.
 
+**44 of 53 is the primary metric, locked before any arm ran, and it is not
+adjusted here.** Alongside it, not instead of it: of the 9 mutants arm C
+missed, 7 are hand-labeled provably equivalent, each with a concrete
+argument in `results/equivalence_audit.json` — no test could ever kill
+them. Excluding those 7 from the denominator, arm C killed 44 of the 46
+reachable survivors a test could actually have killed (95.7%). See "Hand-
+labeled: 7 of the 9 are provably equivalent," below, for the arguments and
+the 2 genuinely killable misses.
+
 Arm A is shown for description only. It writes an unbounded batch per call, so
 a C-vs-A gap moves two mechanisms at once and identifies neither. Its official
 9/53 is also a floor rather than a capability measure: clean-pass is evaluated
@@ -454,49 +463,62 @@ result.
 
 ## Negative controls: the real gap in the checking, not the results
 
-Reader-reported. Every check this project built before this point is oriented
-"high is good, low prompts investigation" — the canary, the determinism gate,
-the byte-size canary above all fire on an unexpectedly *low* or *inconsistent*
-score. None of them would catch a bug that made a bad score look *good*,
-because a flattering result never prompts the debugging that catches things
-here. Two controls close that gap: cases engineered so the harness's answer
-should be extreme, in the direction that's normally never checked.
+Reported by Ahmet Özel (dev.to/ahmetozel), along with the sharper framing
+underneath it: pre-registering a prediction does not protect you when the
+instrument produces the number you predicted. Every check this project
+built before this point is oriented "high is good, low prompts
+investigation" — the canary, the determinism gate, the byte-size canary
+above all fire on an unexpectedly *low* or *inconsistent* score. None of
+them would catch a bug that made a bad score look *good*, because a
+flattering result never prompts the debugging that catches things here —
+and "expected: near zero," stated in advance, would not have caught it
+either, because a bug that lands exactly on the predicted number is the one
+pre-registration cannot distinguish from a correct result. Two controls
+close that gap: cases engineered so the harness's answer should be extreme,
+in the direction that's normally never checked.
 
-**Control A — a suite that cannot kill anything.** `cachetools-func`'s real
-`tests/` was replaced with a synthetic suite that imports the module, calls
-each of its five decorators once, and asserts nothing that constrains
-behaviour beyond existence (`assert decorated is not None`, `assert True`).
-Scored through the unmodified frozen runner: **7 of 51 killed (0.137), not
-zero.** Investigated rather than waved through, per the design constraint
-this control exists to satisfy: a near-zero score is also what a broken suite
-produces (bug 1, above), so three preconditions were checked *before* trusting
-the score at all — the synthetic suite passes on clean source, `coverage`
-confirms the module actually executed (37 lines), and both canaries still
-fire correctly on this target (the unparseable one does; the byte-size one is
-`N/A` here — `cachetools-func` has no same-length comparison operator, same
-finding as the operator-family investigation above). All three held. The 7
-kills are fully explained, not dismissed: all 7 are `return_none` mutants on
-the exact lines this suite's specific call pattern (`maxsize=2`, non-`None`,
-non-callable) actually executes — `assert x is not None` is a real, narrow
-detector for exactly that one operator class, which is a known, already-
-documented property of existence-class assertions in this project, not a new
-finding. **`kills_outside_return_none == 0`** is the number that actually
-matters here: zero `constant` or `compare` mutants — 34 of the 51 — were
-counted as detected by a suite that cannot distinguish them. The harness is
-not flattering itself; the test design just wasn't as vacuous as "near zero"
-implied, and that's reported rather than quietly re-run with a stricter
-suite until the number looked cleaner.
+### Control A: a suite that cannot kill anything — and the honest result was not zero
 
-**Control B — a mutant that does not exist.** The real arm C `draft_and_gate`
-loop, run against 5 fabricated original/mutated line pairs on
-`cachetools-func` — plausible-looking diffs, verified to match the real
-source's actual lines, but `Mutant.source` left as the genuine, untouched
-clean file throughout. A test cannot fail against a mutation that was never
-applied. Result: **0 of 5 kept, `killed_target=False` on all 10 attempts**
-(every fabricated mutant used its one retry). One fabricated mutant's first
-draft even failed clean-pass for real, retried, and still correctly scored
-`killed_target=False` on attempt 2 — the ordinary machinery worked exactly as
-designed, not degenerately.
+`cachetools-func`'s real `tests/` was replaced with a synthetic suite that
+imports the module, calls each of its five decorators once, and asserts
+nothing that constrains behaviour beyond existence (`assert decorated is
+not None`, `assert True`). Scored through the unmodified frozen runner:
+**7 of 51 killed (0.137), not zero.**
+
+Reported plainly rather than adjusted until it looked cleaner. Investigated
+rather than waved through, per the design constraint this control exists to
+satisfy: a near-zero score is also what a broken suite produces (bug 1,
+above), so three preconditions were checked *before* trusting the score at
+all — the synthetic suite passes on clean source, `coverage` confirms the
+module actually executed (37 lines), and both canaries still fire correctly
+on this target (the unparseable one does; the byte-size one is `N/A` here —
+`cachetools-func` has no same-length comparison operator, same finding as
+the operator-family investigation above). All three held.
+
+The 7 kills are fully explained, not dismissed: every one is a `return_none`
+mutant on a line this suite's specific call pattern (`maxsize=2`,
+non-`None`, non-callable) actually executes, and zero are `constant` or
+`compare` — 34 of the 51. `assert x is not None` is a narrow but genuine
+detector for exactly one operator class; it does not, and structurally
+cannot, detect anything else. **The calibration result worth stating
+plainly: a suite of "vacuous" tests has a non-zero floor, not a zero one,
+whenever it includes even a bare existence check.** That floor is
+predictable and fully attributable here — `kills_outside_return_none == 0`
+is the number that actually rules out the harness flattering itself — but
+it means "near zero" was the wrong intuition for what this specific suite
+would score, not a wrong result from the harness.
+
+### Control B: a mutant that does not exist
+
+The real arm C `draft_and_gate` loop, run against 5 fabricated
+original/mutated line pairs on `cachetools-func` — plausible-looking diffs,
+verified to match the real source's actual lines, but `Mutant.source` left
+as the genuine, untouched clean file throughout. A test cannot fail against
+a mutation that was never applied. Result: **0 of 5 kept,
+`killed_target=False` on all 10 attempts** (every fabricated mutant used its
+one retry). One fabricated mutant's first draft even failed clean-pass for
+real, retried, and still correctly scored `killed_target=False` on attempt
+2 — the ordinary machinery worked exactly as designed, not degenerately.
 
 Both controls, full records including every draft and gate outcome, are in
 `results/negative_controls.json`. Control A costs nothing (pure scoring, no

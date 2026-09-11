@@ -1124,11 +1124,8 @@ above.
 
 ## A reader-reported "tenth instrument bug" (stale .pyc execution): verified empirically, confirmed real, confirmed not currently exploitable, closed with a second canary
 
-[Credit intentionally left unfilled -- not written up with a name at the
-time this entry was first added; added retroactively per instruction to
-credit both this reader and the negative-control reader by name. Ask the
-user for both names and fill in here and in the entry above rather than
-leave either silently uncredited or invent a placeholder.]
+Reported by Vinh Nguyen (dev.to/vinhnguyenthanhdn) -- the pyc staleness
+mechanism and the byte-size-preserving canary gap.
 
 A reader raised a specific, mechanistic claim: CPython's default
 timestamp-based `.pyc` invalidation keys on source mtime (whole seconds) +
@@ -1240,10 +1237,18 @@ just this persistent directory.
 
 ## Reader-reported gap: no negative control, so a flattering bug in a case that never surprises us would never trigger debugging
 
-[Credit intentionally left unfilled -- the reader who reported this and the
-reader who reported the stale-.pyc gap above should both be named here by
-name, per instruction; ask the user for both and fill this in rather than
-leave it silently uncredited or invent a placeholder.]
+Reported by Ahmet Özel (dev.to/ahmetozel) -- the negative control itself,
+and the sharper framing underneath it: pre-registering a prediction does
+not protect you when the instrument produces the number you predicted.
+Pre-registration (used throughout this project -- the assertion-taxonomy
+hypothesis, the metric lock, this very control's own "expected: near zero"
+line above) guards against rationalizing a *surprising* result after the
+fact. It does nothing for a bug that happens to produce the *expected*
+result, because an expected result is exactly the one nobody goes back to
+re-derive. Control A is the concrete instance of this in this project's own
+run: had some bug made the vacuous suite's kill score land at a tidy 0.0
+instead of 0.137, the pre-registered "expected: near zero" would have been
+satisfied and the investigation below would never have happened.
 
 Every check this project had built up to this point -- the canary, the
 determinism gate, the byte-size canary -- fires on an unexpectedly *low* or
