@@ -1233,7 +1233,10 @@ despite this. It does mean a literal re-run of
 as opposed to a fresh clone elsewhere, would currently fail
 `dotenv-variables`' canary check at the `verify_clean` step before ever
 reaching scoring. Reported, not fixed -- out of scope for this
-investigation, and not touched.
+investigation, and not touched. **Fixed properly a few entries down** ("Frozen
+core reopened a third time"), once it turned out this would also break a
+literal reproduction following README's own documented steps in order, not
+just this persistent directory.
 
 ## Reader-reported gap: no negative control, so a flattering bug in a case that never surprises us would never trigger debugging
 
@@ -1359,3 +1362,78 @@ alongside it, not instead of it. Written to `results/equivalence_audit.json`
 with full reasoning per mutant; new README subsection "Hand-labeled: 7 of
 the 9 are provably equivalent"; Limitations' "20-item stratified audit...
 did not run" line updated to describe what actually ran instead.
+
+## Frozen core reopened a third time: verify_clean() was sensitive to its caller's on-disk location, not just dotenv-variables' own suite
+
+The `.env`-leak finding surfaced during the pyc investigation, above, turned
+out bigger than first scoped. Investigated properly rather than fixed on
+the spot, per instruction to say so before touching the frozen core.
+
+**Root cause was not `cwd`.** `find_dotenv()` (default `usecwd=False`)
+never calls `os.getcwd()` in the code path this hits -- confirmed by
+reading `dotenv/main.py` directly, not guessed. It walks the Python call
+stack to the first real (non-`dotenv/main.py`) calling frame and searches
+upward from *that frame's file's own path on disk*. For
+`test_is_interactive.py`, that frame is the test file itself, physically
+located at `targets/python-dotenv/tests/test_is_interactive.py` -- three
+directories below this repo's own `.env`. This is also why the test's own
+`monkeypatch.chdir(tmp_path)` doesn't help it: cwd is never consulted on
+this path. "Running the check from a neutral cwd" -- one of the two fixes
+named when this was assigned -- would not actually have worked; the file
+itself has to physically live somewhere with no `.env` in its ancestry, not
+just the process's working directory.
+
+**Bigger scope than first reported.** The originally-named symptom was
+`scripts/verify_targets.py`'s canary loop calling `verify_clean()` directly
+against `project_root`. Checked whether `score_target()` -- frozen,
+`runner.py`, called by `determinism_check()` and everywhere else scoring
+happens -- has the same exposure via its own internal `verify_clean()`
+call. It does: confirmed empirically that `score_target()` called directly
+against `dotenv-variables` fails with the identical error, independent of
+`scripts/verify_targets.py`'s own separate call. A fix scoped to only the
+named call site would have left `determinism_check()` failing one step
+later on the same target, in the same run. Also confirmed this isn't
+specific to this one persistent working directory: README's own documented
+reproduction steps create `.env` (step 0, before any numbered step) before
+step 4 runs `verify_targets.py`, so a literal reproduction from a genuinely
+fresh clone, followed exactly in order, would hit this too -- not just this
+session's leftover state.
+
+**The fix: isolate `verify_clean()` itself, once, in `runner.py`.**
+Copies `project_root` into a `tempfile.TemporaryDirectory()` first (the
+same `ignore_patterns` used by every other copytree call in this codebase)
+and runs the existing test command against the copy instead of
+`project_root` directly. Fixing `verify_clean()` itself, rather than each
+caller separately, means `scripts/verify_targets.py`'s canary loop,
+`scripts/negative_controls.py`'s `control_a`, and `score_target()`'s own
+internal call all inherit the fix from one change, with no other file
+touched. This is not a mutation-isolation change -- nothing here is
+mutated -- it is a location-isolation fix, closing a gap in copytree
+coverage that existed only because "nothing is mutated here" made a copy
+seem unnecessary when the check was first written.
+
+**Verified the fix changes no ground-truth verdict, before trusting it.**
+`scripts_demo.py` reconfirmed `kill_score=0.0952` unchanged. Ran the full
+`scripts/verify_targets.py` across all 12 targets against the fixed
+`runner.py` and diffed every per-mutant record (`mutant_id`, `operator`,
+`lineno`, `outcome`, `reachable`) plus every aggregate figure against the
+already-committed `results/target_verification.json`: zero mismatches,
+`git diff --stat` on the rewritten file shows no changes at all -- byte-for-
+byte identical, `dotenv-variables` included, which previously could not
+even be checked this way. `dotenv-variables`' canary, byte-size canary, and
+determinism check all now pass where they previously either crashed
+(`verify_clean` direct) or were never reachable (blocked by the crash
+upstream).
+
+**On invariant 5.** This changes `runner.py`, the frozen core, which the
+letter of invariant 5 says requires re-running both arms. Reopened
+deliberately rather than silently: this specific change alters no kill or
+survive verdict for any of the 455 mutants, on any target -- verified
+above, not assumed -- so arm A and arm B's official numbers, which depend
+only on `target_verification.json`'s content, are unaffected by
+construction. Both arms were not formally re-run. Recorded here plainly so
+the decision is visible, not smoothed over: the same discipline this
+project has applied to every other frozen-core reopening (workers=4->1,
+`__future__`-import hoisting) is applied here too, including writing down
+what would have needed re-running and why the verification step above
+substitutes for it rather than skips it.

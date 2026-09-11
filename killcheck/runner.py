@@ -90,8 +90,33 @@ def _run(cmd: list[str], cwd: Path, timeout: int) -> tuple[int, str]:
 
 
 def verify_clean(target: Target, timeout: int = 120) -> None:
-    """The suite must pass on unmutated code, or the whole run is meaningless."""
-    code, output = _run(target.test_command, target.project_root, timeout)
+    """The suite must pass on unmutated code, or the whole run is meaningless.
+
+    Runs against a tempdir copy of project_root, not project_root itself --
+    not for isolation from mutation (nothing is mutated here), but because
+    at least one real target's suite is sensitive to the *on-disk location*
+    of its own test files. `dotenv-variables`' find_dotenv() (default
+    usecwd=False) does not consult the process's cwd at all: it walks the
+    Python call stack to the first real calling frame and searches upward
+    from that frame's file's actual path on disk. Called directly against
+    project_root, that walk starts inside this repo's own directory tree
+    and finds this repo's own .env two directories up -- a false positive
+    with nothing to do with the target module. Every other copytree call in
+    this codebase already moves the scored files outside this repo's tree
+    before running anything; this one didn't, because nothing here is
+    mutated and a copy seemed unnecessary. Confirmed empirically (not
+    reasoned about) that copying first resolves it, and that every other
+    target's clean-pass verdict is unaffected -- see CHANGELOG.md."""
+    with tempfile.TemporaryDirectory(prefix="killcheck-verify-clean-") as tmp:
+        work = Path(tmp) / "project"
+        shutil.copytree(
+            target.project_root,
+            work,
+            ignore=shutil.ignore_patterns(
+                "__pycache__", ".git", ".pytest_cache", "*.pyc", ".venv", "node_modules"
+            ),
+        )
+        code, output = _run(target.test_command, work, timeout)
     if code != 0:
         raise RuntimeError(
             f"[{target.name}] test suite does not pass on clean code "
