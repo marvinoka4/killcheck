@@ -48,11 +48,14 @@ target (mutant_id, operator, outcome, reachable) plus the aggregate counts,
 so downstream scripts can slice however they need without recomputing
 anything. Exits non-zero if any target fails its canary.
 """
+import ast
+import io
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
+import tokenize
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -113,6 +116,86 @@ def canary_check(target: Target, timeout: int = 30) -> tuple[bool, str]:
     if result.outcome == "survived":
         return False, "suite PASSED on unimportable source -- mutations are not reaching this target"
     return True, f"suite correctly reported '{result.outcome}' on unimportable source"
+
+
+# CPython's default timestamp-based .pyc invalidation keys on source mtime
+# (whole seconds) + source size. GARBAGE_SOURCE above has a different byte
+# size than the real module, which itself invalidates any stale .pyc header
+# -- so the canary above cannot detect a stale-bytecode-executes-instead-of
+# the-mutation failure mode by construction, even though ignore_patterns
+# already strips __pycache__/*.pyc from every tempdir copy this pipeline
+# makes (see the runner.py comment above COPY_IGNORE's use, and CHANGELOG.md
+# for the empirical check that confirmed this both ways: a synthetic
+# reproducer proved CPython really is fooled by a matching mtime+size, and a
+# real copytree from a target with genuine committed .pyc files produced
+# zero .pyc in the destination). This canary closes that gap: same total
+# file byte length as the real module, syntactically valid (unlike
+# GARBAGE_SOURCE), a single same-length comparison-operator flip
+# (== <-> !=, < <-> >, <= <-> >=) so a stale-but-header-matching .pyc would
+# have to be silently substituted for this exact source to go undetected.
+_SAME_LEN_FLIPS = [("==", "!="), ("!=", "=="), ("<=", ">="), (">=", "<="), ("<", ">"), (">", "<")]
+
+
+def byte_size_preserving_mutation(source: str) -> tuple[str, str] | None:
+    """Return (mutated_source, description) for the first same-length
+    comparison-operator flip found via `tokenize` (so an occurrence inside a
+    string or comment is never touched -- tokenize already classifies those
+    separately from OP tokens, which is the actual guarantee here, not the
+    parse check below), or None if the module contains no such operator at
+    all. The parse check is a second, independent guard against a
+    line-continuation edge case, not a substitute for tokenize's own
+    string/comment handling."""
+    for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+        if tok.type != tokenize.OP:
+            continue
+        for orig, flipped in _SAME_LEN_FLIPS:
+            if tok.string != orig:
+                continue
+            lines = source.splitlines(keepends=True)
+            row, col = tok.start
+            line = lines[row - 1]
+            new_line = line[: col] + flipped + line[tok.end[1] :]
+            if len(new_line) != len(line):
+                continue
+            lines[row - 1] = new_line
+            candidate = "".join(lines)
+            if len(candidate) != len(source):
+                continue
+            try:
+                ast.parse(candidate)
+            except SyntaxError:
+                continue
+            return candidate, f"{orig} -> {flipped} at line {row}, col {col}"
+    return None
+
+
+def byte_size_canary_check(target: Target, timeout: int = 30) -> tuple[str, str]:
+    """Return (status, detail). status is "PASS" (the suite detected the
+    same-byte-length mutation -- no stale-bytecode substitution occurred),
+    "FAIL" (the suite reported the mutation as survived -- exactly the
+    failure mode this check exists to catch), or "N/A" (this target's
+    module has no comparison operator eligible for a same-length flip;
+    4 of 12 targets in this eval set are N/A, not skipped silently)."""
+    source = (target.project_root / target.module_path).read_text()
+    result = byte_size_preserving_mutation(source)
+    if result is None:
+        return "N/A", "no same-length comparison operator found in this module"
+    candidate, desc = result
+    fake = Mutant(
+        id="M-byte-canary",
+        module=str(target.module_path),
+        lineno=0,
+        col_offset=0,
+        operator="byte-canary",
+        description=desc,
+        original_line="",
+        mutated_line="",
+        source=candidate,
+    )
+    result_ = _evaluate_one(target, fake, timeout)
+    if result_.outcome == "survived":
+        return "FAIL", f"suite PASSED on a same-byte-length mutation ({desc}) -- possible stale-bytecode execution"
+    return "PASS", f"suite correctly reported '{result_.outcome}' on a same-byte-length mutation ({desc})"
 
 
 def determinism_check(target: Target, timeout: int = 30, runs: int = 3) -> tuple[bool, str, list[dict]]:
@@ -241,6 +324,22 @@ def main() -> int:
         print()
         print(f"CANARY FAILED for: {', '.join(canary_failures)}")
         print("Do not trust kill scores for these targets until fixed. Aborting before scoring.")
+        return 1
+
+    print()
+    print("=== byte-size-preserving canary (catches stale-bytecode substitution the garbage-source canary cannot) ===")
+    byte_canary_failures = []
+    for t in targets:
+        target = Target.from_dict(t, ROOT)
+        status, detail = byte_size_canary_check(target)
+        print(f"{t['name']:25s} {status:4s}  {detail}")
+        if status == "FAIL":
+            byte_canary_failures.append(t["name"])
+
+    if byte_canary_failures:
+        print()
+        print(f"BYTE-SIZE CANARY FAILED for: {', '.join(byte_canary_failures)}")
+        print("A same-byte-length mutation went undetected -- possible stale .pyc execution. Aborting before scoring.")
         return 1
 
     print()

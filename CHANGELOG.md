@@ -1121,3 +1121,110 @@ inside a summary table is exactly the shape of error that reading a
 document catches least reliably, and auditing it against disk catches
 directly. Fixed in the summary table; see the "Arm C complete" row entry
 above.
+
+## A reader-reported "tenth instrument bug" (stale .pyc execution): verified empirically, confirmed real, confirmed not currently exploitable, closed with a second canary
+
+A reader raised a specific, mechanistic claim: CPython's default
+timestamp-based `.pyc` invalidation keys on source mtime (whole seconds) +
+source size, so a mutation that happens to land on the same file size and
+the same whole-second mtime as an existing `.pyc`'s header could execute the
+stale bytecode instead of the mutated source -- invisible to the existing
+canary (unparseable garbage has a different size, which invalidates any
+`.pyc` regardless) and invisible to the determinism gate (staleness is
+itself deterministic). Investigated per instruction: verify empirically, do
+not reason about it. Every step below actually ran.
+
+**The underlying CPython behavior is real.** A minimal synthetic
+reproducer -- compile a `.pyc` from `a == b`, overwrite the source with
+byte-size-identical `a != b`, force the mtime back to the exact whole
+second the `.pyc` was compiled at, import fresh -- executed the *original*
+`a == b` semantics from stale bytecode, not the `a != b` on disk. This
+reproduced on the first attempt. The threat model is not hypothetical.
+
+**It does not currently reach any scored result in this codebase.** Four
+distinct places build a scored tempdir copy -- `runner.py`'s
+`_evaluate_one` (frozen), `agent.py`'s `gate_check` and
+`official_batch_rescore` (two call sites, including a nested per-mutant
+copy taken from an *already-executed* outer copy, which does generate a
+real `.pyc` in that outer copy before the nested copytree runs), and
+`baseline.py`'s `score_with_added_tests` (which delegates its actual
+per-mutant scoring back to `_evaluate_one`, inheriting its protection
+rather than needing its own). All four exclude `"__pycache__"` and
+`"*.pyc"` via `shutil.ignore_patterns`, read directly from source, not
+inferred. Proven, not just read: copying a real target's checkout (19
+committed `.pyc` files) through the exact `ignore_patterns` call produced
+0 `.pyc` in the destination and 47 real source files, confirming the copy
+itself ran rather than silently no-op'ing. Every mutant additionally gets
+its own brand-new `tempfile.TemporaryDirectory()` -- never reused across
+mutants -- so there is no window for a `.pyc` compiled for one mutant's
+source to persist into another's. Checked separately for the three
+src-layout targets (`cachetools-func`, `dotenv-variables`,
+`aiofiles-temptypes`, all built with `-o pythonpath=src`): a probe import
+resolved to the tempdir copy's own path, not the original checkout's, and
+zero `.pyc` were reachable there either. `PYTHONPYCACHEPREFIX` /
+`sys.pycache_prefix` are unset anywhere in this environment or repo, so
+there is no fixed external cache location redirecting compiled bytecode
+outside the per-mutant tempdir either.
+
+**An accidental second layer, not one to rely on.** `engine.py`'s mutants
+are generated via full-file `ast.unparse()`, which renormalises formatting
+throughout the whole file, not just the mutated line -- so `mutant.source`
+never has the same total byte length as the raw checked-out original
+(confirmed: 0 of all 455 mutants across the eval set do). Even if the
+`ignore_patterns` exclusion were somehow bypassed, an accidental size match
+between a fresh mutant and a stale `.pyc` header would be unlikely by
+construction of this specific engine. This is incidental, not designed,
+and a different mutation engine (a surgical single-line text edit instead
+of full-file regeneration) would not have this property -- it is not
+something to lean on in place of the actual exclusion.
+
+**Closed with a second canary, per instruction, regardless of the
+(negative) outcome above.** The existing canary's `GARBAGE_SOURCE` cannot
+detect stale-bytecode substitution by construction: unparseable, differently
+sized, and would invalidate any `.pyc` on that basis alone even if one were
+present. Added `scripts/verify_targets.py`'s `byte_size_canary_check`:
+locate a same-length comparison-operator flip (`==`/`!=`, `<`/`>`, `<=`/`>=`)
+via `tokenize` (so an occurrence inside a string or comment is never
+touched), splice it in directly against the raw source (not through
+`ast.unparse`, so total file byte length is trivially preserved), and
+assert the suite reports it as not-survived. Ran against all 12 targets:
+8 have an eligible operator and all 8 pass (correctly detected); 4
+(`cachetools-func`, `natsort-ns-enum`, `voluptuous-error`,
+`boltons-typeutils`) have no same-length comparison operator anywhere in
+their module and are reported `N/A`, not silently skipped or forced to a
+pass. Wired into `main()`'s canary section as a standing check: a future
+`FAIL` here aborts before scoring, exactly like the existing canary.
+
+**A comment-only edit to the frozen `runner.py`, not a behavior change.**
+Added a comment directly above the `ignore_patterns` call explaining it is
+load-bearing for correctness, per the instruction that a line that turns
+out to be load-bearing is exactly the kind of thing that gets "cleaned up"
+later by someone who doesn't know. The `ignore_patterns(...)` call itself
+is byte-for-byte unchanged -- CLAUDE.md invariant 5 requires re-running both
+arms only when the measuring instrument's *behavior* changes, and this
+changes none. Also added `scripts/test_pyc_exclusion.py`, a regression test
+that exercises the real, unmodified `_evaluate_one` (via a `shutil.copytree`
+spy from inside `runner.py`'s own namespace, not a reimplementation of its
+copytree call) and asserts zero `.pyc` reach the tempdir across all 12
+targets' real committed bytecode. Verified the test itself has teeth before
+trusting it: a deliberately broken variant of `_evaluate_one` with no
+`ignore_patterns` at all let 19 real `.pyc` files through on the same
+target -- the test would have caught exactly this.
+
+**A separate, unrelated finding surfaced by this investigation:** calling
+`verify_clean()` directly against `dotenv-variables`' `project_root` (as
+`scripts/verify_targets.py`'s canary loop does, before any tempdir copy
+exists) currently fails in this exact working directory, because this
+repo's own `.env` file sits two directories above
+`targets/python-dotenv/`, and `find_dotenv()`'s upward search in
+`test_is_interactive.py` walks straight into it. Confirmed this does *not*
+affect any actual scored result: `_evaluate_one` and every other copytree
+call run inside a `tempfile.TemporaryDirectory()` well outside this repo's
+directory tree, where `find_dotenv()`'s upward search cannot reach our
+`.env` -- the byte-size canary above scored `dotenv-variables` correctly
+despite this. It does mean a literal re-run of
+`python3 scripts/verify_targets.py` from this persistent working directory,
+as opposed to a fresh clone elsewhere, would currently fail
+`dotenv-variables`' canary check at the `verify_clean` step before ever
+reaching scoring. Reported, not fixed -- out of scope for this
+investigation, and not touched.

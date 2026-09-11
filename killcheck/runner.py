@@ -105,6 +105,21 @@ def _evaluate_one(target: Target, mutant: Mutant, timeout: int) -> MutantResult:
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="killcheck-") as tmp:
         work = Path(tmp) / "project"
+        # "__pycache__"/"*.pyc" here are load-bearing for correctness, not
+        # tidiness: CPython's default timestamp-based .pyc invalidation keys
+        # on source mtime (whole seconds) + size, and every target checkout
+        # in this eval set has real committed .pyc files from its own
+        # earlier clean-suite runs. Without this exclusion, a mutation whose
+        # rewritten module happens to land on the same size and the same
+        # whole-second mtime as an existing .pyc's header would import the
+        # stale bytecode instead of the mutated source -- confirmed
+        # empirically, both that CPython really is fooled by a matching
+        # header (a synthetic reproducer) and that this copytree call
+        # produces zero .pyc in the destination even when the source has
+        # dozens (see CHANGELOG.md and scripts/test_pyc_exclusion.py). Do
+        # not remove this exclusion as a cleanup; if it's ever removed,
+        # scripts/verify_targets.py's byte-size-preserving canary is the
+        # standing check that would catch the regression.
         shutil.copytree(
             target.project_root,
             work,
