@@ -1,0 +1,154 @@
+{
+  "control_a": {
+    "target": "cachetools-func",
+    "checks": {
+      "clean_pass": true,
+      "executed_lines": 37,
+      "module_actually_executed": true,
+      "unparseable_canary": {
+        "passed": true,
+        "detail": "suite correctly reported 'killed' on unimportable source"
+      },
+      "byte_size_canary": {
+        "status": "N/A",
+        "detail": "no same-length comparison operator found in this module"
+      }
+    },
+    "preconditions_ok": true,
+    "total_mutants": 51,
+    "killed": 7,
+    "kill_score": 0.1373,
+    "outcome_counts": {
+      "survived": 44,
+      "killed": 7
+    },
+    "mutants_by_operator": {
+      "constant": 29,
+      "return_none": 17,
+      "compare": 5
+    },
+    "killed_by_operator": {
+      "return_none": 7
+    },
+    "kills_outside_return_none": 0,
+    "near_zero": false,
+    "near_zero_threshold": 0.1,
+    "explanation": "This suite asserts `is not None` on every decorated function, which is a real, narrow existence check against exactly one operator class (return_none) on whichever lines this specific call pattern (maxsize=2, non-None, non-callable) actually executes -- not a harness bug. kills_outside_return_none == 0 is the load-bearing number here, not kill_score alone: it confirms no constant or compare mutant is being counted as detected by an assertion that cannot possibly distinguish them.",
+    "wall_clock_s": 21.6
+  },
+  "control_b": {
+    "target": "cachetools-func",
+    "n_fabricated": 5,
+    "any_kept": false,
+    "PASS": true,
+    "records": [
+      {
+        "mutant_id": "M-fabricated-L35",
+        "lineno": 35,
+        "fabricated_original_line": "def fifo_cache(maxsize=128, typed=False):",
+        "fabricated_mutated_line": "def fifo_cache(maxsize=256, typed=False):",
+        "kept": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_fifo_cache_default_maxsize_is_128"
+          },
+          {
+            "attempt": 2,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_fifo_cache_default_maxsize_is_128"
+          }
+        ]
+      },
+      {
+        "mutant_id": "M-fabricated-L41",
+        "lineno": 41,
+        "fabricated_original_line": "    if maxsize is None:",
+        "fabricated_mutated_line": "    if maxsize is not None:",
+        "kept": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_fifo_cache_none_maxsize_is_unbound"
+          },
+          {
+            "attempt": 2,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_fifo_cache_callable_maxsize_returns_wrapped_function"
+          }
+        ]
+      },
+      {
+        "mutant_id": "M-fabricated-L63",
+        "lineno": 63,
+        "fabricated_original_line": "def lru_cache(maxsize=128, typed=False):",
+        "fabricated_mutated_line": "def lru_cache(maxsize=127, typed=False):",
+        "kept": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_lru_cache_default_maxsize_is_128"
+          },
+          {
+            "attempt": 2,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_lru_cache_default_maxsize_is_128"
+          }
+        ]
+      },
+      {
+        "mutant_id": "M-fabricated-L91",
+        "lineno": 91,
+        "fabricated_original_line": "def ttl_cache(maxsize=128, ttl=600, timer=time.monotonic, typed=False):",
+        "fabricated_mutated_line": "def ttl_cache(maxsize=128, ttl=601, timer=time.monotonic, typed=False):",
+        "kept": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "passed_on_clean": false,
+            "killed_target": false,
+            "test_name": "test_ttl_cache_default_ttl"
+          },
+          {
+            "attempt": 2,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_ttl_cache_default_ttl"
+          }
+        ]
+      },
+      {
+        "mutant_id": "M-fabricated-L77",
+        "lineno": 77,
+        "fabricated_original_line": "def rr_cache(maxsize=128, choice=random.choice, typed=False):",
+        "fabricated_mutated_line": "def rr_cache(maxsize=129, choice=random.choice, typed=False):",
+        "kept": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_rr_cache_default_maxsize_is_128"
+          },
+          {
+            "attempt": 2,
+            "passed_on_clean": true,
+            "killed_target": false,
+            "test_name": "test_rr_cache_default_maxsize_is_128"
+          }
+        ]
+      }
+    ],
+    "run_id": "negctrl-20260911-120111",
+    "wall_clock_s": null
+  }
+}

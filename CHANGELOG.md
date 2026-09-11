@@ -1124,6 +1124,12 @@ above.
 
 ## A reader-reported "tenth instrument bug" (stale .pyc execution): verified empirically, confirmed real, confirmed not currently exploitable, closed with a second canary
 
+[Credit intentionally left unfilled -- not written up with a name at the
+time this entry was first added; added retroactively per instruction to
+credit both this reader and the negative-control reader by name. Ask the
+user for both names and fill in here and in the entry above rather than
+leave either silently uncredited or invent a placeholder.]
+
 A reader raised a specific, mechanistic claim: CPython's default
 timestamp-based `.pyc` invalidation keys on source mtime (whole seconds) +
 source size, so a mutation that happens to land on the same file size and
@@ -1228,3 +1234,61 @@ as opposed to a fresh clone elsewhere, would currently fail
 `dotenv-variables`' canary check at the `verify_clean` step before ever
 reaching scoring. Reported, not fixed -- out of scope for this
 investigation, and not touched.
+
+## Reader-reported gap: no negative control, so a flattering bug in a case that never surprises us would never trigger debugging
+
+[Credit intentionally left unfilled -- the reader who reported this and the
+reader who reported the stale-.pyc gap above should both be named here by
+name, per instruction; ask the user for both and fill this in rather than
+leave it silently uncredited or invent a placeholder.]
+
+Every check this project had built up to this point -- the canary, the
+determinism gate, the byte-size canary -- fires on an unexpectedly *low* or
+*inconsistent* score. None of them would catch a bug that made a bad score
+look *good*: a flattering result never gets investigated, which is the
+entire mechanism the "eight instrument bugs" section above already
+identified for why bugs survive, applied one level up to the checks
+themselves. Built `scripts/negative_controls.py`, two cases engineered so
+the harness's answer should be extreme in the direction nothing else
+checks.
+
+**Control A -- a suite that cannot kill anything.** `cachetools-func`'s real
+suite replaced with one that imports the module, calls all five decorators
+once, and asserts nothing beyond existence. Scored through the unmodified
+frozen `score_target()`: 7 of 51 killed (0.137), not zero. Investigated
+rather than accepted, per the control's own design constraint (a near-zero
+score is also what a broken suite produces -- see bug 1). Three
+preconditions checked first: clean-pass (true), `coverage`-confirmed actual
+execution (37 lines), both canaries still fire correctly on this target
+(unparseable: yes; byte-size: `N/A`, `cachetools-func` has no same-length
+comparison operator, consistent with the earlier byte-size-canary
+investigation). All three held, so the 7 kills were investigated rather
+than dismissed: all 7 are `return_none` mutants on lines this suite's exact
+call pattern (`maxsize=2`, non-`None`, non-callable) actually executes --
+`assert x is not None` is a real, narrow detector for exactly that operator
+class, a property already documented for existence-class assertions
+elsewhere in this project, not a new mechanism. `kills_outside_return_none
+== 0`: zero `constant` or `compare` mutants, 34 of the 51, were counted as
+detected by a suite that structurally cannot distinguish them. Not a
+harness bug -- the test design was less vacuous than "near zero" implied,
+reported as found rather than quietly tightened until the number looked
+cleaner.
+
+**Control B -- a mutant that does not exist.** The real arm C
+`draft_and_gate` loop run against 5 fabricated original/mutated line pairs
+on `cachetools-func`, verified to match the real source, with
+`Mutant.source` left as the genuine unmodified clean file throughout. 0 of
+5 kept, `killed_target=False` on all 10 attempts (every fabricated mutant
+used its retry). One fabricated mutant's attempt 1 failed clean-pass for a
+real, unrelated reason, retried, and attempt 2 still correctly scored
+`killed_target=False` -- the ordinary retry machinery engaged normally
+inside the control rather than needing to be special-cased around it.
+
+Both written to `results/negative_controls.json` with full per-attempt
+records, not just the aggregate. Control A is free (no model calls, ~20s)
+and is documented as an additional manual step in README rather than wired
+into `scripts/verify_targets.py`'s automatic run, alongside control B (5-10
+real model calls, which could never be wired into a step this project
+promises is free regardless of speed). See README's new "Negative
+controls" section, inserted between the instrument-bugs section and
+Reproducing this.

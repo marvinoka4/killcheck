@@ -399,6 +399,63 @@ result.
 
 ---
 
+## Negative controls: the real gap in the checking, not the results
+
+Reader-reported. Every check this project built before this point is oriented
+"high is good, low prompts investigation" — the canary, the determinism gate,
+the byte-size canary above all fire on an unexpectedly *low* or *inconsistent*
+score. None of them would catch a bug that made a bad score look *good*,
+because a flattering result never prompts the debugging that catches things
+here. Two controls close that gap: cases engineered so the harness's answer
+should be extreme, in the direction that's normally never checked.
+
+**Control A — a suite that cannot kill anything.** `cachetools-func`'s real
+`tests/` was replaced with a synthetic suite that imports the module, calls
+each of its five decorators once, and asserts nothing that constrains
+behaviour beyond existence (`assert decorated is not None`, `assert True`).
+Scored through the unmodified frozen runner: **7 of 51 killed (0.137), not
+zero.** Investigated rather than waved through, per the design constraint
+this control exists to satisfy: a near-zero score is also what a broken suite
+produces (bug 1, above), so three preconditions were checked *before* trusting
+the score at all — the synthetic suite passes on clean source, `coverage`
+confirms the module actually executed (37 lines), and both canaries still
+fire correctly on this target (the unparseable one does; the byte-size one is
+`N/A` here — `cachetools-func` has no same-length comparison operator, same
+finding as the operator-family investigation above). All three held. The 7
+kills are fully explained, not dismissed: all 7 are `return_none` mutants on
+the exact lines this suite's specific call pattern (`maxsize=2`, non-`None`,
+non-callable) actually executes — `assert x is not None` is a real, narrow
+detector for exactly that one operator class, which is a known, already-
+documented property of existence-class assertions in this project, not a new
+finding. **`kills_outside_return_none == 0`** is the number that actually
+matters here: zero `constant` or `compare` mutants — 34 of the 51 — were
+counted as detected by a suite that cannot distinguish them. The harness is
+not flattering itself; the test design just wasn't as vacuous as "near zero"
+implied, and that's reported rather than quietly re-run with a stricter
+suite until the number looked cleaner.
+
+**Control B — a mutant that does not exist.** The real arm C `draft_and_gate`
+loop, run against 5 fabricated original/mutated line pairs on
+`cachetools-func` — plausible-looking diffs, verified to match the real
+source's actual lines, but `Mutant.source` left as the genuine, untouched
+clean file throughout. A test cannot fail against a mutation that was never
+applied. Result: **0 of 5 kept, `killed_target=False` on all 10 attempts**
+(every fabricated mutant used its one retry). One fabricated mutant's first
+draft even failed clean-pass for real, retried, and still correctly scored
+`killed_target=False` on attempt 2 — the ordinary machinery worked exactly as
+designed, not degenerately.
+
+Both controls, full records including every draft and gate outcome, are in
+`results/negative_controls.json`. Control A costs nothing (pure scoring, no
+model calls) and runs in about 20 seconds. Control B makes 5-10 real model
+calls and is deliberately **not** wired into `scripts/verify_targets.py`'s
+automatic run — this project's reproduction steps promise the harness-
+verification steps are free, and control B would break that promise on every
+invocation. Run both together: `python3 scripts/negative_controls.py` (see
+Reproducing this, below).
+
+---
+
 ## Reproducing this
 
 **Prerequisites:** Python 3.11+ (developed on 3.14, macOS). Roughly 2 GB disk
@@ -446,11 +503,15 @@ cp .env.example .env        # then add a real ANTHROPIC_API_KEY
 7. **`python3 scripts/classify_tests.py`** — assertion taxonomy over all
    generated tests. **`python3 scripts/ablate.py`** — reconstructs the weaker
    keep-rules from arm C's draft log without additional calls.
+8. **`python3 scripts/negative_controls.py`** — the two negative controls
+   described above. Writes `results/negative_controls.json`. Control A is
+   free and takes about 20 seconds; control B makes 5-10 real model calls
+   and is not run automatically by any other step, for exactly that reason.
 
-**Approximate cost of a full reproduction:** the harness steps (1–4) are free.
-The three arms together made 137 model calls for this submission at Sonnet
-rates (10 arm A, 53 arm B, 74 arm C including retries). Expect a few US
-dollars total.
+**Approximate cost of a full reproduction:** the harness steps (1–4) and
+control A within step 8 are free. The three arms together made 137 model
+calls for this submission at Sonnet rates (10 arm A, 53 arm B, 74 arm C
+including retries); control B adds 5-10 more. Expect a few US dollars total.
 
 ### One target reproduced non-deterministically once, then passed on re-check
 
