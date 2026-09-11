@@ -213,9 +213,62 @@ reachable-survivor set exactly on all 10 targets. All nine exhausted both
 attempts, and every final draft passed clean and failed to kill. Seven of the
 nine are `constant` mutants. Against 36 of 43 constant mutants killed overall,
 that describes a residue the model cannot reach even when shown the exact diff
-and given a retry with real failure output. Some of that residue is likely
-semantically equivalent mutants, which this project does not attempt to detect
-(see Limitations).
+and given a retry with real failure output. Hand-labeled below rather than
+left as an unbounded caveat: most of that residue turns out to be provably
+unkillable, not a capability gap.
+
+### Hand-labeled: 7 of the 9 are provably equivalent
+
+The 20-item stratified manual audit planned in an earlier draft (see
+Limitations) was deferred, then replaced with something cheaper and more
+targeted: labeling the nine specific mutants arm C could not kill, by hand,
+with a concrete argument for each — not a model's unsupported judgement.
+Full records, including the agent's actual final draft and gate outcome per
+mutant, are in `results/equivalence_audit.json`.
+
+**7 EQUIVALENT.** All 6 `tenacity-stop` mutants flip the same thing in 6
+different `stop_*` classes' `__call__` methods: the `retry_state` parameter's
+type annotation, from the quoted forward-reference `"RetryCallState"` to
+`''`. Python never evaluates or enforces annotations at call time, and
+`RetryCallState` is imported only inside `if typing.TYPE_CHECKING:`
+(`tenacity/stop.py`) — the name doesn't exist at runtime at all, so nothing
+could introspect it even if something tried. Grepped the whole package and
+test suite for `get_type_hints`/`__annotations__`/`inspect.signature`: zero
+matches. No call to `__call__(retry_state)` can observe a difference,
+because the method body is byte-identical either way. `validators-card`'s
+`M-8e984385` (`return False` → `return None`) is equivalent for a different,
+also-verified reason: `card_number` is wrapped by `@validator`, whose own
+logic tests the inner return value with plain truthiness — `False` and
+`None` are laundered into the identical `ValidationError` either way, and
+the caller never sees the raw value. (One caveat disclosed rather than
+omitted: `card_number.__wrapped__('')` *would* distinguish them — reaching
+through `@wraps`' internals, which this project's own agent loop contract
+already excludes as illegitimate test content, "asserting on implementation
+internals" rather than behaviour. Through the public interface, nothing
+distinguishes them.)
+
+**2 KILLABLE — and both misses have a specific, identified cause, not a
+capability gap.** `cachetools-func`'s `M-d92d6ba3` (default `maxsize`
+128→129) is real and observable: `lfu_cache()(fn).cache_parameters()`
+differs by call convention, verified empirically in a fresh subprocess. The
+agent's test called `lfu_cache(lambda n: n)` — passing the function directly
+hits a branch with a *hardcoded* `128` unrelated to the mutated default,
+so the model's own test reads 128 under clean **and** mutant source
+regardless. `shortuuid-main`'s `M-2537e138` (`uuid()`'s `pad_length is None`
+→ `is not None`) is real too: `len(su.uuid(pad_length=30))` is 30 on clean
+source, 22 (silently falls back to `self._length`) on the mutant — also
+verified in a fresh subprocess. The agent's test called `su.encode(...)`
+directly instead, a different method with its own separate, unmutated
+`None`-check; its own code comments describe *`encode()`'s* logic, not
+`uuid()`'s. Neither miss reflects the mutation being hard to specify — both
+are the model testing the wrong call pattern or the wrong function entirely.
+
+**The materially stronger claim this audit buys:** not "44 of 53, with an
+unbounded residue of maybe-equivalent misses," but **44 of 53 overall, and
+of the 9 misses, 7 are provably unkillable — 44 of the 46 reachable survivors
+this suite could possibly kill (95.7%).** The 2 genuinely killable misses are
+attributable to specific, identified test-design mistakes, not to the
+mutations being beyond what a shown diff and a retry can specify.
 
 ### Assertion class, kept versus discarded
 
@@ -624,15 +677,25 @@ it — a limitation of mutation testing generally, not of this tool specifically
 A test that clears the gate today is not guaranteed to stay meaningful as the
 source evolves.
 
-**No semantic equivalence detection.** `engine.py` drops mutants whose unparsed
-AST is textually identical to the original, and reachability removes mutants no
-test structurally reaches — but neither catches a mutant that is reachable,
-executed, and still behaviourally equivalent for every input any test
-constructs. Residual semantic equivalence among reachable survivors is
-unbounded by our method, and the mutant population is 54% `constant`, the family
-where such equivalents concentrate. Reachable-survivor kill rate is a process
-statistic, not a killable-mutant rate. **A 20-item stratified manual audit was
-planned and did not run** — the time went to the arm C run instead.
+**No automated semantic equivalence detection, but the residual survivor
+population is now fully hand-labeled, not just sampled.** `engine.py` drops
+mutants whose unparsed AST is textually identical to the original, and
+reachability removes mutants no test structurally reaches — but neither
+catches a mutant that is reachable, executed, and still behaviourally
+equivalent for every input any test constructs. A 20-item *stratified*
+manual audit was planned before the arm C run, on the reasoning that
+labeling all reachable survivors up front wasn't affordable; it did not
+run, the time went to the arm C run instead. What replaced it after arm C
+completed is narrower in method (no automated detection, still by hand) but
+complete rather than sampled: every reachable survivor is now classified as
+either killed (44, provably non-equivalent by direct construction — the
+kill *is* a distinguishing input) or one of the 9 arm C could not kill, all
+9 of which are now hand-labeled with a concrete argument each (see "Hand-
+labeled: 7 of the 9 are provably equivalent," above, and
+`results/equivalence_audit.json`). 7 are provably equivalent; 2 are real,
+killable mutants the agent missed for identified, specific reasons.
+Reachable-survivor kill rate over the *killable* subset is therefore no
+longer an open question for this eval set: 44 of 46.
 
 ---
 

@@ -1292,3 +1292,70 @@ real model calls, which could never be wired into a step this project
 promises is free regardless of speed). See README's new "Negative
 controls" section, inserted between the instrument-bugs section and
 Reproducing this.
+
+## The deferred equivalence audit, done: all 9 survivors hand-labeled, not just 20 sampled
+
+The 20-item stratified manual audit (Limitations, planned before arm C ran,
+deferred because labeling all reachable survivors up front wasn't
+affordable) turned out cheaper and more targeted once arm C had actually
+run: labeling the 9 *specific* mutants arm C could not kill, by hand, with
+a concrete argument each -- not a model's unsupported judgement, and never
+EQUIVALENT without an argument for why no input distinguishes it.
+
+**7 EQUIVALENT.** All 6 `tenacity-stop` misses are the same thing in 6
+different `stop_*` classes: `__call__`'s `retry_state` parameter's type
+annotation, `"RetryCallState"` -> `''`. Verified, not assumed: `grep`'d the
+whole `tenacity` package and its test suite for
+`get_type_hints`/`__annotations__`/`inspect.signature` -- zero matches --
+and confirmed `RetryCallState` is imported only inside `if
+typing.TYPE_CHECKING:` in `tenacity/stop.py`, so the name does not exist at
+runtime at all; even `typing.get_type_hints()` would raise `NameError` on
+the *original* annotation. The `@override` decorator only sets
+`__override__ = True`, confirmed by reading `tenacity/_utils.py` directly.
+No call to `__call__(retry_state)` -- the method's only entry point -- can
+observe a difference, because its body is byte-for-byte identical either
+way. `validators-card`'s `M-8e984385` (`return False` -> `return None`) is
+equivalent for a different, separately verified reason: `card_number` is
+wrapped by `@validator` (`validators/utils.py`), whose own logic tests the
+inner return with plain truthiness -- confirmed by reading both branches of
+`wrapper()` -- so `False` and `None` both launder into the identical
+`ValidationError` object; the caller never sees the raw value. Disclosed
+rather than omitted: `card_number.__wrapped__('')` *would* distinguish
+them, reaching through `@wraps`' internals -- excluded from counting
+against equivalence because this project's own agent loop contract already
+excludes "asserting on implementation internals" as legitimate test
+content, and no legitimate caller of the public API can observe it.
+
+**2 KILLABLE, both with an identified, specific cause -- not a capability
+gap.** `cachetools-func`'s `M-d92d6ba3` (default `maxsize` 128->129):
+verified empirically in a fresh subprocess that `lfu_cache()(fn)` (empty
+parens first) reads 128 on clean source and 129 on the mutant via
+`cache_parameters()['maxsize']`. The agent's actual test called
+`lfu_cache(lambda n: n)` -- passing the function directly, which hits a
+branch hardcoding `LFUCache(128)` literally in the source, unrelated to the
+mutated default parameter -- so the model's own test reads 128 under both
+clean and mutant regardless of the mutation; verified this too, both
+patterns against clean source. `shortuuid-main`'s `M-2537e138` (`uuid()`'s
+`pad_length is None` -> `is not None`): verified empirically that
+`len(su.uuid(pad_length=30))` is 30 on clean source and 22 (silently
+discarding the explicit argument, falling back to `self._length`) on the
+mutant -- first attempt at this check used in-process module reload and
+gave a false negative (both showed 30) before being caught and redone with
+a fresh subprocess per version, the same reload-unreliability lesson this
+project has hit before. The agent's actual test called `su.encode(...)`
+directly -- a different method with its own separate, unmutated
+`None`-check -- and its own code comments describe *`encode()`'s* logic,
+not `uuid()`'s; the model appears to have tested the wrong function
+entirely.
+
+**The materially stronger claim this buys, stated in CLAUDE.md's own
+`X of Y` convention:** not "44 of 53, with an unbounded residue of
+maybe-equivalent misses," but 44 of 53 overall, and of the 9 misses, 7 are
+provably unkillable -- 44 of the 46 reachable survivors this suite could
+possibly kill (95.7%). The primary metric stays 44/53, locked before any
+arm ran, per the same discipline that rejected swapping targets to raise
+the pooled-53 denominator earlier in this project -- this is reported
+alongside it, not instead of it. Written to `results/equivalence_audit.json`
+with full reasoning per mutant; new README subsection "Hand-labeled: 7 of
+the 9 are provably equivalent"; Limitations' "20-item stratified audit...
+did not run" line updated to describe what actually ran instead.

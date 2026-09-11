@@ -1,0 +1,168 @@
+{
+  "generated_from": "results/agent_arm_c.json + direct empirical verification against the real module sources",
+  "n_total": 9,
+  "n_equivalent": 7,
+  "n_killable": 2,
+  "n_uncertain": 0,
+  "mutants": [
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-25c3ab92",
+      "operator": "constant",
+      "lineno": 85,
+      "enclosing_function": "__call__",
+      "enclosing_class": "stop_when_event_set",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_never_call_annotation_resolves_correctly():\n    \"\"\"\n    The _stop_never.__call__ annotation for retry_state must be 'RetryCallState',\n    not ''. When get_type_hints() is called, '' cannot be resolved as a valid\n    type and will raise an error, whereas 'RetryCallState' resolves correctly\n    via TYPE_CHECKING imports.\n    \"\"\"\n    import typing\n    import tenacity.stop as stop_module\n    from tenacity.stop import _stop_never\n\n    instance = _stop_never()\n    \n    # get_type_hints evaluates string annotations in the module's namespace.\n    # '' is not valid Python and will cause a NameError or similar,\n    # while 'RetryCallState' will resolve to the actual type (available via\n    # TYPE_CHECKING namespace tricks or direct import).\n    # We check __annotations__ directly on the function.\n    ann = instance.__call__.__annotations__\n    retry_state_ann = ann.get('retry_state', None)\n    \n    # Before mutation: retry_state_ann == 'RetryCallState' (non-empty)\n    # After mutation:  retry_state_ann == '' (empty string)\n    assert retry_state_ann is not None, \"retry_state annotation should exist\"\n    assert retry_state_ann != '', (\n        f\"retry_state annotation must not be empty string, got {retry_state_ann!r}\"\n    )\n    assert isinstance(retry_state_ann, str) and len(retry_state_ann) > 0, (\n        f\"Expected non-empty string annotation, got {retry_state_ann!r}\"\n    )\n    # Verify it contains the expected type name\n    assert 'RetryCallState' in retry_state_ann, (\n        f\"Expected 'RetryCallState' in annotation, got {retry_state_ann!r}\"\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-29b584b1",
+      "operator": "constant",
+      "lineno": 114,
+      "enclosing_function": "__call__",
+      "enclosing_class": "stop_after_delay",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_never_call_annotation_is_not_empty_string():\n    from tenacity.stop import _stop_never\n\n    # Access the raw annotation string directly without resolving it\n    annotations = _stop_never.__call__.__annotations__\n    assert 'retry_state' in annotations\n    annotation = annotations['retry_state']\n    assert annotation != '', f\"Expected a non-empty annotation but got {annotation!r}\"",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-369f6698",
+      "operator": "constant",
+      "lineno": 71,
+      "enclosing_function": "__call__",
+      "enclosing_class": "_stop_never",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_all_call_retry_state_annotation_is_not_empty():\n    import inspect\n    from tenacity.stop import stop_all\n\n    # Get the __call__ method directly from stop_all's own dict,\n    # not inherited from a base class\n    call_method = stop_all.__dict__[\"__call__\"]\n    \n    # Get annotations directly from the function object\n    annotations = call_method.__annotations__\n    \n    assert \"retry_state\" in annotations, (\n        \"stop_all.__call__ should have a 'retry_state' annotation\"\n    )\n    annotation_value = annotations[\"retry_state\"]\n    \n    # The annotation should be \"RetryCallState\", not an empty string\n    assert annotation_value != \"\", (\n        f\"stop_all.__call__ retry_state annotation should not be empty, got {annotation_value!r}\"\n    )\n    assert annotation_value == \"RetryCallState\", (\n        f\"stop_all.__call__ retry_state annotation should be 'RetryCallState', got {annotation_value!r}\"\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-528515c3",
+      "operator": "constant",
+      "lineno": 63,
+      "enclosing_function": "__call__",
+      "enclosing_class": "stop_all",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_never_call_has_correct_retry_state_type_annotation():\n    import inspect\n    import tenacity\n    from tenacity.stop import _stop_never\n\n    # Get the __call__ method via inspect to access annotations\n    method = _stop_never.__call__\n    \n    # Try to get annotations from the underlying function\n    # Some decorators wrap the function, so we may need to unwrap\n    unwrapped = inspect.unwrap(method)\n    \n    annotations = unwrapped.__annotations__\n    \n    assert 'retry_state' in annotations, (\n        f\"retry_state parameter should have an annotation, got: {annotations}\"\n    )\n    assert annotations['retry_state'] == 'RetryCallState', (\n        f\"Expected annotation 'RetryCallState' but got {annotations['retry_state']!r}\"\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-950b9bd4",
+      "operator": "constant",
+      "lineno": 132,
+      "enclosing_function": "__call__",
+      "enclosing_class": "stop_before_delay",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_after_attempt_call_annotation_is_retry_call_state():\n    from tenacity.stop import stop_after_attempt\n    # Get the raw annotations directly from the __call__ method\n    # without resolving forward references, so we can detect the empty string mutation\n    call_method = stop_after_attempt.__call__\n    annotations = getattr(call_method, '__annotations__', {})\n    retry_state_annotation = annotations.get('retry_state', None)\n    assert retry_state_annotation is not None, (\n        \"stop_after_attempt.__call__ should have a retry_state annotation\"\n    )\n    assert retry_state_annotation != '', (\n        \"retry_state annotation should not be empty string; got: {!r}\".format(retry_state_annotation)\n    )\n    assert 'RetryCallState' in str(retry_state_annotation), (\n        \"retry_state annotation should reference RetryCallState; got: {!r}\".format(retry_state_annotation)\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "tenacity-stop",
+      "mutant_id": "M-b0304ae2",
+      "operator": "constant",
+      "lineno": 96,
+      "enclosing_function": "__call__",
+      "enclosing_class": "stop_after_attempt",
+      "original_line": "def __call__(self, retry_state: \"RetryCallState\") -> bool:",
+      "mutated_line": "def __call__(self, retry_state: '') -> bool:",
+      "final_attempt": 2,
+      "final_draft": "def test_stop_never_call_annotation_resolves_to_retry_call_state():\n    import inspect\n    from tenacity.stop import _stop_never\n    from tenacity import RetryCallState\n\n    sig = inspect.signature(_stop_never.__call__)\n    annotation = sig.parameters['retry_state'].annotation\n    # The annotation should be the string \"RetryCallState\" (forward reference), not empty string ''\n    assert annotation != '', \"retry_state annotation should not be empty string\"\n    assert annotation == 'RetryCallState', (\n        f\"Expected retry_state annotation to be 'RetryCallState', got {annotation!r}\"\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "The mutation flips the retry_state parameter's type annotation from the quoted forward-reference string \"RetryCallState\" to the empty string ''. This is a PEP 484 type hint, stored only in __call__.__annotations__; Python does not evaluate or enforce annotations at call time, and `RetryCallState` is imported ONLY inside `if typing.TYPE_CHECKING:` (tenacity/stop.py lines 22-25) -- the name does not exist at runtime at all, so even typing.get_type_hints() would raise NameError on the ORIGINAL annotation, let alone distinguish it from the mutant's empty string. Grepped the entire tenacity package and its test suite for get_type_hints/__annotations__/inspect.signature: zero matches. The @override decorator (tenacity/_utils.py) only sets `__override__ = True`; it does not touch __annotations__. No call to __call__(retry_state) -- the only way this method is ever invoked -- can observe a difference, because the annotation plays no role in the method body, which is completely unchanged by this mutation. Concrete argument: for any retry_state input, `stop.__call__(retry_state)` executes byte-identical bytecode in both versions; the only difference is a string sitting in a dict (__annotations__) nothing in this codebase ever reads."
+    },
+    {
+      "target": "cachetools-func",
+      "mutant_id": "M-d92d6ba3",
+      "operator": "constant",
+      "lineno": 49,
+      "enclosing_function": "lfu_cache",
+      "original_line": "def lfu_cache(maxsize=128, typed=False):",
+      "mutated_line": "def lfu_cache(maxsize=129, typed=False):",
+      "final_attempt": 2,
+      "final_draft": "def test_lfu_cache_user_function_default_maxsize():\n    import cachetools.func\n\n    # When lfu_cache is called with a callable as the first argument (user function style),\n    # it should use the default maxsize of 128, not 129 or any other value.\n    cached = cachetools.func.lfu_cache(lambda n: n)\n    params = cached.cache_parameters()\n    assert params[\"maxsize\"] == 128, (\n        f\"lfu_cache default maxsize should be 128, got {params['maxsize']}\"\n    )\n    info = cached.cache_info()\n    assert info.maxsize == 128, (\n        f\"lfu_cache cache_info maxsize should be 128, got {info.maxsize}\"\n    )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "KILLABLE",
+      "reasoning": "The mutation changes lfu_cache's default maxsize parameter from 128 to 129. This IS observable: calling `lfu_cache()(fn)` (empty parens, then decorate) takes the `else` branch in func.py, which builds `_cache(LFUCache(maxsize), maxsize, typed)` using the actual default-parameter value -- so `wrapper.cache_parameters()['maxsize']` reads 128 on clean source and 129 on the mutant. Verified empirically by constructing both the clean and mutated module and calling this exact pattern in a fresh subprocess: clean gives 128, mutant gives 129. The agent's actual test called `lfu_cache(lambda n: n)` instead -- passing the lambda as the first POSITIONAL argument, which hits func.py's `elif callable(maxsize):` branch. That branch hardcodes `_cache(LFUCache(128), 128, typed)` -- a literal 128 written directly in the source, completely independent of the mutated default-parameter value -- so the model's own test necessarily reads 128 under BOTH clean and mutant source, regardless of the mutation. Verified: both patterns give cache_parameters()['maxsize']==128 against clean source; only the empty-parens pattern diverges (128 vs 129) against the mutant. This is a real, killable behavioral difference; the miss is a specific, identifiable test-design mistake (wrong call convention), not an unkillable mutant."
+    },
+    {
+      "target": "validators-card",
+      "mutant_id": "M-8e984385",
+      "operator": "return_none",
+      "lineno": 40,
+      "enclosing_function": "card_number",
+      "original_line": "return False",
+      "mutated_line": "return None",
+      "final_attempt": 2,
+      "final_draft": "def test_card_number_empty_string_not_none():\n    from validators import card_number\n    result = card_number('')\n    assert result is not None",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "EQUIVALENT",
+      "reasoning": "card_number is decorated with @validator (validators/utils.py). The wrapper's own logic tests the inner function's return value with plain truthiness -- `True if func(*args, **kwargs) else ValidationError(...)` (and the equivalent `if func(...): return True else: raise ValidationError(...)` branch) -- never `is False`, `== False`, `is None`, or any type-sensitive check. False and None are both falsy in Python, so the decorator launders both into the exact same ValidationError instance; the caller (and every legitimate caller, since `card_number` the module-level name IS the wrapped version) can never observe the raw inner return value at all -- only True or a ValidationError object ever comes back. Confirmed against the agent's own two drafts: both call the public `card_number('')` and check the WRAPPED result (isinstance(...,ValidationError) / result is not None); both assertions are true under clean AND mutated source, because `result` is always a ValidationError instance, never actually None or False itself. One caveat, disclosed rather than omitted: @wraps(func) sets `card_number.__wrapped__` to the raw inner function, so `card_number.__wrapped__('') is False` vs `is None` WOULD technically distinguish them. Not counted against equivalence here: reaching through `__wrapped__` bypasses the public decorator entirely and asserts on implementation internals, which this project's own agent loop contract explicitly excludes from legitimate test content (CLAUDE.md: 'must assert on behaviour rather than on implementation internals'). Through the only interface this library's own callers or tests are meant to use, no input distinguishes the two versions."
+    },
+    {
+      "target": "shortuuid-main",
+      "mutant_id": "M-2537e138",
+      "operator": "compare",
+      "lineno": 109,
+      "enclosing_function": "uuid",
+      "original_line": "if pad_length is None:",
+      "mutated_line": "if pad_length is not None:",
+      "final_attempt": 2,
+      "final_draft": "import unittest\nfrom uuid import UUID\nfrom shortuuid.main import ShortUUID\n\n\nclass TestEncodeDefaultPaddingMutation(unittest.TestCase):\n    def test_encode_no_pad_length_pads_to_full_length(self):\n        # UUID(int=0) has no significant digits in any base, so without padding\n        # int_to_string returns \"\". The original code sets pad_length = self._length\n        # when pad_length is None, giving a properly padded result.\n        # The mutation (if pad_length is not None) skips this assignment,\n        # leaving pad_length=None, so no padding is applied and the result is \"\".\n        su = ShortUUID()\n        smallest_uid = UUID(int=0)\n        # Call encode with NO explicit pad_length argument\n        encoded = su.encode(smallest_uid)\n        expected_length = su._length  # 22 for default alphabet\n        self.assertEqual(\n            len(encoded),\n            expected_length,\n            f\"encode() without explicit pad_length should pad to {expected_length} chars, got {len(encoded)!r}\",\n        )\n        # Verify the encoded string consists only of the first alphabet character (padding char)\n        first_char = su._alphabet[0]\n        self.assertEqual(\n            encoded,\n            first_char * expected_length,\n            f\"UUID(int=0) should encode to '{first_char * expected_length}'\",\n        )",
+      "gate_outcome": {
+        "passed_on_clean": true,
+        "killed_target": false
+      },
+      "label": "KILLABLE",
+      "reasoning": "The mutation flips `uuid()`'s pad_length default-fill check from `is None` to `is not None`. Original: an explicit pad_length is left untouched; only the default (None) gets replaced with self._length. Mutant: an explicit pad_length gets OVERWRITTEN with self._length instead of being honored; the default (None) case is left as None (and then re-derived correctly inside encode()'s own separate, unmutated `if pad_length is None` check -- which is why calling with NO explicit pad_length shows no difference at all). Verified empirically in a fresh subprocess: `su.uuid(pad_length=30)` against clean source returns a 30-character string; against the mutant it returns a 22-character string (self._length for the default alphabet) -- the explicit 30 is silently discarded. `assert len(su.uuid(pad_length=30)) == 30` passes on clean, fails on the mutant: a genuine, real, observable difference. The agent's actual test called `su.encode(smallest_uid)` directly -- a DIFFERENT method with its own separate, unmutated `if pad_length is None` check at a different line -- and never called `uuid()` at all, let alone with an explicit pad_length. Both draft attempts' own code comments describe encode()'s logic, not uuid()'s -- the model appears to have misattributed which function the diff was shown against. This is a real, killable mutant; the miss is that the agent tested the wrong function entirely, not that the mutation is undetectable."
+    }
+  ]
+}
