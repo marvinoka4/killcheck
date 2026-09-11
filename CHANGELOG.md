@@ -1442,3 +1442,80 @@ project has applied to every other frozen-core reopening (workers=4->1,
 `__future__`-import hoisting) is applied here too, including writing down
 what would have needed re-running and why the verification step above
 substitutes for it rather than skips it.
+
+## Vinh Nguyen's second finding, sharper than the first: the pyc-exclusion test asserted a proxy, not the property
+
+Reported by Vinh Nguyen (dev.to/vinhnguyenthanhdn) again -- a follow-up on
+the stale-.pyc finding above. Verified per instruction, not reasoned about.
+
+**The claim:** `ignore_patterns` protects the copy only while bytecode lands
+beside the source. With `PYTHONPYCACHEPREFIX` set, CPython writes compiled
+`.pyc` to a separate tree keyed on the copy's absolute path instead -- so
+zero `.pyc` arrive in the copy *and* a stale read can still occur, if the
+work directory's path is reused across calls. The actual protection depends
+on the work directory not being reused, not on `ignore_patterns` alone.
+
+**Reproduced exactly, three branches, Python 3.14.7 (matching the report's
+3.14.6):** same `copytree` + `ignore_patterns` call runner.py itself makes,
+a byte-size-identical mutant with mtime forced back to match a primed
+`.pyc`'s header. No prefix + fixed work path: fresh (`.pyc` lives inside the
+copy, gets deleted with it regardless of path reuse). Prefix + the *same*
+fixed work path, reused across two calls: **STALE -- 0 `.pyc` in the copy,
+wrong behaviour observed anyway.** Prefix + a fresh unique path per call:
+fresh. All three landed exactly where the report said they would.
+
+**Checked every temp-copy call site directly, not assumed:** `runner.py`'s
+`_evaluate_one` and `verify_clean`, `agent.py`'s `gate_check` and
+`official_batch_rescore` (including its nested per-mutant copy, which
+copies from an outer copy that has *already* generated real bytecode via
+its own clean-pass run before the nested copytree runs), `baseline.py`'s
+`score_with_added_tests`, `scripts/verify_targets.py`, and
+`scripts/negative_controls.py` -- every one uses
+`tempfile.TemporaryDirectory()` or `tempfile.mkdtemp()`, none reuses a
+fixed path. No call site found vulnerable under the current design.
+
+**Ran the full harness once with `PYTHONPYCACHEPREFIX` set** to confirm the
+empirical answer for our actual configuration, not just the mechanism in
+isolation: all 12 targets' canary, byte-size canary, and determinism checks
+passed; `results/target_verification.json` diffed against the committed
+version -- zero mismatches, `git diff` shows no change to the file at all.
+
+**The important change: `scripts/test_pyc_exclusion.py` rewritten to assert
+the property, not the proxy.** The original test asserted `pyc_count == 0`
+in the copy -- exactly the assertion that holds in the "prefix + fixed
+path" branch above, while the harness is stale. Kept as a secondary
+diagnostic only, clearly labeled as insufficient alone. Added
+`test_byte_size_mutation_correctly_observed_under_pycache_prefix`: runs a
+real, same-byte-length behavioral mutation through the real, unmodified
+`_evaluate_one`, with `PYTHONPYCACHEPREFIX` set for the duration, and
+asserts the *observed outcome* is not `survived` -- the property that
+actually matters. Verified this new test has teeth before trusting it, per
+instruction: added
+`test_property_check_catches_the_deliberately_stale_case`, which reproduces
+the exact reused-fixed-path branch from the reproduction above and asserts
+*that* variant comes back `survived` (stale) -- confirming the property
+check is capable of catching the failure mode it exists for, not just
+capable of passing.
+
+**Extended the load-bearing comment in `runner.py`** to name both
+protections explicitly and state that neither is sufficient alone:
+`tempfile.TemporaryDirectory()` giving every call a unique, never-reused
+path (the one that matters under `PYTHONPYCACHEPREFIX`), and
+`ignore_patterns` excluding `__pycache__`/`*.pyc` from the copy itself (the
+one that matters without it). Comment-only; `ignore_patterns(...)` and the
+`tempfile.TemporaryDirectory(...)` call are byte-for-byte unchanged, so this
+does not reopen the frozen core in the behavior-changing sense --
+`scripts_demo.py` reconfirmed `kill_score=0.0952`.
+
+**The general lesson, worth recording on its own:** the original test's
+assertion (0 `.pyc` in the copy) held under our actual configuration and
+would have failed to catch the exact failure mode it was written for, under
+a supported, documented Python environment variable we simply hadn't
+considered. A proxy assertion can be exactly right for the environment it
+was written in and exactly wrong for one input away from it. Asserting the
+property -- the actual behavior the harness depends on, not a stand-in for
+it that happens to correlate in the cases tried -- costs the same to write
+and does not have that failure mode. This is the same shape of lesson as
+the predicted-outcome discipline that caught most of this project's
+instrument bugs, applied one level up: to the tests that check the
+instrument, not just the instrument itself.

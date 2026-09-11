@@ -128,23 +128,36 @@ def _evaluate_one(target: Target, mutant: Mutant, timeout: int) -> MutantResult:
     import time
 
     started = time.monotonic()
+    # TWO things protect this call from stale-bytecode execution, and BOTH
+    # are load-bearing -- neither one alone is sufficient, confirmed
+    # empirically, not assumed (see CHANGELOG.md, both entries, and
+    # scripts/test_pyc_exclusion.py):
+    #
+    # 1. tempfile.TemporaryDirectory() below gives every single call to this
+    #    function its own fresh, unique, never-reused absolute path. This is
+    #    the one that actually matters if PYTHONPYCACHEPREFIX is set: with
+    #    that env var present, CPython does not write compiled bytecode
+    #    beside the source at all -- it writes to a SEPARATE tree, keyed on
+    #    the source file's absolute path. Reuse a fixed work directory under
+    #    that env var (a --work-dir flag, a "reuse the tempdir across
+    #    mutants" optimisation, anything that makes this path stop being
+    #    unique) and a stale .pyc from an EARLIER call at that same path can
+    #    still be read for a LATER one, even though ignore_patterns below
+    #    still keeps the copy itself pyc-free -- confirmed by direct
+    #    reproduction: 0 .pyc in the copy, wrong behaviour observed anyway.
+    # 2. "__pycache__"/"*.pyc" in ignore_patterns below stop a stale .pyc
+    #    from being copied IN from the source checkout in the first place --
+    #    every target here has real committed .pyc files from its own
+    #    earlier clean-suite runs. This is the one that matters without
+    #    PYTHONPYCACHEPREFIX: bytecode written beside the source, inside a
+    #    tempdir that gets deleted at the end of this function's `with`
+    #    block regardless of path reuse.
+    #
+    # Neither point protects against what the other one covers. Do not
+    # remove either as a cleanup, and do not add a fixed or reused work
+    # path without re-reading both CHANGELOG entries first.
     with tempfile.TemporaryDirectory(prefix="killcheck-") as tmp:
         work = Path(tmp) / "project"
-        # "__pycache__"/"*.pyc" here are load-bearing for correctness, not
-        # tidiness: CPython's default timestamp-based .pyc invalidation keys
-        # on source mtime (whole seconds) + size, and every target checkout
-        # in this eval set has real committed .pyc files from its own
-        # earlier clean-suite runs. Without this exclusion, a mutation whose
-        # rewritten module happens to land on the same size and the same
-        # whole-second mtime as an existing .pyc's header would import the
-        # stale bytecode instead of the mutated source -- confirmed
-        # empirically, both that CPython really is fooled by a matching
-        # header (a synthetic reproducer) and that this copytree call
-        # produces zero .pyc in the destination even when the source has
-        # dozens (see CHANGELOG.md and scripts/test_pyc_exclusion.py). Do
-        # not remove this exclusion as a cleanup; if it's ever removed,
-        # scripts/verify_targets.py's byte-size-preserving canary is the
-        # standing check that would catch the regression.
         shutil.copytree(
             target.project_root,
             work,
