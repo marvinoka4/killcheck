@@ -2057,3 +2057,68 @@ survivors, stable x3), reachability OK (9 reachable / 3 unreachable),
 this pass's fixes) to a correctly-refused abort (finding 1's fix) to a
 real, trustworthy number, entirely via `--tests-env` -- no code change
 needed beyond exposing the mechanism.
+
+## byte_size_canary_check must check reachability before asserting staleness
+
+**Finding 2 from the field test above.** `byte_size_canary_check` picked
+the first same-length comparison-operator flip found anywhere in the
+module and asserted that its non-detection meant "possible stale-bytecode
+execution." On jsonschema's `_utils.py`, this produced a confidently WRONG
+diagnosis: the flagged line (`extras_msg`'s `==`, line 97) is never
+executed by `test_utils.py` at all -- confirmed directly via `coverage run`
+showing it in the Missing set, and by grep showing `extras_msg` is only
+called from `_keywords.py`/`_legacy_keywords.py`, never from the test file
+in scope. The mutation genuinely survived, but for the mundane reason that
+its line never ran, not because of stale bytecode. No `.pyc` for this file
+existed before the run either -- there was nothing to have gone stale from.
+
+This lives in `killcheck/verify_core.py`, inherited unchanged from
+`scripts/verify_targets.py`'s original design (see the earlier "reader-
+reported... stale .pyc execution" entries) -- so it is an instrument
+finding, not a CLI-only one: it affects the eval set's own published
+harness too, just never triggered there, because the 12 eval-set targets
+were hand-curated and widened specifically to maximize reachable coverage
+(see CLAUDE.md's "Widening the suites"), which happened to always leave a
+reachable same-length operator for this check to land on. **Same shape as
+the findings this check itself was built to catch: an earlier version of
+this exact project asserted non-survival as evidence of something specific
+(staleness) without first ruling out the mundane explanation (the line
+never ran) -- exactly the discipline `byte_size_canary_check` exists to
+enforce on the mutation-scoring path, applied here one level up, to the
+check itself.**
+
+**Fix:** `byte_size_canary_check` now calls `measure_reachable_lines`
+first and only selects a same-length mutation site on a line the clean
+suite actually executes (coverage-confirmed), via a new `reachable_lines`
+parameter on `byte_size_preserving_mutation` (optional, defaults to `None`
+-- `scripts/test_pyc_exclusion.py`'s own reproduction still calls it
+unfiltered, deliberately, since it needs any eligible mutation regardless
+of what the suite covers). Three outcomes, no longer conflated into two:
+a reachable site survives -> `FAIL`, staleness diagnosis now warranted,
+not assumed; eligible operators exist but none are reachable -> `N/A`,
+says so explicitly, no diagnosis made; reachability itself couldn't be
+measured -> `N/A`, says that explicitly too, distinct from the other two
+reasons in `detail`.
+
+**Re-ran all 12 eval targets and diffed against the committed
+`target_verification.json`: byte-identical, zero mismatches** -- same
+empirical-diff discipline as every prior change to this shared checking
+logic. Also diffed the byte-size-canary section's own PASS/FAIL/N/A output
+line by line against the pre-fix run: identical -- same 8 `PASS` (same
+lines, same columns, same operators), same 4 `N/A` ("no same-length
+comparison operator found in this module"), zero `FAIL` either before or
+after. The fix changed zero verdicts on the hand-curated eval set and
+correctly changed jsonschema's verdict from a false `FAIL` to an honest
+`N/A` on the one real, uncurated target that exposed the gap.
+
+**The general lesson, worth recording on its own, same shape as the
+pyc-staleness lesson above:** a check that asserts a specific diagnosis
+(staleness) from a single observation (non-detection) without first
+eliminating a more mundane explanation (unreached code) can be exactly
+right for every case it happened to be tested against and exactly wrong
+for the first uncurated one it meets. This is the same "assert the
+property, not a proxy that merely correlates with it" discipline recorded
+earlier in this project, applied to a different check: non-survival
+correlates with staleness only once reachability is no longer a competing
+explanation, and establishing that costs one extra coverage measurement,
+not a fundamentally different design.

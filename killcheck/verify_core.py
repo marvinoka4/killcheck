@@ -114,15 +114,15 @@ def canary_check(target: Target, timeout: int = 30) -> tuple[bool, str]:
 _SAME_LEN_FLIPS = [("==", "!="), ("!=", "=="), ("<=", ">="), (">=", "<="), ("<", ">"), (">", "<")]
 
 
-def byte_size_preserving_mutation(source: str) -> tuple[str, str] | None:
-    """Return (mutated_source, description) for the first same-length
-    comparison-operator flip found via `tokenize` (so an occurrence inside a
-    string or comment is never touched -- tokenize already classifies those
-    separately from OP tokens, which is the actual guarantee here, not the
-    parse check below), or None if the module contains no such operator at
-    all. The parse check is a second, independent guard against a
-    line-continuation edge case, not a substitute for tokenize's own
-    string/comment handling."""
+def _byte_size_flip_candidates(source: str) -> list[tuple[str, str, int]]:
+    """Every eligible same-length comparison-operator flip found via
+    `tokenize` (so an occurrence inside a string or comment is never
+    touched -- tokenize already classifies those separately from OP tokens,
+    which is the actual guarantee here, not the parse check below), as
+    (mutated_source, description, lineno) triples in file order. Split out
+    from byte_size_preserving_mutation so a caller can filter candidates by
+    reachability without re-tokenizing the module."""
+    candidates = []
     for tok in tokenize.generate_tokens(io.StringIO(source).readline):
         if tok.type != tokenize.OP:
             continue
@@ -143,21 +143,87 @@ def byte_size_preserving_mutation(source: str) -> tuple[str, str] | None:
                 ast.parse(candidate)
             except SyntaxError:
                 continue
-            return candidate, f"{orig} -> {flipped} at line {row}, col {col}"
+            candidates.append((candidate, f"{orig} -> {flipped} at line {row}, col {col}", row))
+    return candidates
+
+
+def byte_size_preserving_mutation(
+    source: str, reachable_lines: set[int] | None = None
+) -> tuple[str, str] | None:
+    """Return (mutated_source, description) for a same-length
+    comparison-operator flip, or None if none is eligible.
+
+    If `reachable_lines` is given (the set of line numbers the clean suite
+    actually executes, from coverage), prefers the first eligible flip that
+    sits on one of those lines, and returns None if no eligible flip does.
+    A flip on a line the suite never executes can't distinguish "detected"
+    from "stale" from "just never ran" -- it isn't a usable test of
+    staleness at all. An earlier version of this function had no such
+    filter, always returning the first eligible flip found anywhere in the
+    file regardless of reachability; byte_size_canary_check then asserted
+    non-survival on it as evidence of staleness. On a real, uncurated
+    target (jsonschema's _utils.py) this produced a confident, WRONG
+    diagnosis: the flagged line was never executed by the test command in
+    play at all (confirmed directly via coverage), so the mutation
+    "survived" for the mundane reason that it never ran, not because of
+    stale bytecode. See CHANGELOG.md's "byte_size_canary_check must check
+    reachability" entry.
+
+    If `reachable_lines` is None, no reachability filter is applied -- the
+    original, non-reachability-aware selection. Still used as-is by
+    scripts/test_pyc_exclusion.py's own reproduction, which deliberately
+    wants any eligible same-length mutation to exercise the copy-and-score
+    path, regardless of what the suite happens to cover.
+    """
+    candidates = _byte_size_flip_candidates(source)
+    if not candidates:
+        return None
+    if reachable_lines is None:
+        candidate, desc, _row = candidates[0]
+        return candidate, desc
+    for candidate, desc, row in candidates:
+        if row in reachable_lines:
+            return candidate, desc
     return None
 
 
 def byte_size_canary_check(target: Target, timeout: int = 30) -> tuple[str, str]:
-    """Return (status, detail). status is "PASS" (the suite detected the
-    same-byte-length mutation -- no stale-bytecode substitution occurred),
-    "FAIL" (the suite reported the mutation as survived -- exactly the
-    failure mode this check exists to catch), or "N/A" (this target's
-    module has no comparison operator eligible for a same-length flip;
-    4 of 12 targets in this eval set are N/A, not skipped silently)."""
+    """Return (status, detail). status is "PASS" (a same-byte-length
+    mutation on a line the suite actually executes was detected -- no
+    stale-bytecode substitution occurred), "FAIL" (that mutation was
+    reported as survived -- exactly the failure mode this check exists to
+    catch, and a warranted staleness diagnosis because reachability was
+    confirmed FIRST, not assumed), or "N/A" for any of three different
+    underlying reasons, distinguished in `detail`: no eligible
+    comparison-operator flip exists anywhere in the module; eligible flips
+    exist but none sit on a line the suite executes under this test
+    command (so there is no reachable site left to test); or reachability
+    itself couldn't be measured for this module (coverage failed).
+
+    Reachability-gated: picks a mutation site among lines coverage confirms
+    the suite executes, not merely the first eligible site in the file. See
+    byte_size_preserving_mutation's docstring for why -- the un-gated
+    version produced a false "possible stale-bytecode execution" diagnosis
+    on a real, uncurated target."""
     source = (target.project_root / target.module_path).read_text()
-    result = byte_size_preserving_mutation(source)
+    reachable_lines = measure_reachable_lines(target, timeout=timeout)
+    if reachable_lines is None:
+        return (
+            "N/A",
+            "could not measure line coverage for this module -- cannot confirm a reachable "
+            "same-length mutation site to test",
+        )
+
+    result = byte_size_preserving_mutation(source, reachable_lines)
     if result is None:
+        if _byte_size_flip_candidates(source):
+            return (
+                "N/A",
+                "same-length comparison operator(s) exist in this module, but none sit on a "
+                "line the suite executes under this test command -- no reachable site available",
+            )
         return "N/A", "no same-length comparison operator found in this module"
+
     candidate, desc = result
     fake = Mutant(
         id="M-byte-canary",
@@ -172,7 +238,11 @@ def byte_size_canary_check(target: Target, timeout: int = 30) -> tuple[str, str]
     )
     result_ = _evaluate_one(target, fake, timeout)
     if result_.outcome == "survived":
-        return "FAIL", f"suite PASSED on a same-byte-length mutation ({desc}) -- possible stale-bytecode execution"
+        return (
+            "FAIL",
+            f"suite PASSED on a same-byte-length mutation on a REACHABLE line ({desc}) -- "
+            f"possible stale-bytecode execution",
+        )
     return "PASS", f"suite correctly reported '{result_.outcome}' on a same-byte-length mutation ({desc})"
 
 
