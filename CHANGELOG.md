@@ -1847,3 +1847,137 @@ for byte. This eval set's own environment always had `python3` on `PATH`
 verifying against real output rather than trusted on inspection alone: a
 change to code no failing test exercises needs the same empirical check a
 passing test would have forced, not less.
+
+## Field test: killcheck against three real repos outside the eval set
+
+The synthetic external repo used to verify packaging (see "From research
+artifact to usable tool" above) inherits this project's own assumptions by
+construction -- it cannot tell us what breaks on a stranger's code. Also
+worth correcting here: the "no network" conclusion behind building that
+synthetic repo was itself wrong. The check that produced it
+(`timeout 10 curl ...`) failed because `timeout` isn't installed in this
+sandbox, not because of an actual network problem -- the compound command's
+`||` fallback printed "NO NETWORK" for the wrong reason, uncaught because
+stderr wasn't redirected. Network was reachable the whole time (confirmed
+directly: `git ls-remote`, a plain `curl` to PyPI, and DNS resolution all
+worked once `timeout` was removed from the check). Recorded here plainly
+rather than left to stand uncorrected.
+
+Three real repos were cloned and tested with network access: `pytest-dev/
+pytest` (nested conftest.py hierarchy -- its own test suite is the feature
+it tests), `python-attrs/attrs` (src-layout), `python-jsonschema/jsonschema`
+(chosen for heavy parametrization; turned out to be unittest.TestCase-heavy
+instead -- see below). All three MIT, none in targets.json. Killcheck was
+pip-installed into a fresh venv per repo; `score`/`verify` only, no
+`harden` (no model calls, no API credit spent).
+
+**pytest** (`pytest-dev/pytest` @ `3fd8675d`, module `src/_pytest/scope.py`,
+auto-discovered test `testing/test_scope.py` -- correct match, first try).
+`killcheck score` completed and reported **kill_score = 0.0000 (0/35), with
+no warning anything was wrong.** `killcheck verify` on the identical target
+correctly caught this: canary FAIL, "mutations are not reaching this
+target's test process." Confirmed by direct reproduction: the same
+src-layout bug already in this CHANGELOG's own "src-layout editable
+installs silently defeat mutation testing" entry -- the editable install
+resolves back to the original checkout, not the tempdir copy. The standard
+workaround (`-o pythonpath=src`) does NOT fix it here, unlike attrs below:
+`_pytest.mark.structures` imports `_pytest.scope` while pytest is still
+bootstrapping itself, before pytest's own ini-option-based path insertion
+(which only applies at collection time) ever runs. A `PYTHONPATH`
+environment variable set before the interpreter starts does fix it --
+confirmed by direct reproduction (a garbage-source mutation is correctly
+detected once `PYTHONPATH` is set as a real env var, not a pytest option).
+
+Two further findings here are self-hosting-specific, not general: shallow
+clone (`--depth 1`) broke setuptools-scm's version derivation, so pytest
+saw itself as `0.1.dev1` and failed its own `minversion = "2.0"` check --
+fixed by a full clone; `pip install -e ".[dev]"` fails on pytest's own
+checkout with a dependency-resolution conflict, entirely independent of
+killcheck, caused by `dependency-groups.dev` self-referentially declaring
+`"pytest[dev]"` as one of its own requirements.
+
+**attrs** (`python-attrs/attrs` @ `8f767776`, module `src/attr/
+converters.py`, auto-discovered test `tests/test_converters.py` -- correct,
+first try). Same src-layout canary FAIL as pytest, but here `-o
+pythonpath=src` DOES fix it (attrs doesn't import itself to bootstrap its
+own test runner the way pytest does). With the workaround: canary PASS,
+byte-size canary PASS, determinism PASS (17 survivors, stable x3),
+`killcheck score` in 23.6s -- 40/57 killed (0.702), 10 reachable / 7
+unreachable. Two of those seven "unreachable" survivors are provably wrong
+under a wider test scope, confirmed by grep, not assumed: `optional()`'s
+annotation-setting lines never execute under `test_converters.py` alone,
+but `tests/test_annotations.py` -- a different file, invisible to
+single-file auto-discovery -- directly asserts on `.__annotations__` values
+that depend on exactly those lines running. This is finding 3, left open
+below.
+
+**jsonschema** (`python-jsonschema/jsonschema` @ `865c27fc`, module
+`jsonschema/_utils.py`, auto-discovered test `jsonschema/tests/
+test_utils.py` -- correct, first try). Chosen for "heavy fixtures or
+parametrised tests"; turned out to have zero `pytest.mark.parametrize`
+anywhere in its own test suite and zero `conftest.py` files in the whole
+repo -- its fixtures are exclusively `unittest.TestCase`/`setUp`, not
+pytest's. Recorded honestly rather than silently reframed: the prediction
+was wrong, though the repo still qualifies under the "heavy fixtures" half
+of the criterion, and killcheck needed no special handling for
+`TestCase`-style suites (score/verify only run the whole test command as a
+subprocess and check exit codes -- they don't care about internal test
+structure). `killcheck verify`: clean suite PASS, canary PASS,
+**byte-size canary FAIL -- "possible stale-bytecode execution" at
+`_utils.py:97`.** Investigated rather than trusted: no `.pyc` for this file
+existed before the run (nothing to be stale from), and a direct `coverage
+run` against `test_utils.py` alone shows line 97 in the Missing set --
+`extras_msg` (the flagged line's function) is used only by `_keywords.py`/
+`_legacy_keywords.py`, never by `test_utils.py`. The FAIL was real (the
+mutation did survive) but the stated cause was wrong -- an unreached-line
+false attribution, not staleness. This is finding 2, fixed below.
+`killcheck score` (score never calls the byte-size canary -- see finding 1)
+completed in 67.3s: 40/146 killed (0.274), 92 unreachable / 14 reachable --
+the same single-file-scope undercounting as attrs, more pronounced.
+
+**Auto-discovery's file-matching was correct 3 for 3** -- no wrong guesses,
+no ambiguity errors triggered, across three genuinely different repo
+layouts. Wall clock was reasonable everywhere a real result came back
+(20-78s, nowhere near "twenty minutes"). `.killcheck/` output stayed
+correctly isolated to each target repo in all three cases -- confirmed
+directly, not assumed, by checking this repo's own `results/`/
+`trajectories/` came back clean via `git status` after each run.
+
+**Prioritised findings, as requested, before any fix:**
+
+*Genuinely broken:*
+1. `killcheck score` runs no canary at all -- `verify` catches the
+   src-layout failure every time, `score` (the command QUICKSTART.md puts
+   first) does not, and returns a confident, wrong `0.0000` in silence.
+   `harden` has the identical gap (confirmed by code inspection, not run,
+   to avoid spending API credit on a target already known to be broken) --
+   worse there, since it would spend real model calls chasing survivors
+   that can never be killed.
+2. `byte_size_canary_check` doesn't check reachability before asserting
+   non-survival means staleness -- confirmed wrong on a real target
+   (jsonschema, above). Lives in `killcheck/verify_core.py`, inherited
+   unchanged from `scripts/verify_targets.py`'s original design, so this
+   affects the eval set's own instrument too, not just the CLI -- never
+   triggered there because the hand-curated eval set happened to avoid it.
+3. Auto-discovery's single-file test scope materially undercounts
+   reachability (attrs, jsonschema above) -- the exact effect CLAUDE.md's
+   own "widening the suites" exercise corrected for in the eval set, with
+   no equivalent in the CLI.
+
+*Awkward-repo-specific (pytest self-hosting only -- see per-repo section
+above for which):* the `[dev]` extras conflict, the shallow-clone version
+issue, `-o pythonpath=src` not working for pytest specifically.
+
+*Works but poor UX:*
+4. Canary failure messages named that something failed but not why or what
+   to try, despite this project's own CHANGELOG already documenting the
+   src-layout fix.
+5. QUICKSTART.md's own `--tests` example used a bare `pytest`, not
+   `sys.executable -m pytest` (what auto-discovery itself uses). This bit
+   the tester directly during this exact field test -- their shell's PATH
+   resolved bare `pytest` to a different venv's binary than the one
+   killcheck was installed into, silently.
+
+Findings 1, 2, 4, 5 fixed in the entries immediately below, in that order,
+per instruction. Finding 3 is a design decision, not a patch -- left open,
+options reported separately, no code changed for it in this pass.
