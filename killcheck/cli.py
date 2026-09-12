@@ -35,6 +35,17 @@ this wrong would mean an ad-hoc `killcheck score` run on someone's unrelated
 project could silently corrupt the submission's own committed data. Every
 command writes into --out instead (default: ./.killcheck/ under wherever
 the command was actually run from).
+
+`score` and `harden` both run the unparseable-source canary before doing
+any mutation work, and ABORT on failure rather than return a number --
+added after a field test against a real src-layout target (pytest testing
+itself) showed `score` returning a confident, unflagged kill_score=0.0000
+while `verify`, run against the exact same target, correctly caught and
+refused. A confident wrong number is worse than a refusal; see
+CHANGELOG.md's "score and harden must not run without a canary" entry.
+`--skip-canary` overrides this for a user who has already confirmed the
+canary separately (or is deliberately investigating a known-bad target);
+it says so loudly in the output, not just in a flag name nobody re-reads.
 """
 from __future__ import annotations
 
@@ -63,6 +74,45 @@ from killcheck.verify_core import (
 )
 
 _ROOT_MARKERS = (".git", "pyproject.toml", "setup.py", "setup.cfg", "tox.ini")
+
+# Shared between verify/score/harden's canary-failure paths -- a canary
+# failure used to just say "mutations are not reaching this target's test
+# process," which is true but tells a user nothing to try next. The most
+# common real-world cause, confirmed on two independently-chosen real repos
+# during a field test (attrs, pytest), is a src-layout package: the
+# editable-install re-imports the ORIGINAL checkout instead of the mutated
+# tempdir copy. `-o pythonpath=src` fixes it for a normal src-layout target
+# (attrs) but not for a target that imports itself while its OWN test
+# runner is still starting up, before that option's collection-time path
+# logic ever runs (pytest testing pytest -- confirmed by direct
+# reproduction, not assumed). --tests-env sets a real environment variable
+# before the interpreter starts, which is not too late either way. See
+# CHANGELOG.md's "canary failure messages must name the likely cause" entry
+# for the full mechanism on both counterexamples.
+_CANARY_FAILURE_HELP = (
+    "canary failed -- mutations are not reaching this target's test process, so any kill "
+    "score from it would be meaningless.\n"
+    "\n"
+    "The most common cause is a src-layout package (the module lives under src/<pkg>/) "
+    "installed editable. Try adding `-o pythonpath=src` to --tests, e.g.\n"
+    '  --tests "... -o pythonpath=src"\n'
+    "\n"
+    "That does not always work: a project that imports itself while its OWN test runner is "
+    "still starting up (pytest testing pytest is the known case) has already re-imported the "
+    "original before that option's collection-time path logic ever runs. If `-o "
+    "pythonpath=src` doesn't fix it, set the path before the interpreter starts instead:\n"
+    "  --tests-env PYTHONPATH=src\n"
+    "\n"
+    "See CHANGELOG.md's src-layout entries for the full mechanism on both cases."
+)
+
+_SKIP_CANARY_WARNING = (
+    "WARNING: --skip-canary passed -- the canary (which confirms a mutation actually reaches "
+    "the interpreter) was NOT run. If this target has the src-layout resolution problem the "
+    "canary exists to catch, every result below is meaningless, not just optimistic -- it is "
+    "not measuring what it looks like it is measuring. Run `killcheck verify` on this module "
+    "to check properly before trusting anything below."
+)
 
 
 class CLIError(Exception):
@@ -181,6 +231,40 @@ def discover_target(module_arg: str, tests_arg: str | None) -> Target:
 
     name = str(module_rel.with_suffix("")).replace(os.sep, "-")
     return Target(name=name, project_root=project_root, module_path=module_rel, test_command=test_command)
+
+
+def _apply_tests_env(pairs: list[str]) -> None:
+    """Set each --tests-env KEY=VALUE pair as a real process environment
+    variable, before any subprocess this CLI runs.
+
+    This works with zero change to the frozen core: runner.py's `_run()`
+    (and every other subprocess.run call in this codebase) never passes
+    `env=` explicitly, so it always inherits whatever THIS process's
+    os.environ is at call time. Setting a var here, once, early, is enough
+    for every later subprocess call in the same run to see it. This is the
+    exact mechanism this project's own PYTHONPYCACHEPREFIX tests already
+    rely on (see scripts/test_pyc_exclusion.py) -- --tests-env is that same
+    mechanism, exposed to a user instead of hardcoded to one test.
+
+    Why this belongs at the CLI layer and not as a runner.py change: an
+    option baked into --tests itself (e.g. pytest's own `-o
+    pythonpath=src`) only ever affects pytest's own collection-time path
+    logic -- too late for a target that imports itself during its OWN test
+    runner's startup, before collection begins (pytest testing pytest is
+    the confirmed case; see CHANGELOG.md). A real environment variable, set
+    before the interpreter even starts, is visible to the very first
+    import, which is what actually fixes that case -- and inheriting
+    os.environ is already how every subprocess call here behaves, so
+    reaching this by mutating this process's own environment needs no
+    change to runner.py's frozen _run() at all.
+    """
+    for pair in pairs:
+        key, sep, value = pair.partition("=")
+        if not sep:
+            raise CLIError(f"--tests-env {pair!r} is not in KEY=VALUE form")
+        if not key:
+            raise CLIError(f"--tests-env {pair!r} has an empty key")
+        os.environ[key] = value
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +386,15 @@ def cmd_score(args: argparse.Namespace) -> int:
     except RuntimeError as e:
         raise CLIError(str(e))
 
+    canary_verified = False
+    if args.skip_canary:
+        print(_SKIP_CANARY_WARNING, file=sys.stderr)
+    else:
+        passed, _detail = canary_check(target, timeout=args.timeout)
+        if not passed:
+            raise CLIError(_CANARY_FAILURE_HELP)
+        canary_verified = True
+
     report = score_target(target, timeout=args.timeout, workers=1, check_clean=False)
     if report["total_mutants"] == 0:
         print(f"{target.module_path}: no mutable sites found -- nothing to score.")
@@ -316,6 +409,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         "module": str(target.module_path),
         "project_root": str(target.project_root),
         "test_command": target.test_command,
+        "canary_verified": canary_verified,
         **report,
         "outcome_breakdown": breakdown,
         "reachability": reach_summary,
@@ -329,6 +423,9 @@ def cmd_score(args: argparse.Namespace) -> int:
         print(json.dumps(result, indent=2))
         return 0
 
+    if not canary_verified:
+        print(_SKIP_CANARY_WARNING)
+        print()
     c, f = breakdown["counts"], breakdown["fractions"]
     print(f"{target.module_path}  ({target.name})")
     print(f"  {report['killed']}/{report['total_mutants']} killed  (kill score {report['kill_score']:.4f})")
@@ -349,6 +446,9 @@ def cmd_score(args: argparse.Namespace) -> int:
     else:
         print("\n  No survivors -- every mutant was killed.")
     print(f"\nwrote {path}")
+    if not canary_verified:
+        print()
+        print(_SKIP_CANARY_WARNING)
     return 0
 
 
@@ -377,12 +477,18 @@ def cmd_verify(args: argparse.Namespace) -> int:
     passed, detail = canary_check(target, timeout=args.timeout)
     record("canary", "PASS" if passed else "FAIL", detail)
     if not passed:
-        raise CLIError("canary failed -- mutations are not reaching this target's test process.")
+        raise CLIError(_CANARY_FAILURE_HELP)
 
     status, detail = byte_size_canary_check(target, timeout=args.timeout)
     record("byte-size canary", status, detail)
     if status == "FAIL":
-        raise CLIError("byte-size canary failed -- possible stale-bytecode execution.")
+        raise CLIError(
+            "byte-size canary failed -- a same-byte-length mutation on a line the clean suite "
+            "actually executes (reachability confirmed first, not assumed) went undetected. "
+            "Unreached-line false positives are ruled out by construction, so this is a "
+            "genuine possible stale-bytecode execution. See CHANGELOG.md's byte_size_canary_check "
+            "entries for the mechanism."
+        )
 
     if args.skip_determinism:
         record("determinism", "SKIPPED", "--skip-determinism passed; the run below is a single pass, not confirmed stable")
@@ -443,6 +549,22 @@ def cmd_harden(args: argparse.Namespace) -> int:
         verify_clean(target, timeout=max(args.timeout, 30))
     except RuntimeError as e:
         raise CLIError(str(e))
+
+    canary_verified = False
+    if args.skip_canary:
+        print(_SKIP_CANARY_WARNING, file=sys.stderr)
+    else:
+        passed, _detail = canary_check(target, timeout=args.timeout)
+        if not passed:
+            raise CLIError(
+                _CANARY_FAILURE_HELP + "\n\nRefusing to run harden: with the canary failing, "
+                "every survivor below is an artifact of mutations never reaching the "
+                "interpreter, not a real gap -- no test could ever kill them, so harden would "
+                "spend real model calls chasing something that can't be fixed by writing a "
+                "better test. Fix the canary failure first, or pass --skip-canary if you "
+                "understand the risk."
+            )
+        canary_verified = True
 
     report = score_target(target, timeout=args.timeout, workers=1, check_clean=False)
     if report["total_mutants"] == 0:
@@ -556,6 +678,7 @@ def cmd_harden(args: argparse.Namespace) -> int:
     result = {
         "target": target.name,
         "module": str(target.module_path),
+        "canary_verified": canary_verified,
         "attempted": len(wanted),
         "kept": len(kept_sources),
         "discarded": len(wanted) - len(kept_sources),
@@ -571,6 +694,9 @@ def cmd_harden(args: argparse.Namespace) -> int:
     path = out_dir / f"{target.name}_harden.json"
     path.write_text(json.dumps(result, indent=2))
     print(f"wrote {path}")
+    if not canary_verified:
+        print()
+        print(_SKIP_CANARY_WARNING)
     return 0
 
 
@@ -591,6 +717,13 @@ def _add_common(sp: argparse.ArgumentParser) -> None:
         "--timeout", type=int, default=60,
         help="per-mutant subprocess timeout in seconds (default: 60)",
     )
+    sp.add_argument(
+        "--tests-env", action="append", default=[], metavar="KEY=VALUE",
+        help="set an environment variable before the interpreter starts (repeatable), e.g. "
+        "--tests-env PYTHONPATH=src. Needed when -o pythonpath=src (baked into --tests) isn't "
+        "enough -- a target that imports itself during its own test runner's startup, before "
+        "collection-time path options apply, needs the path set before the interpreter starts.",
+    )
     sp.add_argument("--debug", action="store_true", help="show full tracebacks on unexpected errors")
 
 
@@ -604,6 +737,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp_score = sub.add_parser("score", help="mutation score for a module, with the survivor list")
     _add_common(sp_score)
     sp_score.add_argument("--json", action="store_true", help="print machine-readable JSON only")
+    sp_score.add_argument(
+        "--skip-canary", action="store_true",
+        help="skip the pre-flight canary check (faster, unverified -- the output says so loudly)",
+    )
 
     sp_verify = sub.add_parser("verify", help="canary, byte-size canary, determinism gate, reachability")
     _add_common(sp_verify)
@@ -627,6 +764,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--out-tests",
         help="where to write the kept generated tests (default: <out>/<name>_killcheck_tests.py)",
     )
+    sp_harden.add_argument(
+        "--skip-canary", action="store_true",
+        help="skip the pre-flight canary check (unverified -- risks spending model calls on "
+        "survivors that can never be killed; the output says so loudly)",
+    )
 
     return p
 
@@ -645,6 +787,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     handlers = {"score": cmd_score, "verify": cmd_verify, "harden": cmd_harden}
     try:
+        _apply_tests_env(args.tests_env)
         return handlers[args.command](args)
     except CLIError as e:
         print(f"error: {e}", file=sys.stderr)

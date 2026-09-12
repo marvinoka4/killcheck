@@ -1981,3 +1981,79 @@ issue, `-o pythonpath=src` not working for pytest specifically.
 Findings 1, 2, 4, 5 fixed in the entries immediately below, in that order,
 per instruction. Finding 3 is a design decision, not a patch -- left open,
 options reported separately, no code changed for it in this pass.
+
+## score and harden must not run without a canary
+
+**Finding 1 from the field test above, highest priority.** `killcheck
+score` returned `kill_score = 0.0000` on pytest's `src/_pytest/scope.py`
+with no warning at all -- the src-layout bug the canary exists to catch,
+silently shipped to a user as a confident number. `verify`, run against the
+exact same target, caught it correctly. The canary works; it simply wasn't
+wired into the command people run first, and QUICKSTART.md itself puts
+`score` ahead of `verify` in its own walkthrough.
+
+**Fix:** `score` and `harden` both now run `canary_check` (the same
+unparseable-garbage canary `verify` already ran) immediately after
+`verify_clean`, before any mutation work -- and for `harden`, before the
+API client is even constructed, so a canary failure never spends a model
+call. On failure, both ABORT with an error (no number returned, no test
+drafted) rather than proceed. `--skip-canary` overrides this for a user who
+has already confirmed the canary separately, or is deliberately
+investigating a known-bad target -- both the terminal output (top AND
+bottom, so it's hard to scroll past) and the written JSON
+(`"canary_verified": false`) say loudly that the result is unverified, not
+just a flag name nobody re-reads.
+
+**Verified against the exact case that exposed the bug:** `killcheck
+score` on pytest's `scope.py` now aborts with an actionable error (see the
+next entry) instead of returning `0.0000`. `--skip-canary` still produces
+the same `0/35` as before, now with the warning printed twice, confirming
+the skip path is a deliberate, visible override, not a silent behavior
+change for anyone who was already passing it.
+
+## Canary failure messages must name the likely cause and the fix, plus a --tests-env passthrough for the case that needs it
+
+**Finding 4 from the field test above.** "canary failed -- mutations are
+not reaching this target's test process" is true and tells a user nothing
+to try next, despite this project's own CHANGELOG already documenting the
+exact mechanism and fix for the most common cause.
+
+**Fix:** every canary-failure path (`verify`, and the two new ones in
+`score`/`harden` above) now raises a shared, detailed message: names
+src-layout-plus-editable-install as the common cause, suggests adding `-o
+pythonpath=src` to `--tests`, and states plainly that this does not always
+work -- pytest testing itself is the confirmed counterexample, because
+`_pytest` imports itself while pytest's own test runner is still
+bootstrapping, before its collection-time path option ever applies (see
+the field-test entry above for the direct reproduction). For that case, the
+message now points at a new flag:
+
+**`--tests-env KEY=VALUE`** (repeatable, on all three subcommands): sets a
+real process environment variable before the interpreter starts, e.g.
+`--tests-env PYTHONPATH=src`. This is the one thing that fixes pytest's
+self-hosting case, confirmed directly -- an ini option only ever affects
+pytest's own collection-time path logic, too late for a target that has
+already imported itself before collection begins; a real environment
+variable is visible to the very first import, which is not too late.
+
+**Why this needed no change to the frozen core.** `runner.py`'s `_run()`
+(and every other `subprocess.run` call in this codebase) never passes
+`env=` explicitly, so it always inherits whatever the CALLING process's
+`os.environ` is at the moment the subprocess starts. `--tests-env` just
+sets `os.environ[key] = value` once, early, inside the CLI's own process,
+before any of the frozen functions are called -- every subsequent
+subprocess call in the same run inherits it automatically. This is the
+exact mechanism this project's own `PYTHONPYCACHEPREFIX` tests already
+rely on (`scripts/test_pyc_exclusion.py`, setting the env var before
+calling `_evaluate_one` directly); `--tests-env` is that same mechanism,
+exposed to a user instead of hardcoded to one test. No frozen-core change,
+no new parameter threaded through `runner.py`'s signatures.
+
+**Verified end to end against the exact case that motivated it:**
+`killcheck verify src/_pytest/scope.py --tests-env PYTHONPATH=src` on
+pytest -- canary PASS, byte-size canary PASS, determinism PASS (12
+survivors, stable x3), reachability OK (9 reachable / 3 unreachable),
+`kill_score = 0.6571`. Pytest went from a silently wrong `0.0000` (before
+this pass's fixes) to a correctly-refused abort (finding 1's fix) to a
+real, trustworthy number, entirely via `--tests-env` -- no code change
+needed beyond exposing the mechanism.
