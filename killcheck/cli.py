@@ -4,7 +4,7 @@ targets.json.
 
 Three subcommands, in increasing order of what they need:
 
-  killcheck score <module.py> --tests "pytest tests/test_x.py -q"
+  killcheck score <module.py> --tests "python3 -m pytest tests/test_x.py -q"
     -> mutation score for that module, with the survivor list. No API key.
 
   killcheck verify <module.py> --tests "..."
@@ -173,7 +173,7 @@ def _discover_test_command(project_root: Path, module_file: Path) -> list[str]:
         raise CLIError(
             f"no test files found under {project_root} (looked for test_*.py "
             f"and *_test.py). Pass --tests explicitly, e.g.\n"
-            f'  --tests "pytest path/to/tests -q"'
+            f'  --tests "python3 -m pytest path/to/tests -q"'
         )
     stem = module_file.stem
     parent = module_file.parent.name
@@ -185,7 +185,7 @@ def _discover_test_command(project_root: Path, module_file: Path) -> list[str]:
         raise CLIError(
             f"found {len(candidates)} test file(s) under {project_root} but none named after "
             f"{stem!r} or {parent!r} -- won't guess which one(s) exercise this module. "
-            f'Pass --tests explicitly, e.g.\n  --tests "pytest {example} -q"'
+            f'Pass --tests explicitly, e.g.\n  --tests "python3 -m pytest {example} -q"'
         )
     chosen = sorted(matched, key=lambda p: -p.stat().st_size)[0]
     return [sys.executable, "-m", "pytest", str(chosen.relative_to(project_root)), "-q"]
@@ -709,8 +709,10 @@ def _add_common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("module_path", help="path to the .py module to mutate")
     sp.add_argument(
         "--tests",
-        help='test command to run, e.g. "pytest tests/test_foo.py -q". '
-        "Auto-discovered from the module's name if omitted.",
+        help='test command to run, e.g. "python3 -m pytest tests/test_foo.py -q" (use '
+        "python3 -m pytest, not bare pytest -- a bare pytest resolves via PATH and can "
+        "silently run a different environment's binary than the one killcheck is installed "
+        "into). Auto-discovered from the module's name if omitted.",
     )
     sp.add_argument("--out", help="directory to write results into (default: ./.killcheck)")
     sp.add_argument(

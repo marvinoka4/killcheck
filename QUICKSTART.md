@@ -37,8 +37,17 @@ nearest `.git`/`pyproject.toml`/`setup.py` above it. If either guess is wrong,
 say so yourself:
 
 ```bash
-killcheck score yourpackage/somemodule.py --tests "pytest tests/test_somemodule.py -q"
+killcheck score yourpackage/somemodule.py --tests "python3 -m pytest tests/test_somemodule.py -q"
 ```
+
+Use `python3 -m pytest`, not a bare `pytest` -- `python3` resolves through
+your shell's `PATH` to whichever virtualenv is active, so it reliably runs
+the *same* environment killcheck itself is installed into. A bare `pytest`
+is a separate lookup: if some other `pytest` sits earlier on `PATH` (another
+project's venv, a system install), it silently runs that one instead, with
+no error -- confirmed the hard way during this tool's own testing. Auto-
+discovery (above) already does this correctly for you; a manual `--tests`
+should match it.
 
 Output looks like this:
 

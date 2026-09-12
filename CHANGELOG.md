@@ -2122,3 +2122,26 @@ earlier in this project, applied to a different check: non-survival
 correlates with staleness only once reachability is no longer a competing
 explanation, and establishing that costs one extra coverage measurement,
 not a fundamentally different design.
+
+## QUICKSTART's --tests example must use `python3 -m pytest`, not bare `pytest`
+
+**Finding 5 from the field test above.** QUICKSTART.md's own `--tests`
+example used a bare `pytest`, resolved via `PATH` -- not `sys.executable -m
+pytest`, what auto-discovery itself uses internally. This bit the tester
+directly during the field test above: their shell's `PATH` resolved bare
+`pytest` to a different venv's binary (this repo's own `.venv/bin/pytest`)
+than the one killcheck was actually installed into, silently -- no error,
+just a different environment's `pytest` running against the wrong
+site-packages. That is the best possible evidence this will bite a real
+user, not a hypothetical one.
+
+**Fix:** QUICKSTART.md's example now reads `--tests "python3 -m pytest
+tests/test_somemodule.py -q"`, with a line explaining why: `python3`
+resolves through `PATH` to whichever virtualenv is active, reliably the
+same environment killcheck is installed into, where a bare `pytest` is a
+separate lookup that can silently point elsewhere. The same bare-`pytest`
+pattern in `killcheck/cli.py` itself -- the module docstring's usage
+example, both of `_discover_test_command`'s error-message examples, and
+the `--tests` argparse help text -- was updated to match, so a user
+copy-pasting any of the tool's OWN example text gets the safer form, not
+just the one in QUICKSTART.
