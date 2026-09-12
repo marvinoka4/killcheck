@@ -191,7 +191,23 @@ def _discover_test_command(project_root: Path, module_file: Path) -> list[str]:
     return [sys.executable, "-m", "pytest", str(chosen.relative_to(project_root)), "-q"]
 
 
-def discover_target(module_arg: str, tests_arg: str | None) -> Target:
+_NARROW_SCOPE_NOTE = (
+    "note: reachability below is computed under that single file alone -- it can undercount "
+    "what your project's broader test suite actually reaches. Confirmed on a real target, not "
+    "hypothetical: attrs' converters.py had two survivors reported unreachable under its single "
+    "auto-discovered test file, when tests/test_annotations.py -- a different file, invisible to "
+    "single-file discovery -- directly exercises those exact lines (see CHANGELOG.md's field-test "
+    "entry). If an 'unreachable' count here looks too high, try a wider --tests, e.g. your whole "
+    "tests/ directory, and compare."
+)
+
+
+def discover_target(module_arg: str, tests_arg: str | None) -> tuple[Target, bool]:
+    """Returns (target, auto_discovered) -- auto_discovered is True when
+    `tests_arg` was not given, meaning `_discover_test_command` picked the
+    test command (always a single file, by construction). Callers use this
+    to flag that reachability was measured under a narrow scope they didn't
+    choose themselves -- see _NARROW_SCOPE_NOTE above."""
     module_file = Path(module_arg)
     if not module_file.exists():
         raise CLIError(f"no such file: {module_arg}")
@@ -225,12 +241,16 @@ def discover_target(module_arg: str, tests_arg: str | None) -> Target:
         test_command = shlex.split(tests_arg)
         if not test_command:
             raise CLIError("--tests was empty")
+        auto_discovered = False
     else:
         test_command = _discover_test_command(project_root, module_file)
         print(f"note: no --tests given -- discovered: {' '.join(test_command)}", file=sys.stderr)
+        print(_NARROW_SCOPE_NOTE, file=sys.stderr)
+        auto_discovered = True
 
     name = str(module_rel.with_suffix("")).replace(os.sep, "-")
-    return Target(name=name, project_root=project_root, module_path=module_rel, test_command=test_command)
+    target = Target(name=name, project_root=project_root, module_path=module_rel, test_command=test_command)
+    return target, auto_discovered
 
 
 def _apply_tests_env(pairs: list[str]) -> None:
@@ -357,19 +377,27 @@ def format_survivors_by_function(target: Target, survivor_records: list[dict]) -
     return "\n".join(lines)
 
 
-def format_reachability_line(reach_summary: dict, reach_unknown: bool, n_survivors: int) -> str:
+def format_reachability_line(
+    reach_summary: dict, reach_unknown: bool, n_survivors: int, narrow_scope: bool = False
+) -> str:
     if reach_unknown:
         return (
             "  NOTE: could not measure line coverage for this module (test command has no "
             "'pytest' step, or coverage failed) -- reachability is UNKNOWN for every survivor "
             "below, not the same as unreachable."
         )
-    return (
+    line = (
         f"  {reach_summary['reachable_survivor']} of {n_survivors} survivors sit on a line the "
         f"suite actually executes -- those are the ones worth writing a test for. "
         f"{reach_summary['unreachable']} sit on a line the suite never runs at all (no test "
         f"could kill them without first covering that line)."
     )
+    if narrow_scope:
+        line += (
+            "\n  (measured under a single auto-discovered test file -- may undercount; see the "
+            "note above and try a wider --tests if this looks off)"
+        )
+    return line
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +406,7 @@ def format_reachability_line(reach_summary: dict, reach_unknown: bool, n_survivo
 
 
 def cmd_score(args: argparse.Namespace) -> int:
-    target = discover_target(args.module_path, args.tests)
+    target, narrow_scope = discover_target(args.module_path, args.tests)
     out_dir = _out_dir(args)
 
     try:
@@ -410,6 +438,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         "project_root": str(target.project_root),
         "test_command": target.test_command,
         "canary_verified": canary_verified,
+        "narrow_scope": narrow_scope,
         **report,
         "outcome_breakdown": breakdown,
         "reachability": reach_summary,
@@ -440,7 +469,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         )
     if survivor_records:
         print()
-        print(format_reachability_line(reach_summary, reach_unknown, len(survivor_records)))
+        print(format_reachability_line(reach_summary, reach_unknown, len(survivor_records), narrow_scope))
         print()
         print(format_survivors_by_function(target, survivor_records))
     else:
@@ -458,7 +487,7 @@ def cmd_score(args: argparse.Namespace) -> int:
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
-    target = discover_target(args.module_path, args.tests)
+    target, narrow_scope = discover_target(args.module_path, args.tests)
     out_dir = _out_dir(args)
     print(f"=== verify: {target.module_path} ===")
     checks: list[dict] = []
@@ -506,19 +535,21 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
     breakdown = outcome_breakdown(report)
     reach_summary, mutant_records, reach_unknown = _reachability_for(target, report)
-    record(
-        "reachability",
-        "UNKNOWN" if reach_unknown else "OK",
+    reach_detail = (
         "could not measure coverage for this module" if reach_unknown else
         f"{reach_summary['reachable_survivor']} reachable-survivor, "
-        f"{reach_summary['unreachable']} unreachable, {reach_summary['killed']} killed",
+        f"{reach_summary['unreachable']} unreachable, {reach_summary['killed']} killed"
     )
+    if narrow_scope and not reach_unknown:
+        reach_detail += " (single auto-discovered test file -- may undercount, see note above)"
+    record("reachability", "UNKNOWN" if reach_unknown else "OK", reach_detail)
 
     result = {
         "target": target.name,
         "module": str(target.module_path),
         "project_root": str(target.project_root),
         "test_command": target.test_command,
+        "narrow_scope": narrow_scope,
         "checks": checks,
         "report": report,
         "outcome_breakdown": breakdown,
@@ -541,7 +572,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 
 def cmd_harden(args: argparse.Namespace) -> int:
-    target = discover_target(args.module_path, args.tests)
+    target, narrow_scope = discover_target(args.module_path, args.tests)
     out_dir = _out_dir(args)
     (out_dir / "trajectories").mkdir(parents=True, exist_ok=True)
 
@@ -588,6 +619,14 @@ def cmd_harden(args: argparse.Namespace) -> int:
                 f"mutation on a line the suite never executes. Use --include-unreachable to "
                 f"attempt them anyway (almost always wasted calls)."
             )
+            if narrow_scope:
+                print(
+                    f"note: this reachability count was measured under a single auto-discovered "
+                    f"test file -- some of the {skipped} skipped here may actually be reachable "
+                    f"under your project's broader suite (confirmed on a real target; see the "
+                    f"note printed above). --include-unreachable attempts them anyway; a wider "
+                    f"--tests is the more targeted fix."
+                )
         if not wanted:
             print("no reachable survivors -- nothing to harden. (Re-run with --include-unreachable "
                   "to attempt the unreachable ones anyway, though they are close to unkillable.)")
@@ -679,6 +718,7 @@ def cmd_harden(args: argparse.Namespace) -> int:
         "target": target.name,
         "module": str(target.module_path),
         "canary_verified": canary_verified,
+        "narrow_scope": narrow_scope,
         "attempted": len(wanted),
         "kept": len(kept_sources),
         "discarded": len(wanted) - len(kept_sources),

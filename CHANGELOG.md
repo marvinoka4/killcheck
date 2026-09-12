@@ -2145,3 +2145,61 @@ example, both of `_discover_test_command`'s error-message examples, and
 the `--tests` argparse help text -- was updated to match, so a user
 copy-pasting any of the tool's OWN example text gets the safer form, not
 just the one in QUICKSTART.
+
+## Finding 3, option E: name the narrow-scope limitation instead of silently guessing wider
+
+Finding 3 (auto-discovery's single-file test scope undercounts reachability
+-- see the field-test entry above) needs a design decision on how far to
+widen scope automatically, not a patch, so nothing here changes what
+`score`/`verify`/`harden` actually run. What ships now is honesty about the
+limitation that already exists, per the chosen option:
+
+**Two auto-widening options were considered and explicitly declined.**
+Auto-widening to the full test suite by default risks exactly the "twenty
+minutes on someone's laptop" failure mode this project already treats as
+unacceptable -- CLAUDE.md's own eval-set widening saw test counts go up
+6x-40x, curated afterward by hand; nothing curates an unattended CLI run.
+A targeted heuristic (AST-scan the test directory for files that import the
+target module, run only those) was considered and declined for a sharper
+reason: it is precisely the shape of failure this project exists to argue
+against. The concrete attrs case that exposed finding 3 -- `test_
+annotations.py` asserting on `.__annotations__` values that depend on
+lines in `converters.py` -- would not necessarily be caught by an import
+scan at all, since the dependency runs through what the code returns, not
+through an import statement `test_annotations.py` may or may not contain
+in a form a scanner recognizes. A heuristic that is right most of the time
+and silently wrong sometimes replaces a visible, stated limitation with a
+confident wrong answer -- worse, not better.
+
+**What ships: the limitation is now stated, not silent, and machine-
+visible.** When `--tests` is not given (i.e. auto-discovery picked the
+test command, always a single file by construction), every command now:
+
+- prints a note at discovery time naming the limitation, citing the
+  attrs case concretely (two survivors reported unreachable under their
+  single matching test file, actually exercised by a different, sibling
+  file invisible to single-file discovery) rather than describing the risk
+  abstractly, and suggesting a wider `--tests` to compare;
+- repeats a shorter pointer back to that note right next to the actual
+  reachability numbers (`score`'s summary, `verify`'s `reachability` row,
+  `harden`'s "skipping N unreachable survivor(s)" line), since that's
+  where a reader is actually looking, not just at startup;
+- sets `"narrow_scope": true` in every command's JSON output, so the
+  narrowness is visible to anything reading the file, not only a human
+  reading the terminal.
+
+Explicit `--tests` (a user's own choice of scope) triggers none of this --
+confirmed directly, not assumed: running the same attrs target with
+`--tests` set explicitly produces no note and `"narrow_scope": false`,
+while the identical target via auto-discovery produces both. `discover_
+target`'s return type changed from `Target` to `(Target, bool)`
+accordingly; all three call sites updated.
+
+**Declined for later, per instruction, not implemented here:** a separate,
+coverage-only pass under a wider scope (no re-scoring, so the cost is one
+extra suite run, not one per mutant) that reports how many "unreachable"
+survivors would flip reachable under it -- keeping the fast narrow scope
+for the actual score while showing both numbers, honestly labeled by which
+scope produced each, matching CLAUDE.md's own "always show the curated
+number next to the raw one" principle rather than picking one silently.
+This is real, scoped work, left for its own pass.
