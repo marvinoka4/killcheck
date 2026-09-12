@@ -18,12 +18,23 @@ are, per CLAUDE.md invariant 5) -- but build_mutant_records/
 summarize_reachability/outcome_breakdown feed the primary metric's
 denominator, so changes here get the same re-verify-before-trusting
 discipline as a frozen-core change even though it isn't formally required.
+
+One deliberate change since the move: measure_reachable_lines() invoked the
+literal command name "python3" for its coverage subprocess rather than
+sys.executable -- harmless in every environment this project had actually
+run in (this venv's own bin/ always has a python3), but wrong for a
+stranger's environment where only `python` is on PATH, where it would
+silently degrade every survivor to reachability=UNKNOWN rather than report
+a wrong interpreter. Changed to sys.executable and re-verified against all
+12 eval-set targets the same way as the extraction itself -- see
+CHANGELOG.md's "python3 -> sys.executable" entry.
 """
 import ast
 import io
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import tokenize
 from pathlib import Path
@@ -205,7 +216,7 @@ def measure_reachable_lines(target: Target, timeout: int = 60) -> set[int] | Non
     except ValueError:
         return None
     coverage_cmd = (
-        ["python3", "-m", "coverage", "run", "--data-file", ".cov_reach", "-m", "pytest"]
+        [sys.executable, "-m", "coverage", "run", "--data-file", ".cov_reach", "-m", "pytest"]
         + cmd[pytest_idx + 1 :]
     )
 
@@ -217,7 +228,7 @@ def measure_reachable_lines(target: Target, timeout: int = 60) -> set[int] | Non
                 coverage_cmd, cwd=work, capture_output=True, text=True, timeout=timeout
             )
             json_proc = subprocess.run(
-                ["python3", "-m", "coverage", "json", "--data-file", ".cov_reach",
+                [sys.executable, "-m", "coverage", "json", "--data-file", ".cov_reach",
                  "-o", "cov.json", "-i"],
                 cwd=work, capture_output=True, text=True, timeout=timeout,
             )

@@ -1805,3 +1805,45 @@ workflow re-runs `scripts/classify_tests.py` automatically after an arm
 finishes. Worth a standing habit, not just this one fix: regenerate derived
 `results/*.json` artifacts as part of finishing a run, not on discovery
 months later.
+
+## `measure_reachable_lines`: hardcoded `python3` -> `sys.executable`
+
+Noted but deliberately not changed in the extraction commit above, since it
+was an existing behavior being moved verbatim, not something to fold into a
+"pure code motion" change without its own verification pass. Fixed on its
+own, as flagged.
+
+**Why this one matters more than a typical hardcoded-binary-name nit:**
+`measure_reachable_lines` doesn't crash or error out when `"python3"` isn't
+on `PATH` -- it degrades. `subprocess.run` with a missing executable raises
+`FileNotFoundError`, which the surrounding `try`/`except
+(TimeoutExpired, FileNotFoundError, JSONDecodeError)` catches and turns
+into a plain `None` return, which `killcheck score`/`verify`/`harden` all
+already render as `reachability: UNKNOWN` -- not a crash, not a silent
+zero. But UNKNOWN reads as "coverage measurement doesn't work for this kind
+of project" (a harness limitation), when the real cause would have been
+"the wrong interpreter name for this environment." A stranger with only
+`python` (not `python3`) on `PATH` -- true of some Windows installs, some
+minimal containers, and increasingly common `pyenv`/`uv`-managed
+environments that don't always symlink both names -- would get every
+single survivor reported UNKNOWN and no indication why, which is a worse
+failure than an outright crash: a crash gets debugged, a plausible-looking
+"can't measure this" doesn't.
+
+**Fix:** `["python3", ...]` -> `[sys.executable, ...]` at both of this
+function's two subprocess call sites (the `coverage run` and the
+`coverage json` steps). `sys.executable` is always correct: it's the
+literal path to the interpreter currently running this code, not a name
+that has to be resolved on `PATH` at all, so it's a strict improvement with
+no new failure mode.
+
+**Verified the same way as the extraction itself, not assumed correct
+from "it's just a rename":** ran the full 12-target `scripts/
+verify_targets.py` a third time with the fix applied, and diffed the
+resulting `results/target_verification.json` against the same pre-refactor
+backup used for the extraction's own verification -- zero mismatches, byte
+for byte. This eval set's own environment always had `python3` on `PATH`
+(so the bug was never observable here), which is exactly why the fix needed
+verifying against real output rather than trusted on inspection alone: a
+change to code no failing test exercises needs the same empirical check a
+passing test would have forced, not less.
