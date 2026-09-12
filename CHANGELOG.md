@@ -1519,3 +1519,233 @@ and does not have that failure mode. This is the same shape of lesson as
 the predicted-outcome discipline that caught most of this project's
 instrument bugs, applied one level up: to the tests that check the
 instrument, not just the instrument itself.
+
+## From research artifact to usable tool: a `killcheck` CLI against an arbitrary module, not just the 12 eval-set targets
+
+Requested directly: killcheck only ran against the 12 hardcoded cases in
+`targets.json`. To be useful to anyone else it needs to run against an
+arbitrary repo with one command. Six steps, in order; this entry covers all
+six, reported together since the work was continuous.
+
+**1. CLI entry point.** New `killcheck/cli.py`, three subcommands:
+`killcheck score <module.py>` (mutation score + survivor list, grouped by
+function, reachable vs unreachable), `killcheck verify <module.py>` (canary,
+byte-size canary, determinism gate, reachability -- the instrument-soundness
+checks, on one module), `killcheck harden <module.py>` (the full agent loop:
+draft, gate, retry, batch rescore, a ready-to-review test file). Target
+discovery works from a bare path: walks upward from the module for a project
+marker (`.git`/`pyproject.toml`/`setup.py`/`setup.cfg`/`tox.ini`), and
+guesses a test command from the module's stem/parent-directory name against
+`test_*.py`/`*_test.py` files if `--tests` isn't given. `targets.json` and
+every `scripts/*.py` batch tool are untouched -- batch mode is unchanged, this
+is a second way in, not a replacement. `engine.py` and `runner.py` were not
+touched; the CLI only calls their existing public functions
+(`score_target`, `verify_clean`, `generate_mutants`).
+
+**2. Packaging.** New `pyproject.toml`: `console_scripts` entry
+(`killcheck = killcheck.cli:main`), dependencies pinned to what this was
+built and tested against (`pytest==9.1.1`, `coverage==7.16.0`; `anthropic`
+and `python-dotenv` moved to an optional `[harden]` extra, since `score` and
+`verify` need neither an API key nor those packages importable at all).
+Verified by creating a genuinely fresh venv, `pip install -e .` from a clean
+clone, and running the installed `killcheck` against a repo outside the eval
+set -- see "where it broke" below; the two real breakages found there were
+fixed before this entry was written, not left for later.
+
+No network access in this sandboxed environment, so "a repo outside the
+eval set" is a small synthetic project built for this purpose
+(`mathutils.py` -- `clamp`/`is_palindrome`/`safe_divide`/`running_total` --
+plus a deliberately partial test suite), not a cloned GitHub repo. Stated
+plainly since the brief asked for a real external repo and this substitutes
+for one; the packaging and import-surface bugs this caught (below) are
+about killcheck's own installed layout, not about anything specific to a
+real repo's code, so the substitution doesn't weaken what it verified.
+
+**3. QUICKSTART.md.** Install, point it at one module, get a score, read the
+output -- no eval-set concepts, no arms, no SKR. README.md stays the research
+write-up; both files now link to each other.
+
+**4. Output for humans.** `score` and `verify`'s default output (not
+`--json`) is a terminal summary: kill score, killed/timeout/error/survived
+breakdown, a reachable-vs-unreachable count, then survivors grouped by
+enclosing function with the original and mutated line shown for each,
+tagged `[reachable]`/`[unreachable]`/`[unknown]`. Full JSON is still always
+written to `--out` (default `./.killcheck/`) regardless of which mode is
+used on stdout.
+
+**5. Graceful degradation.** Every assumption that held for the 12
+hand-audited eval-set targets and doesn't hold for an arbitrary repo now
+produces a specific, actionable error instead of a crash or a silent zero:
+no such file, a directory instead of a `.py` file, a module that doesn't
+parse, no discoverable test file (with a copy-pasteable `--tests` example),
+an *ambiguous* set of test files where the old largest-file-fallback
+heuristic (already flagged once in this project's own history --
+aiofiles-temptypes picking the wrong file, see the entry above from that
+session) would have silently guessed wrong with no hand-audit backstop this
+time to catch it, a test suite that fails on clean code (the real pytest
+failure is shown, not swallowed), a test command that isn't installed on
+PATH (caught at the top of `main()`, not left as a raw `FileNotFoundError`
+traceback from inside frozen `runner.py`'s `_run()`), a module with zero
+mutable sites, and a target with zero survivors (or zero *reachable*
+survivors for `harden`). All nine confirmed by deliberately constructing
+that exact condition and running the installed CLI against it, not by
+inspection. `--debug` gets the full traceback for anything not on this list.
+
+Ad-hoc runs never touch this repo's own `results/`/`trajectories/` --
+verified directly, not assumed: every `score`/`verify`/`harden` invocation
+writes only under `--out` (default `./.killcheck/` under wherever the
+command was run from), confirmed by running `harden` end-to-end against the
+synthetic external repo and checking `git status` on this repo's `results/`
+and `trajectories/` came back clean. This matters specifically because a
+`pip install -e .` keeps `killcheck/cli.py` living inside this exact
+checkout -- getting this wrong would have meant an unrelated project's ad-hoc
+run could silently corrupt the eval set's own frozen results.
+
+### Instrument finding, not a packaging chore: `killcheck/agent.py`'s import of `scripts.classify_tests` would have failed for every real install of this package
+
+This is the same shape of bug as "src-layout editable installs silently
+defeat mutation testing" above, not a lesser cousin of it -- worth stating
+as its own finding rather than burying as item 1 of the list below, because
+the mechanism is identical: **an environment assumption that holds where
+the code is developed and breaks where it ships, invisible from inside the
+checkout precisely because the checkout is where the assumption happens to
+be true.** The src-layout bug held because a mutated copy's absolute path
+happened to still resolve back to the original checkout; this one held
+because `scripts/` happened to sit right next to `killcheck/` on disk in
+every environment anyone had actually run this code in so far.
+
+**What happened:** `killcheck/agent.py` (part of the installable
+`killcheck` package, needed by `killcheck harden`) did
+`from scripts.classify_tests import classify_test, ...` -- a top-level
+import of a sibling directory that is not part of the package and was never
+declared as one.
+
+**Root cause:** this import resolves today only because `scripts/` is a
+namespace package reachable via `sys.path` insertion that happens whenever
+code runs from inside this exact git checkout (`agent.py`'s own
+`sys.path.insert(0, str(Path(__file__).resolve().parent.parent))` puts the
+repo root, and therefore `scripts/`, on the path). A `pip install -e .`
+keeps `killcheck/agent.py` living inside that same checkout, so the import
+kept resolving in every environment this project had actually tested in --
+including, initially, this session's own fresh-venv packaging test, run
+from the killcheck repo directory. The failure was invisible until the
+fresh-venv `killcheck` binary was run from a *different* directory
+(`cd` into the synthetic external repo), which is the ordinary way anyone
+would actually use an installed CLI tool.
+
+**How it was found:** not by reading the import statement and reasoning
+about it -- confirmed empirically, the same standard this project holds
+every other claim to: `python3 -c "import scripts"`, run from outside this
+repo's own checkout with `killcheck` pip-installed into that venv,
+raises `ModuleNotFoundError`. The first attempt at this exact check gave a
+false pass, because it was run with cwd still inside the killcheck
+checkout -- Python's `-c` mode puts cwd on `sys.path[0]`, so `scripts/`
+resolved locally even though nothing about the *installed package* made it
+resolve. Re-run from a directory with no `scripts/` on disk at all gave the
+real answer. A packaging check run from inside the project's own checkout
+can pass for the same reason the bug exists in the first place; the check
+only means something run from outside it.
+
+**Fix:** extracted `classify_test` and its supporting decision procedure
+into `killcheck/classify.py` -- part of the installable package, no
+dependency on `scripts/` at all. Verified AST-identical to the pre-move
+original, function by function, before trusting it (see below).
+`scripts/classify_tests.py` now imports from there instead of defining
+these itself; its own batch-analysis behavior (reading
+`results/generated_tests.jsonl`, writing `results/assertion_taxonomy.json`)
+is unchanged. The same problem, same fix, for `scripts/verify_targets.py`'s
+checking primitives -- see item 2 below.
+
+**Generalized into a permanent check, not just a one-time fix:** the fresh-
+venv-plus-outside-the-checkout packaging test that caught this (see
+"Packaging" above) is exactly the kind of check that would catch a future
+regression of the same shape -- a new `killcheck/` module reaching for
+anything under `scripts/`. Worth running again after any future change to
+what `killcheck/*.py` imports, the same way the canary in the src-layout
+entry above is re-run for every new target rather than trusted once and
+forgotten.
+
+**Decision:** no `scripts/` dependency belongs in `killcheck/`, ever --
+that boundary is now what makes `pip install -e .` correct for `harden` at
+all, not just a cleanliness preference.
+
+**Where it broke, in full (the actual ask -- "report where it breaks on a
+repo outside the eval set; that list is the real work"):**
+
+1. The instrument finding above: `killcheck/agent.py` importing from
+   `scripts.classify_tests`. Fixed via the `killcheck/classify.py`
+   extraction described above.
+2. Same problem, same shape, for `scripts/verify_targets.py`'s
+   `canary_check`/`byte_size_canary_check`/`determinism_check`/
+   `measure_reachable_lines`/`build_mutant_records`/`summarize_reachability`/
+   `outcome_breakdown` -- the CLI's `verify` command needs exactly these, and
+   they lived only in `scripts/`. Extracted into `killcheck/verify_core.py`,
+   same AST-identical verification discipline, `scripts/verify_targets.py`
+   now imports from there; its own `main()` (the eval-set batch entry point)
+   is untouched and confirmed unchanged the same way.
+3. Caught immediately by re-running the existing suite before calling
+   either extraction done: forgot to re-export `byte_size_preserving_mutation`
+   from `scripts/verify_targets.py` after moving it -- broke
+   `scripts/test_pyc_exclusion.py`'s collection (it does
+   `from verify_targets import byte_size_canary_check,
+   byte_size_preserving_mutation`, i.e. imports by name off that module).
+   Fixed by adding it back to the re-export list with a comment explaining
+   why it's there despite nothing in `verify_targets.py` itself calling it
+   directly, so a future "unused import" cleanup doesn't silently reintroduce
+   this.
+4. `pip install -e .` writes a `killcheck.egg-info/` build-metadata
+   directory into the source tree itself, regardless of which venv's `pip`
+   ran it -- not excluded by the existing `.gitignore`. Added `*.egg-info/`,
+   `.killcheck/`, `build/`, and `dist/`.
+5. Found while sanity-checking the `classify.py` extraction (its output
+   should be byte-identical to what's committed, since neither
+   `classify_test` nor `results/generated_tests.jsonl` changed): the
+   *committed* `results/assertion_taxonomy.json` was itself stale, predating
+   arm C's run entirely. Unrelated to this refactor -- fixed separately, see
+   "The stale `results/assertion_taxonomy.json`" below.
+6. Noted, not changed: `killcheck/verify_core.py`'s `measure_reachable_lines`
+   (moved verbatim, so this predates this session) invokes the literal
+   command name `"python3"` for its `coverage` subprocess rather than
+   `sys.executable`. Degrades gracefully today -- coverage measurement
+   returns `None`, the CLI reports reachability as `UNKNOWN` rather than
+   crashing or reporting a silent zero -- but would misbehave on a system
+   where only `python` is on PATH. Left alone rather than folded into a
+   "pure code motion" refactor, since fixing it is an actual logic change
+   that deserves its own verification pass, not a rider on this one's
+   zero-behavior-change guarantee.
+
+**Verification, not assertion, for the two extractions specifically:**
+`ast.dump()`-compared every moved function's parsed source against the
+pre-move original (`git show HEAD:...`) before trusting either move --
+`outcome_breakdown`, `canary_check`, `byte_size_preserving_mutation`,
+`byte_size_canary_check`, `determinism_check`, `measure_reachable_lines`,
+`build_mutant_records`, `summarize_reachability`, and `scripts/
+verify_targets.py`'s own `main()` for the first move; `classify_test`,
+`_classify_expr`, `_touches_mock_attr`, `_is_mock_assert_call`,
+`_is_pytest_raises`, `_is_unittest_assert_raises`, every constant, and
+`scripts/classify_tests.py`'s own `_split_tests`/`main()` for the second --
+all reported IDENTICAL. Then ran the full 12-target `scripts/
+verify_targets.py` end to end (all canary, byte-size canary, and
+determinism checks passing, all 12 targets scored, 53 pooled reachable
+survivors) and diffed the resulting `results/target_verification.json`
+against a backup taken before the refactor: **zero mismatches, byte for
+byte**. `git diff --stat results/target_verification.json` against the
+committed version shows no change to the file at all -- the same
+empirical-diff discipline this project has used for both prior frozen-core
+reopenings, applied here even though `verify_targets.py` was never frozen,
+because its output feeds the primary metric's denominator. `scripts_demo.py`
+reconfirmed `kill_score=0.0952` throughout. The extraction changed zero
+ground-truth verdicts.
+
+**End-to-end validation against the synthetic external repo, with a real
+model call:** `killcheck score`/`killcheck verify` ran clean with no API key
+needed. `killcheck harden --max-survivors 4` attempted all four reachable
+survivors: two comparison-boundary mutants on `clamp()` (`<`/`<=` and
+`>`/`>=`) turned out to be genuinely EQUIVALENT for that specific function
+-- verified by hand, not assumed, since both branches return the same value
+(`hi`/`lo`) at the boundary either way -- and were correctly discarded after
+both attempts, never force-kept. The other two (`is_palindrome`'s
+space-stripping constant, `safe_divide`'s `b == 0` boundary) were correctly
+killed and kept on the first attempt. Official batch rescore: 2 of 4 now
+killed, matching the kept count exactly. A ready-to-review test file was
+written to `.killcheck/mathutils_killcheck_tests.py`.

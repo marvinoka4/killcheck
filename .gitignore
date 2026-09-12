@@ -8,3 +8,7 @@ htmlcov/
 .DS_Store
 targets/
 video.txt
+*.egg-info/
+.killcheck/
+build/
+dist/

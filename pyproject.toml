@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "killcheck"
+version = "0.1.0"
+description = "Mutation testing that tells you which surviving mutants are worth writing a test for."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# Pinned to what this was built and tested against, not floor-pinned with
+# ">=" -- see CLAUDE.md's Eval set rules ("Reproducibility is 15 points").
+# `score` and `verify` need only these two; neither imports `anthropic` or
+# `python-dotenv` at module load time (both are lazy-imported inside
+# killcheck/baseline.py's _client(), only reached by `harden`), so a plain
+# `pip install killcheck` is enough to run either without an API key.
+dependencies = [
+    "pytest==9.1.1",
+    "coverage==7.16.0",
+]
+
+[project.optional-dependencies]
+# `killcheck harden` calls a model; this is the only command that needs it.
+harden = [
+    "anthropic==1.2.0",
+    "python-dotenv==1.2.3",
+]
+
+[project.scripts]
+killcheck = "killcheck.cli:main"
+
+[tool.setuptools]
+# Only the library ships. scripts/ is the 12-target eval-set's own batch
+# tooling (verify_targets.py, agent.py's __main__, ablate.py, ...) -- it is
+# not part of the installable package and was never meant to be; it stays a
+# "clone this repo and run its scripts" workflow, unchanged, documented in
+# CLAUDE.md's Architecture section. Keeping it out here is what the
+# killcheck/verify_core.py and killcheck/classify.py extractions were for:
+# before that split, killcheck/agent.py imported from scripts/, so a plain
+# `pip install killcheck` would have shipped a library whose `harden` command
+# broke at import time the moment scripts/ wasn't on sys.path. See
+# CHANGELOG.md.
+packages = ["killcheck"]

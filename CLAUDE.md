@@ -394,17 +394,42 @@ with the residual-equivalence caveat (see Limitations) still intact.
 targets.json               eval set: 12 (project, module, test command) cases
 killcheck/engine.py        AST mutation operators -> deterministic Mutant list   [FROZEN]
 killcheck/runner.py        isolated execution, kill/survive ground truth         [FROZEN]
+killcheck/verify_core.py   canary/byte-size-canary/determinism/reachability primitives
+                            (extracted from scripts/verify_targets.py so both it and
+                            killcheck/cli.py's `verify`/`score`/`harden` share one copy)
+killcheck/classify.py      deterministic AST assertion-taxonomy decision procedure
+                            (extracted from scripts/classify_tests.py; killcheck/agent.py
+                            needs it for arm C's per-draft taxonomy, and a library module
+                            depending on scripts/ is the wrong direction to ship)
 killcheck/logs.py          shared JSONL append helpers (HELD_OUT_OPERATORS: abandoned, unused)
 killcheck/agent.py         the loop: survivor -> context -> test -> gate -> keep
 killcheck/baseline.py      arm A (single prompt) and arm B (budget-matched)
 killcheck/report.py        results table, markdown output
-scripts/verify_targets.py  canary + widened baseline scoring + reachability
+killcheck/cli.py           `killcheck score|verify|harden <module.py>` -- the same primitives
+                            above, against one arbitrary module outside targets.json;
+                            writes only to --out (default ./.killcheck/), never here
+pyproject.toml              console_scripts entry point + pinned deps; `pip install -e .`
+scripts/verify_targets.py  eval-set batch mode: canary + widened baseline scoring +
+                            reachability across all 12 targets.json cases (logic lives in
+                            killcheck/verify_core.py now; this is the batch driver + main())
 scripts/ablate.py          arm C's log -> what gate/retry each individually bought
-scripts/classify_tests.py  deterministic AST assertion taxonomy per arm
+scripts/classify_tests.py  eval-set batch mode: per-arm taxonomy distribution across
+                            results/generated_tests.jsonl (classify_test itself lives in
+                            killcheck/classify.py now; this is the batch driver + main())
 trajectories/              one JSONL per run, every turn appended live
 results/generated_tests.jsonl   every generated test, every arm, every attempt
 results/target_verification.json denominator manifest: per-mutant reachability
 ```
+
+`killcheck/cli.py` and the two extractions above are documented in full in
+CHANGELOG.md's "From research artifact to usable tool" entry, including the
+AST-identity verification both extractions were checked against before
+either was trusted, and the full re-run of `scripts/verify_targets.py`
+diffed against the committed `target_verification.json` (zero mismatches)
+that stands in for a formal frozen-core reopening even though neither
+extraction touched `engine.py` or `runner.py`. See QUICKSTART.md for the
+CLI's own five-minute usage guide -- this file stays the eval-set's
+experimental design, not the CLI's documentation.
 
 ## Agent loop contract
 

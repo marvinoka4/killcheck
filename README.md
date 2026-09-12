@@ -41,6 +41,12 @@ findings and decisions in the order they happened, and
 [tripwires.md](tripwires.md) for the abort conditions checked during the agent
 run.
 
+Everything below this point is the research write-up: the 12-target eval set,
+the frozen measurement core, and what it found. If you just want to run this
+against a module of your own and get a mutation score back, that's
+[QUICKSTART.md](QUICKSTART.md) instead — no eval-set concepts, no arms, no SKR,
+a useful number in five minutes.
+
 ---
 
 ## A finding, not a caveat: most undetected faults are unreached code, not weak assertions

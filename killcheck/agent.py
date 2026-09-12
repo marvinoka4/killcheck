@@ -47,7 +47,7 @@ from killcheck.baseline import (
 from killcheck.engine import generate_mutants, Mutant, OPERATOR_NAMES
 from killcheck.logs import log_generated_test, log_trajectory
 from killcheck.runner import Target
-from scripts.classify_tests import classify_test, UNITTEST_VALUE_METHODS, UNITTEST_EXISTENCE_METHODS
+from killcheck.classify import classify_test, UNITTEST_VALUE_METHODS, UNITTEST_EXISTENCE_METHODS
 
 # Run order per the design: smoke test first, then the two largest
 # denominators, then the rest. Left as an explicit list, not "all targets in
