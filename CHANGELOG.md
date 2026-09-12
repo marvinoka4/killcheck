@@ -1749,3 +1749,59 @@ space-stripping constant, `safe_divide`'s `b == 0` boundary) were correctly
 killed and kept on the first attempt. Official batch rescore: 2 of 4 now
 killed, matching the kept count exactly. A ready-to-review test file was
 written to `.killcheck/mathutils_killcheck_tests.py`.
+
+## The stale `results/assertion_taxonomy.json`, found incidentally, fixed on its own
+
+Surfaced as a side effect of the `killcheck/classify.py` extraction above,
+not caused by it: the committed `results/assertion_taxonomy.json` was last
+written in the "Arm A and B results, generated tests, trajectories" commit
+(31 Aug), which predates arm C's run entirely. It had only `"A"` and `"B"`
+keys. `results/generated_tests.jsonl` -- the file this report is computed
+from -- has held arm C's full log since arm C finished; nothing about
+`classify_test`'s decision procedure changed (confirmed AST-identical, see
+above). The committed JSON simply never got regenerated after the input it's
+derived from grew a third arm.
+
+**Decision: regenerate, not delete.** The underlying data
+(`results/generated_tests.jsonl`) is complete and correct, `classify_test`
+is unchanged, and `scripts/classify_tests.py` is a pure, deterministic
+function of that input -- there is no reason to remove a report that can be
+correctly reproduced on demand. Ran `python3 scripts/classify_tests.py` and
+committed the result.
+
+**Checked before trusting it:** the `"A"` and `"B"` sections of the
+regenerated file are byte-identical to the committed ones -- confirmed by
+direct comparison, not assumed from "nothing should have changed." Only a
+`"C"` section was added (51 lines, pure insertion, `git diff --stat` confirms
+no lines removed or altered elsewhere in the file). Arm C's `gate_would_keep`
+bucket -- 38 `value` / 6 `existence` / 0 `none` / 0 `mock` / 0 `exception`,
+44 total -- matches CLAUDE.md's own stated "Final disposition" figure
+(CLAUDE.md's Assertion taxonomy section, "kept 38 `value` / 6 `existence` /
+0 `none`") exactly, and matches the `value`/`existence`/`exception` "kept"
+column of README's Table 1 kept-vs-discarded breakdown exactly.
+
+**Grepped README.md and CHANGELOG.md for every figure shaped like this
+file's output** (`38 value`, `6 existence`, counts and percentages in the
+`gate_would_keep` shape) before concluding nothing downstream needed a
+correction: every match found was already the arm-C-inclusive number --
+someone had computed it correctly by hand or via a one-off run at the time
+arm C finished, and simply never re-saved the backing JSON artifact to
+match. Same shape as the CHANGELOG arm-B "0 clean-pass failures" catch
+earlier in this project: the prose was right, the derived-data file sitting
+next to it was wrong. The one figure that looked adjacent but isn't sourced
+from this file at all -- README's "discarded" column (8 `value` / 1
+`existence` / 0 `none`) -- is a different computation entirely (this
+script's `gate_would_keep` only reports the *kept* bucket; there is no
+"discarded" breakdown in its schema), so it was left alone correctly, not
+overlooked.
+
+**The general point:** a derived-data artifact that isn't regenerated as
+part of the same step that changes its input silently stops being ground
+truth for anything that later cites it, even while every citation of it
+elsewhere happens to still be correct by luck of having been computed
+independently at the right time. Caught here only because an unrelated
+refactor happened to re-run the generator; nothing about this project's own
+workflow re-runs `scripts/classify_tests.py` automatically after an arm
+finishes. Worth a standing habit, not just this one fix: regenerate derived
+`results/*.json` artifacts as part of finishing a run, not on discovery
+months later.

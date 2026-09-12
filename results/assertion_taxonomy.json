@@ -100,5 +100,56 @@
       "tenacity-stop": 14
     },
     "tests_generated_pooled": 53
+  },
+  "C": {
+    "all_generated": {
+      "total": 72,
+      "counts": {
+        "value": 61,
+        "mock": 0,
+        "exception": 0,
+        "existence": 11,
+        "none": 0
+      },
+      "fractions": {
+        "value": 0.8472,
+        "mock": 0.0,
+        "exception": 0.0,
+        "existence": 0.1528,
+        "none": 0.0
+      }
+    },
+    "gate_would_keep": {
+      "total": 44,
+      "attributable_rows": 72,
+      "total_rows": 74,
+      "counts": {
+        "value": 38,
+        "mock": 0,
+        "exception": 0,
+        "existence": 6,
+        "none": 0
+      },
+      "fractions": {
+        "value": 0.8636,
+        "mock": 0.0,
+        "exception": 0.0,
+        "existence": 0.1364,
+        "none": 0.0
+      }
+    },
+    "tests_by_target": {
+      "slugify-special": 1,
+      "tenacity-stop": 22,
+      "cachetools-func": 17,
+      "shortuuid-main": 8,
+      "toolz-dicttoolz": 5,
+      "validators-card": 3,
+      "natsort-ns-enum": 2,
+      "dictdiffer-resolve": 2,
+      "boltons-typeutils": 2,
+      "aiofiles-temptypes": 10
+    },
+    "tests_generated_pooled": 72
   }
 }
