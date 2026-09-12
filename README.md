@@ -410,6 +410,9 @@ produced a confident, wrong, publishable number.
    fails on src-layout packages" rather than "the harness was broken." Fixed,
    then generalised into a standing **canary check**: overwrite each module
    with unparseable source and assert the suite does not report `survived`.
+   **"Standing" turned out to mean something narrower than it sounded --
+   see below. The same bug reached a real user anyway, through a door this
+   section hadn't shipped yet when it was written.**
 2. **Concurrent execution.** Parallel mutant evaluation corrupted results for
    the one target running real async I/O against real temp files: four repeated
    runs gave three different survivor sets. A widening improvement already
@@ -464,6 +467,51 @@ check proves execution is isolated. Neither is findable by inspection. Before
 measuring an agent, write the checks that would fail if your instrument were
 lying to you — and note which direction each possible lie would push your
 result.
+
+### The ninth bug: the same lie, a door this section hadn't shipped yet
+
+This section was written, and believed complete, when killcheck was still
+an internal eval-set harness — the canary ran as part of the one scoring
+pipeline that existed (`scripts/verify_targets.py`, calling into
+`runner.py`'s own execution path), every one of the 12 targets ran through
+it, "standing check" meant what it said. Then killcheck shipped a CLI
+(`killcheck score` / `verify` / `harden`, for running the same instrument
+against a module that isn't one of the 12), and the src-layout bug reached
+a real user anyway, through a door that didn't exist when bug 1 above was
+written up as fixed.
+
+Field-testing the CLI against three real repos outside the eval set,
+`killcheck score` on `pytest-dev/pytest`'s own `src/_pytest/scope.py`
+returned **`kill_score = 0.0000`, with no warning at all.** Same mechanism
+as bug 1, exactly: an editable install resolves back to the original
+checkout, so no mutation ever reaches the interpreter, and every mutant
+reads as a survivor. `killcheck verify`, run against the identical target,
+caught it correctly — canary FAIL, refused to proceed. The canary was not
+missing. It had simply never been wired into `score`, the command this
+project's own QUICKSTART puts *first*, ahead of `verify`, in its own
+walkthrough — the "standing check" stood in one of the two places that
+needed it, silently not the other.
+
+Both of this section's own patterns hold exactly as stated, on a second
+instance the section didn't yet know about when it made the claim. **Not
+randomly signed:** a wired-nowhere canary fails silent and flattering —
+`score` returns a confident, plausible-looking number, never a crash, never
+an error a user would go looking into. **Not found by reading the code:**
+not caught by re-auditing the fix, not caught by the canary itself (which
+was never called), caught only by deliberately running the shipped tool
+against a real, uncurated repo the way an actual stranger would, and
+noticing the number was suspicious enough to check by hand. Arguably a
+sharper instance of the thesis than the original eight, not a weaker one:
+those were caught before publication, internal, on curated targets, by the
+people who built the instrument. This one shipped, was declared fixed in
+this very section, and reached whoever ran the tool next.
+
+Fixed the same way bug 1 was: `score` and `harden` both now run the canary
+before any work and refuse a number on failure, rather than trust that a
+check written once anywhere in the codebase is a check that runs
+everywhere it needs to. Full mechanism, plus what a canary failure now
+tells a user to try, in CHANGELOG.md's "score and harden must not run
+without a canary" entry.
 
 ---
 
@@ -733,6 +781,14 @@ Everything in this repository that went wrong went wrong in the instrument, not
 the agent. Eight measurement bugs, all of which would have produced a confident
 number, none of which was found by reading code, and every single one biased
 toward the more flattering answer.
+
+A ninth, found later and outside this repository's own eval-set scope, makes
+the point sharper than any of the eight. The fix for bug 1 was real; this file
+said so. The same bug still reached a stranger, through a code path that
+shipped afterward, because a check that exists is not the same claim as a
+check that runs everywhere it needs to — and nothing forces you to notice the
+gap between those two claims until someone else's number comes back wrong.
+See "The ninth bug" above.
 
 That last property is the one worth carrying forward. Evaluation bugs are not
 randomly signed, because attention is not randomly allocated: a result that
