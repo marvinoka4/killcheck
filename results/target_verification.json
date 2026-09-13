@@ -835,18 +835,18 @@
     "total_mutants": 20,
     "kill_score": 0.9,
     "outcome_counts": {
-      "killed": 18,
+      "killed": 17,
       "timeout": 0,
-      "error": 0,
+      "error": 1,
       "survived": 2
     },
     "outcome_fractions": {
-      "killed": 0.9,
+      "killed": 0.85,
       "timeout": 0.0,
-      "error": 0.0,
+      "error": 0.05,
       "survived": 0.1
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.0556,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 0,
@@ -971,7 +971,7 @@
         "mutant_id": "M-4bbc3c8a",
         "operator": "constant",
         "lineno": 155,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
@@ -1162,18 +1162,18 @@
     "total_mutants": 50,
     "kill_score": 0.86,
     "outcome_counts": {
-      "killed": 43,
+      "killed": 30,
       "timeout": 0,
-      "error": 0,
+      "error": 13,
       "survived": 7
     },
     "outcome_fractions": {
-      "killed": 0.86,
+      "killed": 0.6,
       "timeout": 0.0,
-      "error": 0.0,
+      "error": 0.26,
       "survived": 0.14
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.3023,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 3,
@@ -1186,91 +1186,91 @@
         "mutant_id": "M-03bd3ef9",
         "operator": "constant",
         "lineno": 6,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-09f8ce8d",
         "operator": "constant",
         "lineno": 6,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-215c77e5",
         "operator": "constant",
         "lineno": 6,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-054fd936",
         "operator": "constant",
         "lineno": 6,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-c8addbab",
         "operator": "constant",
         "lineno": 6,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-43fb3695",
         "operator": "constant",
         "lineno": 7,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-9f8746b9",
         "operator": "constant",
         "lineno": 7,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-0d9d7d7e",
         "operator": "constant",
         "lineno": 7,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-2c970238",
         "operator": "constant",
         "lineno": 8,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-c1ec3202",
         "operator": "constant",
         "lineno": 8,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-39ea40e6",
         "operator": "constant",
         "lineno": 8,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-dcef7b23",
         "operator": "constant",
         "lineno": 8,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
         "mutant_id": "M-a83ead8a",
         "operator": "constant",
         "lineno": 8,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": false
       },
       {
@@ -1923,18 +1923,18 @@
     "total_mutants": 39,
     "kill_score": 0.9744,
     "outcome_counts": {
-      "killed": 37,
+      "killed": 35,
       "timeout": 1,
-      "error": 0,
+      "error": 2,
       "survived": 1
     },
     "outcome_fractions": {
-      "killed": 0.9487,
+      "killed": 0.8974,
       "timeout": 0.0256,
-      "error": 0.0,
+      "error": 0.0513,
       "survived": 0.0256
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.0526,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 0,
@@ -1982,7 +1982,7 @@
         "mutant_id": "M-3177ff5c",
         "operator": "return_none",
         "lineno": 12,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
@@ -2213,7 +2213,7 @@
         "mutant_id": "M-1ab9c567",
         "operator": "binop",
         "lineno": 47,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       }
     ]
@@ -2460,18 +2460,18 @@
     "total_mutants": 48,
     "kill_score": 0.7917,
     "outcome_counts": {
-      "killed": 38,
+      "killed": 37,
       "timeout": 0,
-      "error": 0,
+      "error": 1,
       "survived": 10
     },
     "outcome_fractions": {
-      "killed": 0.7917,
+      "killed": 0.7708,
       "timeout": 0.0,
-      "error": 0.0,
+      "error": 0.0208,
       "survived": 0.2083
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.0263,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 3,
@@ -2589,7 +2589,7 @@
         "mutant_id": "M-231b71e6",
         "operator": "compare",
         "lineno": 63,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
@@ -2823,18 +2823,18 @@
     "total_mutants": 26,
     "kill_score": 0.3846,
     "outcome_counts": {
-      "killed": 10,
+      "killed": 7,
       "timeout": 0,
-      "error": 0,
+      "error": 3,
       "survived": 16
     },
     "outcome_fractions": {
-      "killed": 0.3846,
+      "killed": 0.2692,
       "timeout": 0.0,
-      "error": 0.0,
+      "error": 0.1154,
       "survived": 0.6154
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.3,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 14,
@@ -2924,7 +2924,7 @@
         "mutant_id": "M-24dd8183",
         "operator": "constant",
         "lineno": 99,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
@@ -2938,14 +2938,14 @@
         "mutant_id": "M-fb7cd4da",
         "operator": "unary_not",
         "lineno": 100,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
         "mutant_id": "M-febfec72",
         "operator": "compare",
         "lineno": 100,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {
@@ -3241,18 +3241,18 @@
     "total_mutants": 35,
     "kill_score": 0.4286,
     "outcome_counts": {
-      "killed": 14,
+      "killed": 13,
       "timeout": 1,
-      "error": 0,
+      "error": 1,
       "survived": 20
     },
     "outcome_fractions": {
-      "killed": 0.4,
+      "killed": 0.3714,
       "timeout": 0.0286,
-      "error": 0.0,
+      "error": 0.0286,
       "survived": 0.5714
     },
-    "error_share_of_kills": 0.0,
+    "error_share_of_kills": 0.0667,
     "error_dominant": false,
     "reachability_counts": {
       "unreachable": 6,
@@ -3321,7 +3321,7 @@
         "mutant_id": "M-6ab173a1",
         "operator": "constant",
         "lineno": 42,
-        "outcome": "killed",
+        "outcome": "error",
         "reachable": true
       },
       {

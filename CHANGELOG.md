@@ -89,6 +89,31 @@ both baseline arms produce their own mutant sets (the agent writes new
 tests, but the *mutants* are unchanged and still frozen-runner-generated,
 so this is mainly a re-confirmation, not expected to change).
 
+**Correction, added later -- the "exactly 0 error outcomes" result above
+was false.** Not because the data was ever wrong, but because the
+classifier that would have reported an `error` outcome could not: its
+detection string never matched pytest's real output, so every collection
+error silently scored as `killed` instead, for this project's entire
+history up to the fix. The "0 error" claim rested on trusting an
+unverified classifier, not on evidence the classifier was ever exercised.
+Full mechanism, and why a uniform zero across 12 independent targets
+should have been investigated rather than written up as a finding, in
+"Instrument bug eleven" below.
+
+**Corrected breakdown**, all 12 targets, as counts and as a fraction of
+total mutants (455), per CLAUDE.md's Kill outcome breakdown convention:
+killed 299 (65.7%), timeout 2 (0.4%), error 21 (4.6%), survived 133
+(29.2%). Six of the 12 targets have at least one `error` outcome
+(natsort-ns-enum 1, toolz-dicttoolz 13, slugify-special 2, shortuuid-main
+1, boltons-typeutils 3, tenacity-stop 1); none is error-dominant by
+CLAUDE.md's own >50%-of-kills threshold (highest share:
+toolz-dicttoolz and boltons-typeutils, both 30.0%). Kill score and
+survivor kill rate are unaffected everywhere -- `killed` and `error` both
+counted as non-survivors before and after the fix, so no kill count,
+survivor set, or SKR figure anywhere in this project changed. Only the
+internal killed/timeout/error split changes, and only for these six
+targets.
+
 ## Adversarial review of the metric, before any arm runs
 
 An adversarial pass over the (already-committed) primary metric found three
@@ -2203,3 +2228,179 @@ for the actual score while showing both numbers, honestly labeled by which
 scope produced each, matching CLAUDE.md's own "always show the curated
 number next to the raw one" principle rather than picking one silently.
 This is real, scoped work, left for its own pass.
+
+## Instrument bug eleven: the scorer itself was never checked
+
+Reported by Zain Dana Harper (dev.to/zaindanaharper): every check this
+project had built validated the EXECUTION path -- the canary proves a
+mutation reaches the interpreter, the determinism gate proves execution is
+isolated, the byte-size canary proves bytecode isn't stale. None validated
+the SCORER: the code that maps a subprocess exit code to
+killed/survived/timeout/error, and the code that aggregates that across
+mutants, targets, and arms. This is not hypothetical -- three of this
+project's ten instrument bugs so far were exactly that kind of bug (the
+taxonomy classifier running on batched rows instead of individual tests,
+test reconstruction dropping shared imports, `self.assertEqual`
+classifying as `none`), and not one was caught by a standing check; all
+three were caught by predicting a diagnostic's outcome and getting a
+contradiction, which is a habit, not a control. His framing: an intact
+artifact says nothing about whether the thing interpreting it is correct.
+
+Three checks were built in response -- CHECK A (known-outcome fixtures),
+CHECK B (conservation invariants), CHECK C (unit metadata), all in
+`scripts/test_scorer_checks.py` plus standing wiring into
+`killcheck/verify_core.py`, `killcheck/baseline.py`, `killcheck/agent.py`,
+`scripts/classify_tests.py`, and `scripts/ablate.py`. **CHECK A found a
+real bug on its first run.**
+
+### What CHECK A found
+
+One of CHECK A's five known-by-construction cases -- an unparseable test
+file, which must score as a collection error, distinctly -- scored
+`killed` instead. Investigated rather than patched around: both
+`_evaluate_one` (runner.py) and `_classify_outcome` (agent.py, an
+intentional duplicate "because runner.py is frozen and doesn't expose this
+as a standalone function") classified the `error` outcome only when a
+subprocess's output contained *both* the substring `"ERROR"` *and* the
+substring `"collected 0 items"`. Reproduced directly against pytest
+9.1.1's real output, not assumed: a collection-time `SyntaxError` --
+including the canary's own `GARBAGE_SOURCE` mutant, reproduced exactly as
+`canary_check` constructs it -- prints `"N error(s) during collection"`
+and never prints `"collected 0 items"` at all; that phrase is pytest's own
+*no-tests-collected* summary line (a different exit code, a different
+failure mode) that whoever wrote the original heuristic conflated with a
+collection error. So every collection error, for every target, fell
+through to `"killed"` instead of `"error"` -- silently, for this project's
+entire history.
+
+**Confirmed this was not a fixture artifact:** `results/
+target_verification.json` showed `error: 0` for all 12 targets, uniformly,
+with zero exceptions, before the fix.
+
+### Fixed as a fourth frozen-core reopening
+
+Per CLAUDE.md invariant 5. Before touching anything: confirmed the two
+existing copies of the classification logic (runner.py's inline version
+inside `_evaluate_one`, agent.py's standalone `_classify_outcome`) were
+byte-for-byte identical to each other -- they had not silently drifted
+apart, both were wrong in exactly the same way, confirmed by direct
+comparison, not assumed.
+
+Verified pytest 9.1.1's actual exit code for every relevant case directly,
+not against what pytest is "supposed" to print: a normal pass (0), a
+normal assertion failure (1), a collection-time `SyntaxError` (2), and a
+test file with zero `test_` functions (5). These match `_pytest.config.
+ExitCode`'s own documented values (OK=0, TESTS_FAILED=1, INTERRUPTED=2,
+INTERNAL_ERROR=3, USAGE_ERROR=4, NO_TESTS_COLLECTED=5).
+
+New `classify_outcome(code, output)` in runner.py, exported (not
+underscore-prefixed) so agent.py can import it instead of duplicating it --
+one copy of this logic in the codebase now, not two that can drift apart
+again. Classifies on exit code first: `-9` (this project's own subprocess-
+timeout sentinel, never a real pytest code) -> `timeout`; `0` -> `survived`;
+`1` -> `killed`, pytest's only unambiguous "a test ran and failed" code;
+`2`/`3`/`4`/`5` -> `error`, since none of pytest's own documented codes for
+interrupted/internal-error/usage-error/no-tests-collected means an
+assertion caught anything. Output-text matching is now a secondary
+fallback only, for an exit code outside this known set (a raw subprocess
+can still surprise you -- a segfault, `os._exit` from a fixture): if the
+output contains an ordinary failure marker, classify as a kill; otherwise
+treat it the same as a documented error code, since there is no positive
+evidence an assertion actually fired.
+
+agent.py's `_classify_outcome` is now `_classify_outcome = classify_outcome`
+-- an alias, not a reimplementation.
+
+### Full re-run, diffed precisely
+
+Ran all 12 eval targets and diffed the result against the pre-fix
+`target_verification.json`, per-target and per-mutant, not just pooled:
+**kill_score, total_mutants, reachability_counts, and the survivor SET
+(the exact set of mutant_ids with `outcome == "survived"`) are byte-
+identical across all 12 targets.** 21 individual mutants across 6 targets
+reclassified from `killed` to `error` (natsort-ns-enum 1, toolz-dicttoolz
+13, slugify-special 2, shortuuid-main 1, boltons-typeutils 3, tenacity-
+stop 1); confirmed directly that no mutant made any other transition
+(never survived-to-anything, never error-to-killed, no timeout changes).
+`scripts_demo.py` reconfirmed `kill_score=0.0952`.
+
+Corrected pooled breakdown, and the correction to the CHANGELOG entry that
+first published the wrong one, in "Kill outcome breakdown: no target's
+baseline is error-propped" above.
+
+### Arms A, B, C: recomputed from already-logged data, no model calls
+
+The outcome CAN be recomputed without spending API credit: every kept/
+generated test's source is already fully persisted (arm A/B's whole added
+batch in `results/baseline_arm_{a,b}.json`, arm C's kept sources inside
+`per_mutant_drafts` in `results/agent_arm_c.json`), so re-scoring against
+the real mutants exercises the fixed classifier without asking a model for
+anything new. Re-ran `score_with_added_tests` (A/B) and
+`official_batch_rescore` (C) directly against each arm's own already-
+generated test source, target by target, and asserted the resulting
+non-survived mutant-id set matched the originally-committed one exactly
+before trusting any recomputed number -- confirmed for every target that
+was originally scored (a handful of arm A/B targets had `clean_pass=False`
+originally and were correctly skipped, not re-scored, matching the
+original run's own behavior).
+
+**Result: pooled_killed is unchanged for all three arms (A: 9, B: 2, C:
+44, matching the committed `results/*.json` figures exactly), and not one
+non-survived mutant reclassified from `killed` to `error` or `timeout` in
+any arm.** Every arm's own breakdown is 100% `killed`, 0% `error`/
+`timeout`, both before and after the fix. This has a clean explanation,
+not a coincidence: arms A/B/C only ever attempt mutants already classified
+`survived` in the baseline verification pass (the reachable-survivor work
+queue) -- a mutant whose outcome was `error` was, by definition, never
+`survived` to begin with, so it was never in any arm's work queue at all.
+The bug this entry describes only ever mis-set `killed` vs `error` within
+the *non-survived* bucket, which arms A/B/C never draw from; it could
+never have touched which mutants they were asked to kill; and none of the
+21 reclassified mutants happens to also be a mutant any arm's own
+generated test newly caused to fail via a collection error. **No number in
+Table 1, the primary metric, or any arm-level figure in this project
+changes as a result of this fix.**
+
+### Two things this bug illustrates that the other ten do not
+
+**A uniform zero across 12 independent targets is itself a signal, and we
+read it as reassurance instead.** Real data drawn from 12 different
+libraries, 455 different mutants, is almost never THAT clean -- some
+target should have had a fixture error, a missing dependency, a flaky
+import, something. "0 error outcomes anywhere" was written up as a finding
+about the eval set's quality ("the baseline numbers... reflect real test
+assertions... not mutants that happened to break at import time"). It
+should have prompted the question the other direction: why is this bucket
+*empty*, not just low? A bucket that never has anything in it is at least
+as likely to be broken as it is to be evidence of quality, and this
+project's own predicted-outcome discipline -- applied everywhere else --
+was never turned on the shape of the result itself here, only on
+individual numbers within it.
+
+**This bug's direction is new among this project's eleven.** Every prior
+instrument bug inflated something: a spurious concurrent failure read as a
+kill, batch classification hid weak tests behind one strong one, a
+discarded valid test manufactured a false rejection. All of them made a
+number look better than it was. This one did not touch kill_score, SKR, or
+any figure that determines whether the agent looks good -- `killed` and
+`error` both count as non-survivors identically, so the primary metric was
+never at risk. What it did instead was manufacture a NULL RESULT: "no
+target is error-propped" read as reassurance about data quality, evidence
+that the eval set's headroom was real and not an artifact -- when the
+actual explanation was dead code, a string comparison that could not
+match pytest's real output. A finding that says "nothing to see here" is
+just as capable of being manufactured by an instrument bug as a finding
+that says "look how good this is," and this project's own bias-detection
+framing (CHANGELOG's "not randomly signed," README's "eight instrument
+bugs" section) was tuned to catch the second shape, not the first. Worth
+naming as its own category, not folded into the other ten's "inflated a
+metric" pattern.
+
+### Credit
+
+Reported by Zain Dana Harper (dev.to/zaindanaharper): the general
+framing that every check in this project validated the execution path and
+none validated the scorer. CHECK A, built in direct response, found this
+bug on its first real run -- not after days of use, not on a hard-to-reach
+edge case, but on the very first known-outcome fixture that happened to
+exercise it.

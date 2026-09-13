@@ -54,7 +54,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from killcheck.logs import read_jsonl
+from killcheck.logs import read_jsonl, UNIT_SINGLE_TEST_FUNCTION
 
 CONDITIONS = ["C", "C_minus_gate", "C_minus_retry", "C_minus_both"]
 
@@ -91,6 +91,20 @@ def load_work_queue_denominator(verification: list[dict]) -> dict[str, set[str]]
 
 def main() -> int:
     records = [r for r in read_jsonl(ROOT / "results" / "generated_tests.jsonl") if r["arm"] == "C"]
+    # CHECK C (unit metadata): every ablation condition below filters and
+    # counts these records as if one row is one test function (kept_count
+    # is a test-function count). That's true for arm C by construction, but
+    # this script has no other guard against silently admitting a
+    # differently-shaped row -- assert it instead of assuming it. Rows
+    # logged before the `unit` field existed are skipped, not failed (see
+    # scripts/classify_tests.py for the same legacy-row handling).
+    for r in records:
+        unit = r.get("unit")
+        if unit is not None:
+            assert unit == UNIT_SINGLE_TEST_FUNCTION, (
+                f"ablate.py only handles arm C rows (unit={UNIT_SINGLE_TEST_FUNCTION!r}), got "
+                f"unit={unit!r} for target {r['target']} mutant {r['mutant_id']}"
+            )
     verification = json.loads((ROOT / "results" / "target_verification.json").read_text())
     work_queue = load_work_queue_denominator(verification)
     total_denominator = sum(len(s) for s in work_queue.values())
@@ -117,8 +131,11 @@ def main() -> int:
         skr = round(addressed / total_denominator, 4) if total_denominator else None
         report[condition] = {
             "kept_count": kept_count,
+            "kept_count_unit": "test_function",
             "survivors_addressed": addressed,
+            "survivors_addressed_unit": "mutant",
             "work_queue_denominator": total_denominator,
+            "work_queue_denominator_unit": "mutant",
             "skr": skr,
         }
 

@@ -37,7 +37,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from killcheck.engine import generate_mutants
-from killcheck.logs import log_generated_test, log_trajectory
+from killcheck.invariants import assert_ids_subset, assert_no_duplicates, assert_pooled_conservation
+from killcheck.logs import log_generated_test, log_trajectory, UNIT_TEST_BATCH
 from killcheck.runner import Target, _evaluate_one, _run
 
 MODEL = "claude-sonnet-4-6"
@@ -518,6 +519,20 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
 
     killed = [mid for mid, out in scored["kills"].items() if out != "survived"]
 
+    # CHECK B (conservation invariants): killed_ids must be a subset of the
+    # survivors this call was actually scoring -- a stray id here would mean
+    # a mutant from a different target or a stale engine.py run leaked in.
+    # If the suite passed clean, every survivor handed to score_with_added_
+    # tests must appear exactly once in its kills dict -- neither dropped
+    # nor scored twice would be visible any other way than this.
+    assert_no_duplicates(killed, context=f"arm {arm}/{target.name} killed_ids")
+    assert_ids_subset(set(killed), set(survivors), context=f"arm {arm}/{target.name} killed_ids")
+    if scored["clean_pass"]:
+        assert len(scored["kills"]) == len(survivors), (
+            f"arm {arm}/{target.name}: scored {len(scored['kills'])} mutants but was handed "
+            f"{len(survivors)} survivors -- work queue did not conserve"
+        )
+
     # One log row per arm-target. Arms A and B have no gate and no per-mutant
     # targeting, so mutant_id is empty and attempt is always 1; killed_target
     # records whether this arm's test set killed anything at all.
@@ -530,6 +545,7 @@ def run_arm(arm: str, spec: dict, verification: dict, client, run_id: str) -> di
         passed_on_clean=scored["clean_pass"],
         killed_target=bool(killed),
         test_source=added,
+        unit=UNIT_TEST_BATCH,  # the whole accumulated batch, not one test -- see killcheck/logs.py
         prompt_tokens=tokens_in,
         completion_tokens=tokens_out,
     )
@@ -581,6 +597,13 @@ def main() -> None:
     scored = [r for r in out if not r.get("skipped")]
     denom = sum(r["reachable_survivors"] for r in scored)
     num = sum(r["killed"] for r in scored)
+    # CHECK B, pooled form -- see scripts/verify_targets.py's identical check
+    # for why this matters even though denom/num are already direct sums
+    # here: it's a standing guard against a future refactor (an incremental
+    # accumulator, a cache) silently breaking the identity CLAUDE.md's
+    # primary metric is defined by.
+    assert_pooled_conservation(denom, [r["reachable_survivors"] for r in scored], f"arm {args.arm} pooled reachable survivors")
+    assert_pooled_conservation(num, [r["killed"] for r in scored], f"arm {args.arm} pooled killed")
 
     total_calls = sum(r["calls"] for r in scored)
     truncated_calls = sum(r["truncated_calls"] for r in scored)

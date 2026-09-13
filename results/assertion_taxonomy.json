@@ -1,6 +1,7 @@
 {
   "A": {
     "all_generated": {
+      "unit": "test_function",
       "total": 556,
       "counts": {
         "value": 358,
@@ -18,9 +19,11 @@
       }
     },
     "gate_would_keep": {
+      "unit": "test_function",
       "total": 0,
       "attributable_rows": 0,
       "total_rows": 10,
+      "attributable_rows_unit": "generated_tests_jsonl_row",
       "counts": {
         "value": 0,
         "mock": 0,
@@ -48,10 +51,12 @@
       "aiofiles-temptypes": 31,
       "tenacity-stop": 62
     },
+    "tests_by_target_unit": "test_function",
     "tests_generated_pooled": 556
   },
   "B": {
     "all_generated": {
+      "unit": "test_function",
       "total": 53,
       "counts": {
         "value": 36,
@@ -69,9 +74,11 @@
       }
     },
     "gate_would_keep": {
+      "unit": "test_function",
       "total": 0,
       "attributable_rows": 1,
       "total_rows": 10,
+      "attributable_rows_unit": "generated_tests_jsonl_row",
       "counts": {
         "value": 0,
         "mock": 0,
@@ -99,10 +106,12 @@
       "aiofiles-temptypes": 8,
       "tenacity-stop": 14
     },
+    "tests_by_target_unit": "test_function",
     "tests_generated_pooled": 53
   },
   "C": {
     "all_generated": {
+      "unit": "test_function",
       "total": 72,
       "counts": {
         "value": 61,
@@ -120,9 +129,11 @@
       }
     },
     "gate_would_keep": {
+      "unit": "test_function",
       "total": 44,
       "attributable_rows": 72,
       "total_rows": 74,
+      "attributable_rows_unit": "generated_tests_jsonl_row",
       "counts": {
         "value": 38,
         "mock": 0,
@@ -150,6 +161,7 @@
       "boltons-typeutils": 2,
       "aiofiles-temptypes": 10
     },
+    "tests_by_target_unit": "test_function",
     "tests_generated_pooled": 72
   }
 }

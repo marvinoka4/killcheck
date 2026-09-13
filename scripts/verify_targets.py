@@ -65,6 +65,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+from killcheck.invariants import assert_outcome_conservation, assert_pooled_conservation, assert_reachability_conservation
 from killcheck.runner import Target, score_target, verify_clean
 
 # byte_size_preserving_mutation isn't called directly by anything in this
@@ -161,6 +162,12 @@ def main() -> int:
             reachable_lines = measure_reachable_lines(target)
             mutants = build_mutant_records(target, rep, reachable_lines)
             reach = summarize_reachability(mutants)
+            # CHECK B (conservation invariants) -- a violation here means the
+            # scorer lost or duplicated a mutant somewhere; abort the whole
+            # run rather than publish a pooled number built on it (caught
+            # separately from the except Exception below -- see there).
+            assert_outcome_conservation(breakdown["counts"], rep["total_mutants"], t["name"])
+            assert_reachability_conservation(reach, rep["total_mutants"], t["name"])
             pooled_reachable_survivors += reach["reachable_survivor"]
 
             c, f = breakdown["counts"], breakdown["fractions"]
@@ -203,9 +210,27 @@ def main() -> int:
                     "mutants": mutants,
                 }
             )
+        except AssertionError:
+            # CHECK B violation: a conservation invariant broke. This is
+            # not a per-target flake to record and move past -- it means
+            # the scorer's own arithmetic is internally inconsistent, so
+            # abort the whole run rather than write a pooled number built
+            # on a number that doesn't add up.
+            raise
         except Exception as e:
             print(f"{t['name']:25s} FAILED: {e}")
             verification_results.append({"name": t["name"], "failed": str(e)})
+
+    # CHECK B, pooled form: the published pooled figure must equal the sum
+    # of the per-target figures it was built from -- CLAUDE.md's primary
+    # metric IS this sum, so this is the same invariant as the per-target
+    # one above, checked once more at the point where the number a reader
+    # actually sees gets assembled.
+    assert_pooled_conservation(
+        pooled_reachable_survivors,
+        [r["reachability_counts"]["reachable_survivor"] for r in verification_results if "reachability_counts" in r],
+        "pooled reachable survivors",
+    )
 
     results_path = ROOT / "results" / "target_verification.json"
     results_path.parent.mkdir(parents=True, exist_ok=True)

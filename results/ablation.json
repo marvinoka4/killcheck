@@ -1,0 +1,38 @@
+{
+  "C": {
+    "kept_count": 44,
+    "kept_count_unit": "test_function",
+    "survivors_addressed": 44,
+    "survivors_addressed_unit": "mutant",
+    "work_queue_denominator": 53,
+    "work_queue_denominator_unit": "mutant",
+    "skr": 0.8302
+  },
+  "C_minus_gate": {
+    "kept_count": 67,
+    "kept_count_unit": "test_function",
+    "survivors_addressed": 44,
+    "survivors_addressed_unit": "mutant",
+    "work_queue_denominator": 53,
+    "work_queue_denominator_unit": "mutant",
+    "skr": 0.8302
+  },
+  "C_minus_retry": {
+    "kept_count": 32,
+    "kept_count_unit": "test_function",
+    "survivors_addressed": 32,
+    "survivors_addressed_unit": "mutant",
+    "work_queue_denominator": 53,
+    "work_queue_denominator_unit": "mutant",
+    "skr": 0.6038
+  },
+  "C_minus_both": {
+    "kept_count": 53,
+    "kept_count_unit": "test_function",
+    "survivors_addressed": 32,
+    "survivors_addressed_unit": "mutant",
+    "work_queue_denominator": 53,
+    "work_queue_denominator_unit": "mutant",
+    "skr": 0.6038
+  }
+}

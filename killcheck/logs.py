@@ -48,6 +48,25 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+# CHECK C (unit metadata) -- see CHANGELOG.md's "The scorer itself was
+# never checked" entry. Bug 4 was a unit mismatch: the taxonomy classifier
+# documented "one test function's source" as its input contract and was
+# handed a whole multi-test batch instead -- both sides were individually
+# correct code, and nothing in the data itself recorded which unit a given
+# row actually was, so the mismatch was invisible until someone checked by
+# hand. `test_source` in a generated_tests.jsonl row means a genuinely
+# different thing depending on which arm wrote it: arm C logs one row per
+# attempt, and test_source is exactly one test function's source. Arms A
+# and B log one row per arm-target (their tests are scored as a whole
+# batch, never individually -- see CLAUDE.md's Clean-pass failures
+# section), and test_source is the WHOLE accumulated batch, potentially
+# many test functions concatenated. These two constants name that
+# difference explicitly so a row states which one it is instead of a
+# reader having to infer it from which arm wrote it.
+UNIT_SINGLE_TEST_FUNCTION = "single_test_function"  # arm C: test_source is exactly one test
+UNIT_TEST_BATCH = "test_batch"  # arms A/B: test_source is a whole accumulated batch
+
+
 def log_generated_test(
     *,
     results_dir: Path,
@@ -60,6 +79,7 @@ def log_generated_test(
     test_source: str,
     prompt_tokens: int,
     completion_tokens: int,
+    unit: str,
 ) -> None:
     """Append one row to results/generated_tests.jsonl.
 
@@ -72,9 +92,17 @@ def log_generated_test(
                         loop contract)
       passed_on_clean  bool -- did the test pass against unmutated source
       killed_target    bool -- did the test fail against mutant_id's mutant
-      test_source      full source of the generated test function
+      test_source      full source -- see `unit` for what it actually contains
       prompt_tokens    tokens in for the call that produced this test
       completion_tokens tokens out for the call that produced this test
+      unit             UNIT_SINGLE_TEST_FUNCTION or UNIT_TEST_BATCH -- what
+                        test_source actually is. Required, no default: every
+                        caller must state it, not inherit whatever the last
+                        caller happened to mean. A consumer must assert the
+                        unit it expects before treating test_source as
+                        containing what it assumes (see
+                        scripts/classify_tests.py and CHECK C's meta-test in
+                        scripts/test_scorer_checks.py).
 
     This is written for EVERY generated test in every arm, gated or not --
     arms A and B have no gate, so "kept" for them means "generated"; arm C's
@@ -83,6 +111,8 @@ def log_generated_test(
     scripts/ablate.py reconstruct what a weaker design (no retry, no gate,
     both) would have kept from a single arm C run, with no extra calls.
     """
+    if unit not in (UNIT_SINGLE_TEST_FUNCTION, UNIT_TEST_BATCH):
+        raise ValueError(f"log_generated_test: unrecognized unit {unit!r}")
     append_jsonl(
         results_dir / "generated_tests.jsonl",
         {
@@ -95,6 +125,7 @@ def log_generated_test(
             "test_source": test_source,
             "prompt_tokens": prompt_tokens,
             "completion_tokens": completion_tokens,
+            "unit": unit,
         },
     )
 

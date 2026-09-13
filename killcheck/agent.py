@@ -45,8 +45,9 @@ from killcheck.baseline import (
     hoist_future_imports,
 )
 from killcheck.engine import generate_mutants, Mutant, OPERATOR_NAMES
-from killcheck.logs import log_generated_test, log_trajectory
-from killcheck.runner import Target
+from killcheck.invariants import assert_ids_subset, assert_no_duplicates
+from killcheck.logs import log_generated_test, log_trajectory, UNIT_SINGLE_TEST_FUNCTION
+from killcheck.runner import Target, classify_outcome
 from killcheck.classify import classify_test, UNITTEST_VALUE_METHODS, UNITTEST_EXISTENCE_METHODS
 
 # Run order per the design: smoke test first, then the two largest
@@ -150,17 +151,16 @@ def _run_with_plugin(
     return code, output, rows
 
 
-def _classify_outcome(code: int, output: str) -> str:
-    """Mirrors runner.py's _evaluate_one() outcome classification exactly
-    (killed/survived/timeout/error), duplicated rather than imported because
-    runner.py is frozen and doesn't expose this as a standalone function."""
-    if code == -9:
-        return "timeout"
-    if code == 0:
-        return "survived"
-    if "ERROR" in output and "collected 0 items" in output:
-        return "error"
-    return "killed"
+# _classify_outcome used to be a hand-duplicated copy of runner.py's inline
+# classification -- "duplicated rather than imported because runner.py is
+# frozen and doesn't expose this as a standalone function," which is exactly
+# the shape of hazard that let both copies stay wrong in the same way
+# instead of drifting apart in a way that might have surfaced the bug
+# earlier (see CHANGELOG.md's "instrument bug eleven" entry). runner.py now
+# exports classify_outcome as a real function; this is an alias, not a
+# reimplementation, so there is exactly one copy of this logic in the
+# codebase from here on.
+_classify_outcome = classify_outcome
 
 
 def rows_for_nodeid_suffix(rows: list[dict], name: str) -> list[dict]:
@@ -458,6 +458,33 @@ def gate_check(
     }
 
 
+def gate_decision(clean: dict, mutant_gate: dict | None) -> dict:
+    """Pure aggregation logic: given gate_check()'s clean-source result and
+    (if run) its mutant-source result, decide passed_on_clean/killed_target/
+    kept. Extracted out of draft_and_gate -- not a parallel
+    reimplementation that could silently drift from what actually decided
+    arm C's kept/discarded tests, since draft_and_gate calls this exact
+    function too (see below). Separating it out is what lets a scorer
+    check exercise this decision directly against real gate_check() output
+    without a model call -- see scripts/test_scorer_checks.py's CHECK A.
+
+    `mutant_gate` is None when the mutant gate was never run: draft_and_gate
+    only calls gate_check() for the mutant if the clean gate already
+    passed, so a clean-failing candidate is never scored against the
+    mutant at all, let alone credited with a kill it never had a chance to
+    make. "survived" in clean["outcome"] means the clean suite passed --
+    the same outcome vocabulary _evaluate_one uses, reused here because a
+    passing suite is what "survived" always means regardless of which
+    source it ran against.
+    """
+    passed_on_clean = clean["outcome"] == "survived"
+    killed_target = False
+    if passed_on_clean and mutant_gate is not None:
+        killed_target = mutant_gate["outcome"] in ("killed", "timeout", "error")
+    kept = passed_on_clean and killed_target
+    return {"passed_on_clean": passed_on_clean, "killed_target": killed_target, "kept": kept}
+
+
 def draft_and_gate(
     client,
     target: Target,
@@ -509,13 +536,10 @@ def draft_and_gate(
         clean = gate_check(target, test_file, code, None) if name else {
             "exit_code": 1, "output": "no test function found", "rows": [], "outcome": "error"
         }
-        passed_on_clean = clean["outcome"] == "survived"  # "survived" here means the clean suite passed
-
-        killed_target = False
-        mutant_gate = None
-        if passed_on_clean:
-            mutant_gate = gate_check(target, test_file, code, mutant)
-            killed_target = mutant_gate["outcome"] in ("killed", "timeout", "error")
+        mutant_gate = gate_check(target, test_file, code, mutant) if clean["outcome"] == "survived" else None
+        verdict = gate_decision(clean, mutant_gate)
+        passed_on_clean = verdict["passed_on_clean"]
+        killed_target = verdict["killed_target"]
 
         log_trajectory(
             trajectories_dir=traj_dir,
@@ -541,7 +565,7 @@ def draft_and_gate(
                 outcome="killed" if killed_target else "survived",
             )
 
-        kept = passed_on_clean and killed_target
+        kept = verdict["kept"]
         feats = mechanical_features(code, mutated_function)
         p_outcome = (
             plugin_outcome_for_test(mutant_gate["rows"], name, mutant_gate["exit_code"])
@@ -561,6 +585,7 @@ def draft_and_gate(
             test_source=code,
             prompt_tokens=pin,
             completion_tokens=pout,
+            unit=UNIT_SINGLE_TEST_FUNCTION,  # one test function per attempt -- see killcheck/logs.py
         )
 
         record = {
@@ -688,11 +713,20 @@ def run_target(client, spec: dict, verification: dict, run_id: str) -> dict:
     survivors = sorted(reachable_survivor_ids(verification))
     if not survivors:
         return {"target": target.name, "reachable_survivors": 0, "skipped": "no reachable survivors"}
+    # CHECK B (conservation invariants): the work queue must not contain the
+    # same mutant twice -- a duplicate would silently double that mutant's
+    # weight in the pooled kill rate without doubling the denominator.
+    assert_no_duplicates(survivors, context=f"{target.name} work queue")
 
     test_file, test_source = existing_test_source(spec, target)
     module_source = (target.project_root / target.module_path).read_text()
     module_tree = ast.parse(module_source)
     mutant_by_id = {m.id: m for m in generate_mutants(module_source, str(target.module_path))}
+    # Every survivor id target_verification.json names must still be a real
+    # mutant id for THIS module right now -- if engine.py's mutant list or
+    # the module's own source drifted since verification ran, this catches
+    # it instead of a bare KeyError three lines down in the loop.
+    assert_ids_subset(set(survivors), set(mutant_by_id.keys()), context=f"{target.name} survivors vs current mutant ids")
 
     results_dir = REPO / "results"
     traj_dir = REPO / "trajectories"
@@ -734,12 +768,30 @@ def run_target(client, spec: dict, verification: dict, run_id: str) -> dict:
             flush=True,
         )
 
+    # CHECK B: every survivor must have produced exactly one draft record
+    # (no mutant skipped, none attempted twice), and kept_sources must agree
+    # with per_mutant_drafts's own kept flags -- these are populated by two
+    # separate conditionals above, not one, so this actually exercises
+    # whether they stayed in sync.
+    assert len(per_mutant_drafts) == len(survivors), (
+        f"{target.name}: {len(per_mutant_drafts)} draft record(s) for {len(survivors)} survivors"
+    )
+    assert len(kept_sources) == sum(1 for d in per_mutant_drafts if d["kept"]), (
+        f"{target.name}: {len(kept_sources)} kept_sources but {sum(1 for d in per_mutant_drafts if d['kept'])} "
+        f"per_mutant_drafts marked kept"
+    )
+
     reachable_mutants = [mutant_by_id[mid] for mid in survivors]
     official = official_batch_rescore(target, test_file, kept_sources, reachable_mutants)
 
     official_killed = sum(
         1 for r in official["per_mutant"].values() if r["outcome"] != "survived"
     )
+    if official["clean_pass"]:
+        assert len(official["per_mutant"]) == len(reachable_mutants), (
+            f"{target.name}: official rescore scored {len(official['per_mutant'])} mutants, "
+            f"expected {len(reachable_mutants)}"
+        )
 
     return {
         "target": target.name,

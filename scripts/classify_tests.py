@@ -76,7 +76,7 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from killcheck.classify import CATEGORIES, classify_test
-from killcheck.logs import read_jsonl
+from killcheck.logs import read_jsonl, UNIT_SINGLE_TEST_FUNCTION, UNIT_TEST_BATCH
 
 
 def _split_tests(source: str) -> list[str]:
@@ -136,8 +136,26 @@ def main() -> int:
     # generation, and is reported in Table 1 alongside the kill counts.
     by_arm_target_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
+    # CHECK C (unit metadata) -- see CHANGELOG.md's "The scorer itself was
+    # never checked" entry. Bug 4 was exactly this file being handed a
+    # whole batch when it expected one test function's source, silently.
+    # generated_tests.jsonl rows written after that fix carry an explicit
+    # `unit` field (killcheck.logs.UNIT_SINGLE_TEST_FUNCTION /
+    # UNIT_TEST_BATCH); assert it's a recognized value rather than assuming
+    # test_source means what this file expects. Rows logged before the
+    # field existed have none -- counted and reported, not silently treated
+    # as passing a check they were never subject to.
+    legacy_rows_without_unit = 0
     for r in records:
         arm = r["arm"]
+        unit = r.get("unit")
+        if unit is None:
+            legacy_rows_without_unit += 1
+        else:
+            assert unit in (UNIT_SINGLE_TEST_FUNCTION, UNIT_TEST_BATCH), (
+                f"generated_tests.jsonl row for arm {arm}/{r['target']} has an unrecognized "
+                f"unit {unit!r} -- this file doesn't know how to interpret its test_source"
+            )
         tests = _split_tests(r["test_source"])
         by_arm_target_counts[arm][r["target"]] += len(tests)
         total_rows[arm] += 1
@@ -164,7 +182,17 @@ def main() -> int:
         total_all = sum(by_arm_all[arm].values())
         total_kept = sum(by_arm_kept[arm].values())
         report[arm] = {
+            # CHECK C (unit metadata): "unit" on each block says what
+            # `total`/`counts`/`fractions` there are counting. all_generated
+            # and gate_would_keep's own counts/fractions count test
+            # FUNCTIONS (post-_split_tests, one per test regardless of which
+            # arm wrote it) -- but attributable_rows/total_rows inside
+            # gate_would_keep count generated_tests.jsonl ROWS (one per
+            # arm-target for A/B, one per attempt for C), a different unit
+            # sitting in the same block. Making both explicit is exactly
+            # the distinction bug 4 lacked.
             "all_generated": {
+                "unit": "test_function",
                 "total": total_all,
                 "counts": {c: by_arm_all[arm][c] for c in CATEGORIES},
                 "fractions": {
@@ -173,9 +201,11 @@ def main() -> int:
                 },
             },
             "gate_would_keep": {
+                "unit": "test_function",
                 "total": total_kept,
                 "attributable_rows": attributable_rows[arm],
                 "total_rows": total_rows[arm],
+                "attributable_rows_unit": "generated_tests_jsonl_row",
                 "counts": {c: by_arm_kept[arm][c] for c in CATEGORIES},
                 "fractions": {
                     c: round(by_arm_kept[arm][c] / total_kept, 4) if total_kept else 0.0
@@ -183,6 +213,7 @@ def main() -> int:
                 },
             },
             "tests_by_target": dict(by_arm_target_counts[arm]),
+            "tests_by_target_unit": "test_function",
             "tests_generated_pooled": sum(by_arm_target_counts[arm].values()),
         }
         print(f"=== arm {arm} ===")
@@ -209,6 +240,11 @@ def main() -> int:
     out_path = ROOT / "results" / "assertion_taxonomy.json"
     out_path.write_text(json.dumps(report, indent=2))
     print(f"\nWrote {out_path.relative_to(ROOT)}")
+    if legacy_rows_without_unit:
+        print(
+            f"note: {legacy_rows_without_unit} of {len(records)} generated_tests.jsonl row(s) "
+            f"predate the `unit` field (CHECK C) and were not checked against it."
+        )
     return 0
 
 

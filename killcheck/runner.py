@@ -25,6 +25,25 @@ execution broke it." The bias runs one direction only: a spurious concurrent
 failure reads as a kill, and kill counts are the quantity every arm in this
 project is trying to increase. Non-determinism here does not average out; it
 flatters. See CHANGELOG.md for how this was found and what it changed.
+
+Frozen core reopened a fourth time: classify_outcome() (used by
+_evaluate_one below) previously matched on output text
+("ERROR" in output and "collected 0 items" in output) to detect the
+`error` outcome, and that text never actually matched pytest's real
+collection-error output -- every collection error, including the canary's
+own unparseable-source mutant, silently scored "killed" instead of
+"error" for this project's entire history. Both counted identically
+toward kill_score and every pooled figure downstream (this did not change
+any kill count, survivor set, or SKR -- verified by a full 12-target
+re-run diffed against the committed target_verification.json, zero
+verdict changes), but the killed/timeout/error breakdown CLAUDE.md
+requires reporting alongside the primary metric was wrong, and a claim
+built on it ("no target's baseline is error-propped") was accordingly
+false. Now classifies on pytest's own documented exit codes first,
+verified against pytest 9.1.1's real output for every case. See
+CHANGELOG.md's "instrument bug eleven" entry for the full account,
+including why a uniform zero across 12 independent targets should have
+been investigated rather than written up as a finding.
 """
 
 from __future__ import annotations
@@ -73,6 +92,56 @@ class Target:
             module_path=Path(d["module_path"]),
             test_command=d["test_command"],
         )
+
+
+def classify_outcome(code: int, output: str) -> str:
+    """Classify a completed test-command run as killed/survived/timeout/
+    error. Frozen core, fourth reopening -- see CHANGELOG.md's "instrument
+    bug eleven" entry for the full account; summary here.
+
+    Primary signal is the exit code, not output text. `-9` is this
+    project's own sentinel (see _run, above: subprocess.TimeoutExpired ->
+    (-9, "TIMEOUT"), never a real pytest exit code). `0`/`1` are pytest's
+    own unambiguous pass/fail codes. `2`/`3`/`4`/`5` are pytest's own
+    documented non-pass, non-assertion-failure codes (_pytest.config.
+    ExitCode: INTERRUPTED, INTERNAL_ERROR, USAGE_ERROR, NO_TESTS_COLLECTED)
+    -- none of them mean an assertion caught the mutation, so none of them
+    may be classified "killed". Verified against pytest 9.1.1's actual
+    output for every one of these cases directly (normal pass, normal
+    assertion failure, a collection-time SyntaxError, and a test file with
+    no test_ functions), not assumed from what pytest is "supposed" to
+    print -- see CHANGELOG.md for the verification transcript.
+
+    The previous version of this function matched on output text instead
+    (`"ERROR" in output and "collected 0 items" in output`) and never
+    correctly matched pytest's real collection-error output at all: a
+    collection-time SyntaxError prints "N error(s) during collection" and
+    never prints "collected 0 items" (that phrase is pytest's own
+    no-tests-collected summary line, a DIFFERENT exit code and a
+    DIFFERENT failure mode the original heuristic's author conflated with
+    it) -- so every collection error, including the canary's own
+    unparseable-source mutant, silently fell through to "killed" instead
+    of "error", for every target, for this project's entire history.
+
+    Output text is used here only as a fallback for an exit code this
+    function does not otherwise recognize (a raw subprocess can still
+    surprise you -- a segfault, os._exit from a fixture -- in ways no
+    documented pytest exit code covers): if the output itself contains a
+    normal test-failure marker, classify it as a kill; otherwise treat it
+    as weak/no evidence, the same as a documented error code, rather than
+    assume a kill with no positive evidence one actually happened.
+    """
+    if code == -9:
+        return "timeout"
+    if code == 0:
+        return "survived"
+    if code == 1:
+        return "killed"
+    if code in (2, 3, 4, 5):
+        return "error"
+    if "FAILED" in output or "AssertionError" in output:
+        return "killed"
+    return "error"
 
 
 def _run(cmd: list[str], cwd: Path, timeout: int) -> tuple[int, str]:
@@ -169,15 +238,7 @@ def _evaluate_one(target: Target, mutant: Mutant, timeout: int) -> MutantResult:
         code, output = _run(target.test_command, work, timeout)
 
     duration = time.monotonic() - started
-
-    if code == -9:
-        outcome = "timeout"
-    elif code == 0:
-        outcome = "survived"
-    elif "ERROR" in output and "collected 0 items" in output:
-        outcome = "error"
-    else:
-        outcome = "killed"
+    outcome = classify_outcome(code, output)
 
     return MutantResult(
         mutant_id=mutant.id,
