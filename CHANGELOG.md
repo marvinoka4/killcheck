@@ -114,6 +114,22 @@ survivor set, or SKR figure anywhere in this project changed. Only the
 internal killed/timeout/error split changes, and only for these six
 targets.
 
+**This claim lives only here -- checked, not assumed.** Searched
+README.md's entire Results section (the head-to-head table, "Kills by
+operator family," "Transfer: the uncomfortable result," "The gate never
+once caught a broken test," "The nine survivors it could not kill") and
+CLAUDE.md's Metrics section (every occurrence of the word "error") for any
+repetition of "0 error outcomes" or "no target is error-dominant" in any
+form. Found none. README's operator-family table ("call-phase
+AssertionError" vs. "call-phase other") looks adjacent but is a different
+concept entirely -- it's agent.py's own per-kept-test call-phase exception
+type for arm C's 44 kills, tracked via the pytest plugin in
+`_write_plugin`, unrelated to runner.py's collection-level
+killed/timeout/error classification this entry corrects. If a future
+reader goes looking for this claim anywhere else in the record, they will
+not find it -- the "exactly 0 error outcomes" figure was written, and is
+now corrected, in this one place only.
+
 ## Adversarial review of the metric, before any arm runs
 
 An adversarial pass over the (already-committed) primary metric found three
@@ -2360,6 +2376,43 @@ never have touched which mutants they were asked to kill; and none of the
 generated test newly caused to fail via a collection error. **No number in
 Table 1, the primary metric, or any arm-level figure in this project
 changes as a result of this fix.**
+
+### CHECK B: zero issues found -- a real result, not "nothing to report"
+
+Run against four existing results files -- `results/target_verification.json`
+(both before and after the classify_outcome fix, separately), `results/
+agent_arm_c.json`, `results/baseline_arm_a.json`, `results/
+baseline_arm_b.json` -- CHECK B's conservation invariants (outcome counts
+sum to total_mutants; reachability buckets sum to total_mutants; pooled
+figures equal the sum of their per-target parts; every mutant_id an arm
+used is a real id for that target; no work queue contains a duplicate)
+found **zero violations, in every file, in both the buggy and the fixed
+state.**
+
+That is a finding, not an absence of one, and it is worth stating exactly
+what it establishes: **the aggregation arithmetic across this entire
+project was sound throughout. Only the classification labels feeding into
+it were wrong.** Those are different failure modes, and this project now
+has direct evidence -- not an assumption -- that it only ever had the
+second one. A codebase can have a real, decade-of-instrument-bugs-shaped
+problem in how it labels individual results while its sums, denominators,
+and pooled figures stay perfectly self-consistent the entire time; this
+project's own history is now a concrete instance of exactly that
+separation, confirmed by running the check, not inferred from the absence
+of a symptom.
+
+**The boundary is just as important as the result: CHECK B would never
+have caught bug eleven on its own.** 21 mutants relabeled from `killed` to
+`error` still sum to the same `total_mutants`; `killed` and `error` are
+both counted as non-survivors by every invariant CHECK B checks, so the
+reclassification is invisible to every sum in this file. Conservation
+invariants validate that a number was correctly SUMMED; they say nothing
+about whether what went into the sum was correctly LABELED in the first
+place -- that is exactly what CHECK A exists for, and the two checks are
+not redundant with each other in either direction. A checklist item that
+reads "conservation: PASS" next to a mislabeled bucket would have looked
+identical before and after this exact bug, which is the precise shape of
+false reassurance CHECK B cannot, by construction, detect.
 
 ### Two things this bug illustrates that the other ten do not
 
