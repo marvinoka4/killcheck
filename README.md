@@ -682,6 +682,18 @@ row per model turn, written live rather than reconstructed. Every generated
 test — kept and discarded — is in `results/generated_tests.jsonl` with its gate
 outcomes.
 
+Some captured subprocess output in `results/` and `trajectories/` contains
+machine-specific absolute paths from the original runs — a pytest traceback
+that happened to print this repo's on-disk location, a temp-directory name
+that happened to embed the account it ran under. Left verbatim, on purpose:
+those files are append-only and never edited after the fact (see "Logging" in
+METHODOLOGY.md), specifically so a reader can diff a reproduction against
+exactly what the original runs produced. Redacting captured output after the
+fact would break that guarantee for a cosmetic reason, and there is nothing
+sensitive in it — it is the GitHub handle this repo is published under. A
+reproduction run on a different machine will naturally produce different
+paths; that is expected, not a mismatch to chase.
+
 ---
 
 ## Limitations

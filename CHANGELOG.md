@@ -2457,3 +2457,39 @@ none validated the scorer. CHECK A, built in direct response, found this
 bug on its first real run -- not after days of use, not on a hard-to-reach
 edge case, but on the very first known-outcome fixture that happened to
 exercise it.
+
+## Pre-public hygiene pass: absolute paths in results/ and trajectories/, left in on purpose
+
+A pass over the repo before making it public turned up five committed
+files with a machine-specific absolute path embedded in captured
+subprocess output: `results/agent_arm_c.json` (one spot, a
+`pytest-of-marvinoka4` temp-directory name inside a captured assertion
+failure), `results/baseline_arm_a.json` and `results/baseline_arm_b.json`
+(one spot each, a pytest collection-error traceback that prints the full
+on-disk repo path under `.venv/lib/...`), and two arm C trajectory files,
+`trajectories/armC-20260910-212816.jsonl` and
+`trajectories/armC-20260910-212912.jsonl` (four spots each, the same
+class of captured pytest output). No credentials, no API keys, nothing
+else sensitive -- just a home-directory path and a username, both of
+which are the GitHub handle this repo is published under.
+
+**Decision: leave every one of them exactly as captured. No redaction.**
+The reasoning is the same rule this project has applied to every other
+piece of recorded output since the Logging section was written: results
+and trajectories are append-only and never edited after the fact,
+specifically so a reader can diff their own reproduction against exactly
+what the original runs produced, byte for byte, not against a version
+that was cleaned up after the fact for someone else's benefit. Editing
+captured subprocess output to scrub a path is a smaller act than editing
+a scored outcome, but it is the same kind of act -- touching a record
+this project's own discipline treats as evidence, after the fact, for a
+reason that has nothing to do with what the record is evidence of. The
+exposure being cosmetic (a username, not a secret) is what makes this
+worth writing down rather than acting on by default: the append-only
+rule doesn't have a carve-out for "harmless to change," because the
+harm was never the point of the rule -- reproducibility was.
+
+Documented in README's "Reproducing this" section, next to where
+`results/` and `trajectories/` are already described, so a reader who
+diffs their own reproduction against these files and sees a different
+path in the same spot knows that's expected, not a mismatch to chase.
