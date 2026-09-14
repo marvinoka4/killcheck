@@ -69,7 +69,7 @@
     "test_command": ["python3", "-m", "pytest", "voluptuous/tests/tests.py", "-q"],
     "extra_requirements": [],
     "hard_case": false,
-    "notes": "Validation error hierarchy/formatting. Exercised transitively by the full schema test suite (repo's pytest.ini pins python_files=tests.py, so the whole suite is one file). Task 2b: already the widest possible scope for this repo, unchanged. Its 0 reachable survivors (see CLAUDE.md's Denominator section) are a coverage.py docstring-tracing artifact, not a narrow-scoping artifact."
+    "notes": "Validation error hierarchy/formatting. Exercised transitively by the full schema test suite (repo's pytest.ini pins python_files=tests.py, so the whole suite is one file). Task 2b: already the widest possible scope for this repo, unchanged. Its 0 reachable survivors (see METHODOLOGY.md's Denominator section) are a coverage.py docstring-tracing artifact, not a narrow-scoping artifact."
   },
   {
     "name": "slugify-special",

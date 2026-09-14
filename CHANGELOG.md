@@ -8,10 +8,10 @@ do, what did we decide."
 
 | STAGE | WHAT WE TRIED AND WHY | EVIDENCE | DECISION / LEARNING |
 | --- | --- | --- | --- |
-| Frozen core + fixture baseline | Built `engine.py` (AST mutation operators) and `runner.py` (kill/survive execution), verified against a local fixture before touching any real target | `fixture/bank.py`: 21 mutants, killed=2, survived=19, kill_score=0.0952 | Froze both files (CLAUDE.md invariant 5) before any agent code existed; any later change requires re-running both arms and a changelog note |
+| Frozen core + fixture baseline | Built `engine.py` (AST mutation operators) and `runner.py` (kill/survive execution), verified against a local fixture before touching any real target | `fixture/bank.py`: 21 mutants, killed=2, survived=19, kill_score=0.0952 | Froze both files (METHODOLOGY.md invariant 5) before any agent code existed; any later change requires re-running both arms and a changelog note |
 | Eval set construction | 12 targets from permissively licensed public repos, pinned commit SHAs, 15-60 mutants each | 455 total mutants across 12 targets | Locked in `targets.json` before any metric or arm code existed |
 | src-layout bug + canary | 3 of 12 targets scored kill_score=0.0000 -- investigated rather than accepted as "the agent fails on src-layout" | mutated module's `__file__` resolved to the *original* checkout, not the tempdir copy, for the 3 src-layout targets | Fixed with `-o pythonpath=src`; added a standing canary check (unparseable-source mutant must report `survived`=false) before any kill score is trusted anywhere |
-| Metric lock | Pooled reachable-survivor kill rate chosen as primary over mean kill score, before any arm ran | n/a -- a design decision, made and committed pre-data | Locked in CLAUDE.md with the "mean kill score is dominated by mutant count" rationale; per-target results as raw counts, never percentages |
+| Metric lock | Pooled reachable-survivor kill rate chosen as primary over mean kill score, before any arm ran | n/a -- a design decision, made and committed pre-data | Locked in METHODOLOGY.md with the "mean kill score is dominated by mutant count" rationale; per-target results as raw counts, never percentages |
 | Reachability denominator | Coverage-based reachability partition (killed / reachable-survivor / unreachable) added after 2 targets came back with 0 reachable survivors | `voluptuous-error` 0/0 (coverage's docstring-tracing artifact, confirmed by hand); `dotenv-variables` 0/0 (`test_cli.py` excluded for an unrelated platform reason) | Both targets kept, contribute 0/0, excluded from the pooled denominator rather than swapped for denser targets |
 | Widening experiment | Widened every target's `test_command` to the broadest clean-running scope, to test whether narrow scoping explained a thin (54/138) denominator | Pooled reachable survivors moved 54 -> 53 (lower, not higher); 10 of 12 targets showed zero movement | Accepted as a finding -- most undetected faults are unreached code, not weak assertions -- not a defect to engineer around; two ways to inflate the number (target-swap, further widening) rejected on principle |
 | Both abandoned holdout designs | (1) operator-based holdout: exclude `boolop`/`unary_not` from the work queue, score anyway. (2) positional holdout: hold out a fixed fraction by index | 24 total `boolop`/`unary_not` mutants across all 12 targets, 4 of 12 have zero, only 1 pooled survivor-and-reachable | Both abandoned before any arm ran -- denominator too thin under either design to support a rate |
@@ -71,7 +71,7 @@ mutation runs themselves.
 ## Kill outcome breakdown: no target's baseline is error-propped
 
 **What:** added killed/timeout/error disaggregation to
-`scripts/verify_targets.py` (see CLAUDE.md's Kill outcome breakdown section
+`scripts/verify_targets.py` (see METHODOLOGY.md's Kill outcome breakdown section
 for why `error` is weaker evidence than `killed`) and wrote
 `results/target_verification.json` with the same breakdown per target.
 
@@ -101,12 +101,12 @@ should have been investigated rather than written up as a finding, in
 "Instrument bug eleven" below.
 
 **Corrected breakdown**, all 12 targets, as counts and as a fraction of
-total mutants (455), per CLAUDE.md's Kill outcome breakdown convention:
+total mutants (455), per METHODOLOGY.md's Kill outcome breakdown convention:
 killed 299 (65.7%), timeout 2 (0.4%), error 21 (4.6%), survived 133
 (29.2%). Six of the 12 targets have at least one `error` outcome
 (natsort-ns-enum 1, toolz-dicttoolz 13, slugify-special 2, shortuuid-main
 1, boltons-typeutils 3, tenacity-stop 1); none is error-dominant by
-CLAUDE.md's own >50%-of-kills threshold (highest share:
+METHODOLOGY.md's own >50%-of-kills threshold (highest share:
 toolz-dicttoolz and boltons-typeutils, both 30.0%). Kill score and
 survivor kill rate are unaffected everywhere -- `killed` and `error` both
 counted as non-survivors before and after the fix, so no kill count,
@@ -118,7 +118,7 @@ targets.
 README.md's entire Results section (the head-to-head table, "Kills by
 operator family," "Transfer: the uncomfortable result," "The gate never
 once caught a broken test," "The nine survivors it could not kill") and
-CLAUDE.md's Metrics section (every occurrence of the word "error") for any
+METHODOLOGY.md's Metrics section (every occurrence of the word "error") for any
 repetition of "0 error outcomes" or "no target is error-dominant" in any
 form. Found none. README's operator-family table ("call-phase
 AssertionError" vs. "call-phase other") looks adjacent but is a different
@@ -159,7 +159,7 @@ both by hand rather than accepting the number:
   as a known, documented limitation rather than special-case docstring
   AST nodes to route around it -- the practical effect is conservative
   (excludes mutants no test would plausibly assert on anyway) rather than
-  distorting the metric in the tool's favor. Recorded in CLAUDE.md's
+  distorting the metric in the tool's favor. Recorded in METHODOLOGY.md's
   Denominator section so nobody mistakes "0 reachable survivors" for "this
   target is unusually well-tested."
 
@@ -167,7 +167,7 @@ both by hand rather than accepting the number:
 Added `boolop`/`unary_not` as held-out operators (`killcheck/logs.py`,
 `HELD_OUT_OPERATORS`): removed from every arm's work queue, still scored.
 Transfer rate (held-out survivors killed after an arm runs, despite never
-being targeted) is the anti-circularity control -- see CLAUDE.md's Held-out
+being targeted) is the anti-circularity control -- see METHODOLOGY.md's Held-out
 operators section. No data yet; infrastructure only, verified by unit
 checks in `scripts/verify_targets.py`'s held-out partition counts.
 
@@ -192,7 +192,7 @@ real kill) -- the synthetic fixture deliberately included one such row to
 prove `ablate.py` catches this rather than silently over-crediting it.
 
 **Decision:** all of the above is infrastructure and metric definition, not
-results. Committed as one changeset alongside the CLAUDE.md and README
+results. Committed as one changeset alongside the METHODOLOGY.md and README
 updates, before `killcheck/baseline.py` (arms A and B) is written -- the
 commit ordering is itself part of the evidence that none of this was shaped
 by a result it needed to explain.
@@ -275,7 +275,7 @@ to be the rare case, not the common one. Ten of twelve targets showed no
 movement at all: their other test files simply exercise different code, not
 more of the same module.
 
-**Decision, per the reframe recorded in CLAUDE.md and README.md:** this is
+**Decision, per the reframe recorded in METHODOLOGY.md and README.md:** this is
 a finding about the shape of undetected faults in well-tested open-source
 Python, not a defect in the eval set to be engineered away. Pooled 53
 reachable survivors, reported honestly with the table above, is the number
@@ -329,7 +329,7 @@ historical record with a comment pointing here; nothing reads it for
 scoring. `scripts/verify_targets.py` no longer computes a held-out
 partition; `scripts/ablate.py`'s work-queue denominator is now simply "all
 reachable survivors." Anti-circularity rests on the assertion taxonomy
-instead -- recorded as a real, narrower guarantee in CLAUDE.md and
+instead -- recorded as a real, narrower guarantee in METHODOLOGY.md and
 README.md, not papered over as equivalent.
 
 ## Frozen core reopened a second time: parallel mutant execution was corrupting one target's ground truth
@@ -338,7 +338,7 @@ README.md, not papered over as equivalent.
 project's own "re-verify, then commit" discipline) found one cell that
 didn't reproduce: `aiofiles-temptypes` came back with a different
 reachable-survivor count than the run that had already been drafted into
-CLAUDE.md, README, and CHANGELOG text. Investigated rather than re-run until
+METHODOLOGY.md, README, and CHANGELOG text. Investigated rather than re-run until
 it matched.
 
 **How it was found:** ran `aiofiles-temptypes`'s full mutation scoring four
@@ -370,7 +370,7 @@ symptoms.
 **Fix:** `killcheck/runner.py`'s `score_target()` default changed from
 `workers=4` to `workers=1`. This reopens the frozen measurement core for the
 second time (first was the src-layout `pythonpath` fix during eval-set
-construction). Per CLAUDE.md's invariant 5, changing the measuring
+construction). Per METHODOLOGY.md's invariant 5, changing the measuring
 instrument after establishing a baseline requires re-running both arms and
 noting it in the changelog -- this change lands here, before either arm has
 run for the first time, so no re-run is owed yet, but the instrument is
@@ -391,7 +391,7 @@ own sanity checks exist for.
 
 **Decision:** every reachability number and every "widening helped this
 target" claim drafted since the 2b widening pass is provisional until
-re-derived under `workers=1`. Retracted and replaced in CLAUDE.md, README,
+re-derived under `workers=1`. Retracted and replaced in METHODOLOGY.md, README,
 and this file -- see the following entries, committed separately from this
 one so the instrument fix and what it changed can be reviewed independently.
 
@@ -461,7 +461,7 @@ a `SyntaxError` that failed collection for all 20 complete tests generated
 alongside it.
 
 **Decision: raise the budget, not bound the prompt.** `MAX_TOKENS` is now
-8000, recorded in CLAUDE.md as the per-call figure for **all three arms** --
+8000, recorded in METHODOLOGY.md as the per-call figure for **all three arms** --
 invariant 3 requires the same budget across arms, so `killcheck/agent.py`
 must use the same number when it's built. Weakening Arm A's "as many as
 warranted" ask to fit an arbitrary ceiling would have made it a strawman,
@@ -505,7 +505,7 @@ discourage, and didn't. This is not a harness defect -- nothing in
 `baseline.py` needed fixing -- it's Arm A actually failing, which is real
 data about single-call unguided generation, kept as-is.
 
-**Decision, binding on all three arms (recorded in CLAUDE.md):** a
+**Decision, binding on all three arms (recorded in METHODOLOGY.md):** a
 generated test that fails on clean source is the arm producing a wrong test.
 It is never dropped and never repaired -- hand-fixing a broken assertion
 before scoring would erase the exact difference the comparison exists to
@@ -561,7 +561,7 @@ output: exact match on all 20 rows across both arms (arm A: 556 tests
 pooled; arm B: 53).
 
 **This fixes the classification unit, not the scoring unit, and cannot --
-recorded as a limitation in CLAUDE.md and README rather than glossed over.**
+recorded as a limitation in METHODOLOGY.md and README rather than glossed over.**
 Arms A and B are still scored per batch; there is no record of which
 individual test in a multi-test batch caused which mutant to die. So
 `gate_would_keep` -- the taxonomy of tests that would clear the kill gate --
@@ -851,14 +851,14 @@ runnable and correct on unmutated code; six of them simply didn't detect
 the fault they were shown.
 
 **The pre-registered `none`/`existence` hypothesis is NOT supported on this
-sample.** CLAUDE.md's assertion-taxonomy section predicted, before any test
+sample.** METHODOLOGY.md's assertion-taxonomy section predicted, before any test
 existed to classify, that a meaningful share of gate-passing tests would be
 `none` or `existence` class. Kept: 7 `value`, 2 `existence`, 0 `none`, 0
 `mock`, 0 `exception`. Discarded: 6 `value`, 0 in every other category. The
 `none` bin is empty on both sides of the keep decision, and every discarded
 draft is `value` class while both `existence` drafts were kept -- the
 opposite of what was predicted. Stated plainly rather than reframed after
-the fact, per the discipline CLAUDE.md itself set for this hypothesis
+the fact, per the discipline METHODOLOGY.md itself set for this hypothesis
 before any data existed.
 
 **8 of 9 kills are call-phase `AssertionError`,** the remaining one a
@@ -891,14 +891,14 @@ comparison against arms A and B, which ran on the full 53-survivor set.
 
 ## Correction: "5 of 12 targets have zero boolop/unary_not mutants" should read 4
 
-Caught auditing CLAUDE.md's numeric claims against `results/` before
+Caught auditing METHODOLOGY.md's numeric claims against `results/` before
 reporting arm C's partial-run numbers. Recomputed directly from
 `target_verification.json`: 24 total `boolop`/`unary_not` mutants across
 all 12 targets (matches), 1 pooled survivor-and-reachable (matches), but
 only 4 targets have zero such mutants (`cachetools-func`, `natsort-ns-enum`,
 `dictdiffer-resolve`, `tenacity-stop`), not 5. The other two figures in that
 sentence were already correct; only the target count was wrong. Corrected
-in CLAUDE.md's "Design 1: operator-based holdout" entry.
+in METHODOLOGY.md's "Design 1: operator-based holdout" entry.
 
 ## Eighth instrument finding: a pre-registered mechanical feature that isn't computable on every target
 
@@ -927,13 +927,13 @@ undefined somewhere is to report it as not computable there, not to force a
 number out of it and not to quietly drop the feature everywhere to avoid
 the asterisk.
 
-## Two contradictions between CLAUDE.md and README, caught by cross-doc consistency checking, both fixed
+## Two contradictions between METHODOLOGY.md and README, caught by cross-doc consistency checking, both fixed
 
 The README (rewritten to the final submission version) had already
-corrected two claims CLAUDE.md still made. Both are now fixed in CLAUDE.md
+corrected two claims METHODOLOGY.md still made. Both are now fixed in METHODOLOGY.md
 to match.
 
-**1. Anti-circularity did not rest on the assertion taxonomy.** CLAUDE.md's
+**1. Anti-circularity did not rest on the assertion taxonomy.** METHODOLOGY.md's
 Metrics section said "anti-circularity rests on the assertion taxonomy: an
 arm cannot inflate its apparent effectiveness by writing vacuous tests,
 because the taxonomy reports exactly how many of its gate-passing tests are
@@ -949,14 +949,14 @@ for (c). Replaced with the three-way split, stated as a correction rather
 than silently rewritten.
 
 **2. The pre-registered `none`/`existence` hypothesis was tested and not
-supported -- CLAUDE.md never said so.** The hypothesis (a meaningful share
+supported -- METHODOLOGY.md never said so.** The hypothesis (a meaningful share
 of gate-passing tests would be `none`/`existence` class, meaning the gate
 selects differential probes rather than specifications) was written before
 arm C existed. Arm C's completed sample (2 of 10 targets, 15 of 53
 reachable survivors, stopped by an exhausted API budget -- not random)
 contradicts it: kept 7 `value`/2 `existence`/0 `none`; discarded 6
 `value`/0 `existence`/0 `none`; 8 of 9 kills call-phase `AssertionError`.
-CLAUDE.md's hypothesis section still ended at "if the data contradicts
+METHODOLOGY.md's hypothesis section still ended at "if the data contradicts
 this, say so plainly" with no record that it had. This is exactly the
 failure mode pre-registration exists to prevent -- a prediction stated in
 public, then quietly left unconfronted once the data came in. Fixed by
@@ -968,7 +968,7 @@ prediction itself would have destroyed the thing pre-registration was for.
 Both corrections were prompted by the same discipline: checking one
 document's claims against another's, not just against `results/` on disk.
 The numbers audit two entries ago checked README against `results/`; this
-pass checked CLAUDE.md against README and found it hadn't been updated
+pass checked METHODOLOGY.md against README and found it hadn't been updated
 when README was.
 
 ## The determinism gate fired on a fresh clone, against our own committed numbers, three hours before submission
@@ -1113,7 +1113,7 @@ every attempt, not just the final one per mutant, after the "n=53 vs n=74"
 distinction from the ninth catch prompted checking whether the same
 draft-supplied text conflated the two populations elsewhere. It did. The
 same wrong "empty across all 74" framing had already been drafted into
-CLAUDE.md's hypothesis-outcome update before this check ran, and was
+METHODOLOGY.md's hypothesis-outcome update before this check ran, and was
 corrected there too before being committed -- the error did not make it
 into two files by being caught in one and missed in the other.
 
@@ -1244,7 +1244,7 @@ Added a comment directly above the `ignore_patterns` call explaining it is
 load-bearing for correctness, per the instruction that a line that turns
 out to be load-bearing is exactly the kind of thing that gets "cleaned up"
 later by someone who doesn't know. The `ignore_patterns(...)` call itself
-is byte-for-byte unchanged -- CLAUDE.md invariant 5 requires re-running both
+is byte-for-byte unchanged -- METHODOLOGY.md invariant 5 requires re-running both
 arms only when the measuring instrument's *behavior* changes, and this
 changes none. Also added `scripts/test_pyc_exclusion.py`, a regression test
 that exercises the real, unmodified `_evaluate_one` (via a `shutil.copytree`
@@ -1397,7 +1397,7 @@ directly -- a different method with its own separate, unmutated
 not `uuid()`'s; the model appears to have tested the wrong function
 entirely.
 
-**The materially stronger claim this buys, stated in CLAUDE.md's own
+**The materially stronger claim this buys, stated in METHODOLOGY.md's own
 `X of Y` convention:** not "44 of 53, with an unbounded residue of
 maybe-equivalent misses," but 44 of 53 overall, and of the 9 misses, 7 are
 provably unkillable -- 44 of the 46 reachable survivors this suite could
@@ -1816,8 +1816,8 @@ direct comparison, not assumed from "nothing should have changed." Only a
 `"C"` section was added (51 lines, pure insertion, `git diff --stat` confirms
 no lines removed or altered elsewhere in the file). Arm C's `gate_would_keep`
 bucket -- 38 `value` / 6 `existence` / 0 `none` / 0 `mock` / 0 `exception`,
-44 total -- matches CLAUDE.md's own stated "Final disposition" figure
-(CLAUDE.md's Assertion taxonomy section, "kept 38 `value` / 6 `existence` /
+44 total -- matches METHODOLOGY.md's own stated "Final disposition" figure
+(METHODOLOGY.md's Assertion taxonomy section, "kept 38 `value` / 6 `existence` /
 0 `none`") exactly, and matches the `value`/`existence`/`exception` "kept"
 column of README's Table 1 kept-vs-discarded breakdown exactly.
 
@@ -2001,7 +2001,7 @@ directly, not assumed, by checking this repo's own `results/`/
    affects the eval set's own instrument too, not just the CLI -- never
    triggered there because the hand-curated eval set happened to avoid it.
 3. Auto-discovery's single-file test scope materially undercounts
-   reachability (attrs, jsonschema above) -- the exact effect CLAUDE.md's
+   reachability (attrs, jsonschema above) -- the exact effect METHODOLOGY.md's
    own "widening the suites" exercise corrected for in the eval set, with
    no equivalent in the CLI.
 
@@ -2119,7 +2119,7 @@ reported... stale .pyc execution" entries) -- so it is an instrument
 finding, not a CLI-only one: it affects the eval set's own published
 harness too, just never triggered there, because the 12 eval-set targets
 were hand-curated and widened specifically to maximize reachable coverage
-(see CLAUDE.md's "Widening the suites"), which happened to always leave a
+(see METHODOLOGY.md's "Widening the suites"), which happened to always leave a
 reachable same-length operator for this check to land on. **Same shape as
 the findings this check itself was built to catch: an earlier version of
 this exact project asserted non-survival as evidence of something specific
@@ -2198,7 +2198,7 @@ limitation that already exists, per the chosen option:
 **Two auto-widening options were considered and explicitly declined.**
 Auto-widening to the full test suite by default risks exactly the "twenty
 minutes on someone's laptop" failure mode this project already treats as
-unacceptable -- CLAUDE.md's own eval-set widening saw test counts go up
+unacceptable -- METHODOLOGY.md's own eval-set widening saw test counts go up
 6x-40x, curated afterward by hand; nothing curates an unattended CLI run.
 A targeted heuristic (AST-scan the test directory for files that import the
 target module, run only those) was considered and declined for a sharper
@@ -2241,7 +2241,7 @@ coverage-only pass under a wider scope (no re-scoring, so the cost is one
 extra suite run, not one per mutant) that reports how many "unreachable"
 survivors would flip reachable under it -- keeping the fast narrow scope
 for the actual score while showing both numbers, honestly labeled by which
-scope produced each, matching CLAUDE.md's own "always show the curated
+scope produced each, matching METHODOLOGY.md's own "always show the curated
 number next to the raw one" principle rather than picking one silently.
 This is real, scoped work, left for its own pass.
 
@@ -2295,7 +2295,7 @@ with zero exceptions, before the fix.
 
 ### Fixed as a fourth frozen-core reopening
 
-Per CLAUDE.md invariant 5. Before touching anything: confirmed the two
+Per METHODOLOGY.md invariant 5. Before touching anything: confirmed the two
 existing copies of the classification logic (runner.py's inline version
 inside `_evaluate_one`, agent.py's standalone `_classify_outcome`) were
 byte-for-byte identical to each other -- they had not silently drifted

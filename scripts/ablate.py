@@ -14,7 +14,7 @@ Four conditions, from the actual design down to its stripped components:
 
 For each condition we report two different things:
   kept_count  how many tests would ship under that design.
-  skr         survivor kill rate over all reachable survivors (CLAUDE.md's
+  skr         survivor kill rate over all reachable survivors (METHODOLOGY.md's
               primary metric denominator; there is no held-out exclusion).
 
 skr(C) == skr(C_minus_gate) is a true structural identity, not a bug: C's
@@ -38,7 +38,7 @@ clean-pass check, not evidence the design change was better.
 The number that should differ, and the one that actually matters, is
 skr(C) vs skr(C_minus_retry): both apply the full gate, differing only in
 whether attempt 2 exists. That gap is retry's isolated contribution, the
-thing CLAUDE.md's agent loop contract claims is the highest-leverage single
+thing METHODOLOGY.md's agent loop contract claims is the highest-leverage single
 change in this system.
 
 Reads results/generated_tests.jsonl (arm C rows) and results/
@@ -75,7 +75,7 @@ def load_work_queue_denominator(verification: list[dict]) -> dict[str, set[str]]
     """target name -> set of mutant_ids that are reachable survivors. This is
     what the agent's work queue is drawn from (all of it -- there is no
     held-out exclusion; that control was designed and then abandoned, see
-    CLAUDE.md's "Abandoned: holdout transfer control" section), so it's the
+    METHODOLOGY.md's "Abandoned: holdout transfer control" section), so it's the
     correct SKR denominator for these ablations."""
     denom = {}
     for entry in verification:

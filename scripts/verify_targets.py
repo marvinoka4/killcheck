@@ -30,17 +30,17 @@ Three checks, in order:
    the three determinism runs -- they're identical by construction once a
    target passes check 2, so a fourth run would be wasted work), confirm
    mutant count lands in the 15-60 band, report the killed/timeout/error
-   breakdown per CLAUDE.md's Kill outcome breakdown section, and run the
+   breakdown per METHODOLOGY.md's Kill outcome breakdown section, and run the
    clean suite under `coverage` to determine which surviving mutants sit on a
    line the suite never executes at all ("unreachable" -- structurally
    impossible for this suite to kill, independent of assertion quality)
    versus lines it does execute ("reachable-survivor" -- a real assertion
-   gap). Per CLAUDE.md's Metrics section, the primary metric's denominator is
+   gap). Per METHODOLOGY.md's Metrics section, the primary metric's denominator is
    reachable survivors only; raw SKR (unreachable included) is reported
    alongside it.
 
 There is no held-out-operator partition here. One was built and then
-abandoned -- see CLAUDE.md's "Abandoned: holdout transfer control" section
+abandoned -- see METHODOLOGY.md's "Abandoned: holdout transfer control" section
 for the numbers that killed it. All reachable survivors are eligible.
 
 Writes results/target_verification.json with a full per-mutant record per
@@ -222,7 +222,7 @@ def main() -> int:
             verification_results.append({"name": t["name"], "failed": str(e)})
 
     # CHECK B, pooled form: the published pooled figure must equal the sum
-    # of the per-target figures it was built from -- CLAUDE.md's primary
+    # of the per-target figures it was built from -- METHODOLOGY.md's primary
     # metric IS this sum, so this is the same invariant as the per-target
     # one above, checked once more at the point where the number a reader
     # actually sees gets assembled.
@@ -246,7 +246,7 @@ def main() -> int:
         print(
             f"NOTE: kill score for {', '.join(error_dominant_targets)} is driven "
             f"substantially by import-time errors, not test assertions. See "
-            f"CLAUDE.md's Kill outcome breakdown section before citing these numbers."
+            f"METHODOLOGY.md's Kill outcome breakdown section before citing these numbers."
         )
     if unknown_reachability_targets:
         print()

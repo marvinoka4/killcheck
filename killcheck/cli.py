@@ -18,7 +18,7 @@ Three subcommands, in increasing order of what they need:
 
 targets.json/scripts/*.py (the 12-target eval-set batch mode this
 submission's own results/ and README are built on) are untouched by this
-file and keep working exactly as they did -- see CLAUDE.md's Architecture
+file and keep working exactly as they did -- see METHODOLOGY.md's Architecture
 section. This is a second, independent way in, not a replacement.
 
 Everything here calls into killcheck/runner.py, killcheck/engine.py,

@@ -19,7 +19,7 @@ from typing import Any
 # CHANGELOG.md's "Abandoned: holdout transfer control" entry -- across all 12
 # targets, the held-out-and-reachable population was too small (single
 # digits) to support a rate at all, before or after widening reachability.
-# Anti-circularity now rests on the assertion taxonomy instead (CLAUDE.md).
+# Anti-circularity now rests on the assertion taxonomy instead (METHODOLOGY.md).
 # Nothing in this codebase reads this constant for scoring; it is not
 # imported by verify_targets.py or ablate.py.
 HELD_OUT_OPERATORS = frozenset({"boolop", "unary_not"})
@@ -58,7 +58,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 # different thing depending on which arm wrote it: arm C logs one row per
 # attempt, and test_source is exactly one test function's source. Arms A
 # and B log one row per arm-target (their tests are scored as a whole
-# batch, never individually -- see CLAUDE.md's Clean-pass failures
+# batch, never individually -- see METHODOLOGY.md's Clean-pass failures
 # section), and test_source is the WHOLE accumulated batch, potentially
 # many test functions concatenated. These two constants name that
 # difference explicitly so a row states which one it is instead of a
@@ -83,7 +83,7 @@ def log_generated_test(
 ) -> None:
     """Append one row to results/generated_tests.jsonl.
 
-    Schema (see CLAUDE.md's Logging section):
+    Schema (see METHODOLOGY.md's Logging section):
       arm              "A" | "B" | "C"
       target           target name from targets.json
       mutant_id        the specific mutant this test was asked to target
@@ -143,7 +143,7 @@ def log_trajectory(
     outcome: str,
     truncated: bool = False,
 ) -> None:
-    """Append one row to trajectories/<run_id>.jsonl. Schema is CLAUDE.md's
+    """Append one row to trajectories/<run_id>.jsonl. Schema is METHODOLOGY.md's
     Logging section verbatim; this just adds the timestamp and does the
     append-and-flush.
 

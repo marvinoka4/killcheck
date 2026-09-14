@@ -18,7 +18,7 @@ anywhere, it has cleared the bar "value" is meant to detect, regardless of
 what else is in there; existence/bare-truthy checks are the weakest positive
 signal, so they only win when nothing stronger is present.
 
-CLAUDE.md's stated hypothesis, written before any test is classified: a
+METHODOLOGY.md's stated hypothesis, written before any test is classified: a
 meaningful share of gate-passing tests will be `none` or `existence`,
 meaning the gate selects differential probes rather than specifications.
 The gate (pass on clean, fail on mutant) only proves a test is sensitive to

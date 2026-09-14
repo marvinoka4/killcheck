@@ -16,7 +16,7 @@ a check like this one, but all of which are the same SHAPE of bug this
 guards against on the arithmetic side.
 
 Every function here raises AssertionError on violation, deliberately, not
-a logged warning: CLAUDE.md's own rule for the kill gate ("no exceptions,
+a logged warning: METHODOLOGY.md's own rule for the kill gate ("no exceptions,
 no close enough") applies here too -- a number that doesn't reconcile
 means every number built from it is suspect, and the caller must ABORT,
 not proceed with a footnote. Every function takes an explicit `context`
@@ -45,7 +45,7 @@ def assert_reachability_conservation(reach: dict, total: int, context: str) -> N
     """reachable_survivor + unreachable + unknown_reachability_survivor +
     killed must equal the total mutant count. Every mutant is partitioned
     into exactly one of these four buckets by build_mutant_records/
-    summarize_reachability (CLAUDE.md's Denominator section) -- the
+    summarize_reachability (METHODOLOGY.md's Denominator section) -- the
     unknown bucket exists specifically so a coverage-measurement failure
     degrades to "don't know," not to a silently wrong classification, and
     it must still be counted here or the identity breaks whenever it's
@@ -64,9 +64,9 @@ def assert_reachability_conservation(reach: dict, total: int, context: str) -> N
 def assert_pooled_conservation(pooled: int, per_target: list[int], context: str) -> None:
     """A pooled figure this project publishes (pooled reachable survivors,
     pooled killed, ...) must equal the sum of the per-target figures it was
-    built from -- CLAUDE.md's primary metric is defined as exactly this
+    built from -- METHODOLOGY.md's primary metric is defined as exactly this
     sum, so if it ever doesn't reconcile the pooled number is not the
-    metric CLAUDE.md defines, whatever else it is."""
+    metric METHODOLOGY.md defines, whatever else it is."""
     expected = sum(per_target)
     if pooled != expected:
         raise AssertionError(

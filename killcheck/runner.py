@@ -36,7 +36,7 @@ own unparseable-source mutant, silently scored "killed" instead of
 toward kill_score and every pooled figure downstream (this did not change
 any kill count, survivor set, or SKR -- verified by a full 12-target
 re-run diffed against the committed target_verification.json, zero
-verdict changes), but the killed/timeout/error breakdown CLAUDE.md
+verdict changes), but the killed/timeout/error breakdown METHODOLOGY.md
 requires reporting alongside the primary metric was wrong, and a claim
 built on it ("no target's baseline is error-propped") was accordingly
 false. Now classifies on pytest's own documented exit codes first,

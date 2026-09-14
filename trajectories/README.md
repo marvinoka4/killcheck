@@ -39,7 +39,7 @@ Every row:
 - **`target`** — target name from `targets.json`.
 - **`mutant_id`** — the specific mutant this turn concerns. Empty string
   (`""`) for arms A and B, which have no per-mutant targeting (see
-  CLAUDE.md's Logging section) — every row for those two arms is one
+  METHODOLOGY.md's Logging section) — every row for those two arms is one
   `generate` call for the whole target.
 - **`phase`** — arms A and B only ever log `generate` (one call, no gate, no
   retry, by design). Arm C logs all four:
@@ -109,6 +109,6 @@ whole record. `armA-...jsonl` has exactly 10 rows (one call per target);
 target, matching `CALL_CAP` in `killcheck/baseline.py`). What each call
 actually produced (test count, clean-pass, kill count) is in
 `results/baseline_arm_a.json` / `results/baseline_arm_b.json`, scored per
-batch rather than per call — see CLAUDE.md's Logging section for why arms
+batch rather than per call — see METHODOLOGY.md's Logging section for why arms
 A/B's `test_source` in `results/generated_tests.jsonl` is a whole target's
 batch, not one test.

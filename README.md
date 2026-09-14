@@ -35,7 +35,7 @@ built and abandoned before any arm ran; see CHANGELOG for the denominators that
 killed them.
 
 Submission for the micro1 Frontier Engineering Challenge 2026. See
-[CLAUDE.md](CLAUDE.md) for the full experimental design — invariants, metrics,
+[METHODOLOGY.md](METHODOLOGY.md) for the full experimental design — invariants, metrics,
 the agent loop contract, and the eval set. See [CHANGELOG.md](CHANGELOG.md) for
 findings and decisions in the order they happened, and
 [tripwires.md](tripwires.md) for the abort conditions checked during the agent
@@ -53,7 +53,7 @@ a useful number in five minutes.
 
 Before building the agent, the eval set's 12 targets were checked for how many
 of their surviving mutants sit on a line their own test suite actually executes
-at all (`scripts/verify_targets.py`, full method in CLAUDE.md's Denominator
+at all (`scripts/verify_targets.py`, full method in METHODOLOGY.md's Denominator
 section). Every target's test command was widened to the broadest scope that
 still runs clean and fast — full `tests/` directories, not single files —
 specifically to rule out narrow test scoping as the cause of a thin number.
@@ -98,7 +98,7 @@ original premise was partially wrong. Two ways to make the pooled number look
 bigger — swapping the two zero-reachable-survivor targets for denser ones, and
 chasing wider test scope — were considered and rejected before the arms: the
 first is case selection on the outcome, the second is contradicted by the data
-above. See CLAUDE.md's "Rejected: reachable-survivor workarounds", and
+above. See METHODOLOGY.md's "Rejected: reachable-survivor workarounds", and
 CHANGELOG.md for the numbers.
 
 ---
@@ -295,7 +295,7 @@ mutations being beyond what a shown diff and a retry can specify.
 | mock | 0 | 0 |
 | none | 0 | 0 |
 
-The pre-registered hypothesis, recorded in CLAUDE.md before any test existed,
+The pre-registered hypothesis, recorded in METHODOLOGY.md before any test existed,
 was that a meaningful share of gate-passing tests would be `none` or
 `existence` class — that the gate would select differential probes rather than
 specifications. **On the full sample that hypothesis is not supported.** The
@@ -806,3 +806,23 @@ measuring an agent, write down what your instrument would look like if it were
 lying to you, then build the check that catches exactly that. And write down
 which direction each possible lie would push your result, because that tells
 you which checks you will be least motivated to run.
+
+---
+
+## How this was built
+
+This repository was built with heavy use of Claude Code for implementation.
+
+The experimental design, the invariants, the metric definitions, and every
+methodological decision were directed by me — what counts as a reachable
+survivor, why the primary metric is pooled and not per-target, why the kill
+gate has no exceptions, what got abandoned and why. METHODOLOGY.md is that
+record.
+
+Every number in this document was verified independently of the code that
+produced it, not assumed correct because the code looked right. The eleven
+instrument bugs in CHANGELOG.md are what that verification actually found —
+three of them after publication, by readers who ran the tool against real
+code rather than read the write-up and trusted it.
+
+Commit history is unmodified. Co-authorship trailers are intact.

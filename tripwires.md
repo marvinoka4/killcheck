@@ -73,7 +73,7 @@ canary/determinism-check pattern this project has already needed twice.
   contains more than one top-level `def test_*`/`async def test_*`, that's
   a contract violation, not a bonus -- it breaks the one-test-per-mutant
   scoring unit this arm's whole design depends on, and reintroduces the
-  batch-attribution problem arms A and B have (see CLAUDE.md's assertion
+  batch-attribution problem arms A and B have (see METHODOLOGY.md's assertion
   taxonomy limitation).
 
 - **The prompt lacks the mutant diff.** Check the actual prompt text sent
@@ -131,7 +131,7 @@ These mean the primary number is being computed in a way that would make it
 look better than it is, independent of anything the model actually did.
 
 - **Nearly all kills are call-phase non-`AssertionError` on
-  `return_none`/`constant` mutants.** Per CLAUDE.md's kill-outcome-breakdown
+  `return_none`/`constant` mutants.** Per METHODOLOGY.md's kill-outcome-breakdown
   rule, `error`-outcome kills are real but weaker evidence than an assertion
   actually firing. If the overwhelming majority of arm C's kills are
   exceptions other than `AssertionError` concentrated on exactly the two
@@ -141,7 +141,7 @@ look better than it is, independent of anything the model actually did.
   pooled SKR hide it, per the existing kill-outcome-breakdown rule.
 
 - **Official SKR computed incrementally rather than by one-pass batch
-  rescore.** This is the exact confound CLAUDE.md already forbids for arms
+  rescore.** This is the exact confound METHODOLOGY.md already forbids for arms
   A and B, and it applies just as much to arm C's final number: the kept
   set must be appended once and scored once. Scoring incrementally as tests
   are kept gives compounding credit to whichever tests happen to be kept
@@ -149,6 +149,6 @@ look better than it is, independent of anything the model actually did.
 
 - **A 0-reachable-survivor target back in the pool.** `voluptuous-error` and
   `dotenv-variables` contribute 0/0 and must stay excluded from the pooled
-  denominator (see CLAUDE.md's Denominator section). Either reappearing in
+  denominator (see METHODOLOGY.md's Denominator section). Either reappearing in
   a nonzero-denominator pooled calculation is a regression in the pooling
   code, not a real result.

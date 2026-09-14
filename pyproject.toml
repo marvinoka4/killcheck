@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 
 # Pinned to what this was built and tested against, not floor-pinned with
-# ">=" -- see CLAUDE.md's Eval set rules ("Reproducibility is 15 points").
+# ">=" -- see METHODOLOGY.md's Eval set rules ("Reproducibility is 15 points").
 # `score` and `verify` need only these two; neither imports `anthropic` or
 # `python-dotenv` at module load time (both are lazy-imported inside
 # killcheck/baseline.py's _client(), only reached by `harden`), so a plain
@@ -36,7 +36,7 @@ killcheck = "killcheck.cli:main"
 # tooling (verify_targets.py, agent.py's __main__, ablate.py, ...) -- it is
 # not part of the installable package and was never meant to be; it stays a
 # "clone this repo and run its scripts" workflow, unchanged, documented in
-# CLAUDE.md's Architecture section. Keeping it out here is what the
+# METHODOLOGY.md's Architecture section. Keeping it out here is what the
 # killcheck/verify_core.py and killcheck/classify.py extractions were for:
 # before that split, killcheck/agent.py imported from scripts/, so a plain
 # `pip install killcheck` would have shipped a library whose `harden` command

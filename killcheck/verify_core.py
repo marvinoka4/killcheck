@@ -14,7 +14,7 @@ output against the previously-committed file, zero mismatches. See
 CHANGELOG.md for that verification.
 
 Nothing here is frozen (only killcheck/engine.py and killcheck/runner.py
-are, per CLAUDE.md invariant 5) -- but build_mutant_records/
+are, per METHODOLOGY.md invariant 5) -- but build_mutant_records/
 summarize_reachability/outcome_breakdown feed the primary metric's
 denominator, so changes here get the same re-verify-before-trusting
 discipline as a frozen-core change even though it isn't formally required.
@@ -54,7 +54,7 @@ COPY_IGNORE = shutil.ignore_patterns(
 
 def outcome_breakdown(report: dict) -> dict:
     """Disaggregate score_target()'s pooled kill count into killed/timeout/error,
-    per CLAUDE.md's Kill outcome breakdown section. score_target() itself only
+    per METHODOLOGY.md's Kill outcome breakdown section. score_target() itself only
     reports the pooled total (by design, all three count as a kill) -- this is
     a read-only post-processing pass over the same report, not a change to the
     frozen runner.

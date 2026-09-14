@@ -18,7 +18,7 @@ anywhere, it has cleared the bar "value" is meant to detect, regardless of
 what else is in there; existence/bare-truthy checks are the weakest positive
 signal, so they only win when nothing stronger is present.
 
-CLAUDE.md's stated hypothesis, written before any test is classified: a
+METHODOLOGY.md's stated hypothesis, written before any test is classified: a
 meaningful share of gate-passing tests will be `none` or `existence`,
 meaning the gate selects differential probes rather than specifications.
 The gate (pass on clean, fail on mutant) only proves a test is sensitive to
@@ -53,7 +53,7 @@ construction for arm C (one test per mutant, one row per test) and true
 incidentally for any arm A/B target whose whole batch happened to be a
 single test. For every multi-test batch, gate_would_keep is reported as not
 computable rather than guessed at by attributing the batch's outcome to
-every test in it, which would silently overcount. See CLAUDE.md and
+every test in it, which would silently overcount. See METHODOLOGY.md and
 README.md for the same limitation stated in the report's own words.
 
 `classify_test` and its supporting decision procedure now live in
@@ -165,7 +165,7 @@ def main() -> int:
         # arm C, true incidentally for an arm A/B target whose whole batch
         # happened to be a single test. A multi-test batch's
         # passed_on_clean/killed_target describes the batch, not any one
-        # test in it (see this file's docstring and CLAUDE.md).
+        # test in it (see this file's docstring and METHODOLOGY.md).
         attributable = len(tests) == 1
         gate_would_keep = attributable and r["passed_on_clean"] and r["killed_target"]
         if attributable:

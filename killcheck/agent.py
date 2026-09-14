@@ -6,10 +6,10 @@ mutation. Gate it -- pass on clean, fail on the mutant -- and retry exactly
 once, feeding back the real pytest output, if the gate rejects. Kept tests
 accumulate per target; the OFFICIAL kill count comes from one batch rescore
 of the final kept set at the end, never from the per-call gate outcome
-(CLAUDE.md's batch-vs-incremental rule applies here exactly as it does to
+(METHODOLOGY.md's batch-vs-incremental rule applies here exactly as it does to
 arms A and B).
 
-See CLAUDE.md's "Agent loop contract" for the design this implements, and
+See METHODOLOGY.md's "Agent loop contract" for the design this implements, and
 tripwires.md for the abort conditions checked during the run.
 """
 

@@ -42,7 +42,7 @@ from killcheck.logs import log_generated_test, log_trajectory, UNIT_TEST_BATCH
 from killcheck.runner import Target, _evaluate_one, _run
 
 MODEL = "claude-sonnet-4-6"
-# 8000, not the original 2000: recorded in CLAUDE.md as the per-call
+# 8000, not the original 2000: recorded in METHODOLOGY.md as the per-call
 # max_tokens for all three arms (invariant 3 requires the same budget across
 # arms, so agent.py must match this when it exists). 2000 was a placeholder
 # that turned out to be wrong -- Arm A's prompt asks for "as many tests as
@@ -600,7 +600,7 @@ def main() -> None:
     # CHECK B, pooled form -- see scripts/verify_targets.py's identical check
     # for why this matters even though denom/num are already direct sums
     # here: it's a standing guard against a future refactor (an incremental
-    # accumulator, a cache) silently breaking the identity CLAUDE.md's
+    # accumulator, a cache) silently breaking the identity METHODOLOGY.md's
     # primary metric is defined by.
     assert_pooled_conservation(denom, [r["reachable_survivors"] for r in scored], f"arm {args.arm} pooled reachable survivors")
     assert_pooled_conservation(num, [r["killed"] for r in scored], f"arm {args.arm} pooled killed")
