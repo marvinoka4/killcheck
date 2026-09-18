@@ -311,6 +311,81 @@ than a true held-out-mutant transfer signal would have been, and the
 Limitations section says so plainly rather than implying the taxonomy is a
 full substitute.
 
+### Design 3 (pre-registered): within-function transfer against a fresh mutant population
+
+Suggested by a reader, joinwell52 (dev.to/joinwell52), after both designs
+above were abandoned for the same root cause: an insufficient denominator.
+This design avoids that cause structurally instead of trying to find a
+bigger sample inside the same 53 mutants -- it does not partition the
+existing survivor set at all. It generates a FRESH mutant population,
+drawn from the same functions the 44 kept tests were written for, and
+excludes every mutant that was ever part of the original 53-survivor work
+queue (both the 44 the agent killed and the 9 it didn't). What is left in
+those functions is mostly sites the existing suite already killed before
+the agent ever ran, plus sites the existing suite never reached -- neither
+of which was ever a survivor, so neither was ever denominator-limited by
+this eval set's own thinness the way Design 1 and Design 2 were. The
+actual population size this produced, per function and pooled, is reported
+in results/within_function_transfer.json and is checked against a ~100
+floor before anything is interpreted (see that file and CHANGELOG.md for
+whether it cleared it).
+
+This does not overturn "Decision: no holdout control ships," directly
+above -- that decision was about partitioning the 53 survivors, and it
+stands, for exactly that design space. This is a structurally different
+control, tried because it sidesteps the specific failure that killed the
+other two, not a retraction of why they failed.
+
+**The question this answers.** Zero cross-function collateral (see
+README's "Transfer: the uncomfortable result") establishes that the 44
+kept tests do not generalise ACROSS function boundaries. It says nothing
+about whether they constrain behaviour WITHIN the function each was
+written for. A test that catches only the one mutation it was shown is a
+probe. A test that catches unseen mutations in the same function is closer
+to a specification. That is the sensitivity-versus-specification
+distinction this document has, until now, said it could not resolve.
+
+**Prediction, made before this experiment's code exists:** within-function
+transfer will be low but non-zero, and concentrated in `value`-class kept
+tests rather than `existence`-class ones.
+
+**Primary metric:** fresh-mutant kill rate = (fresh mutants killed by the
+frozen kept set, scored alone, without the target's original suite) /
+(fresh mutants that are reachable under the kept-tests-only suite -- the
+same coverage-based reachability method already used for the main
+denominator, in Denominator above, applied here to a different suite: the
+44 kept tests running by themselves, not the target's own suite). Report
+the raw rate too (every fresh mutant generated, unreachable ones included,
+the same convention raw SKR follows elsewhere in this document), and the
+per-class breakdown -- value vs. existence -- attributed via which kept
+test's own call phase actually failed on a given fresh mutant, the same
+collateral-kill attribution mechanism `official_batch_rescore` already
+uses for this project's real, published kill counts.
+
+**Design constraints, fixed before any experiment code exists:**
+
+- The 44 kept tests are frozen exactly as gated. No regeneration, no
+  retries, zero model calls anywhere in this experiment.
+- The fresh population is scored against the 44 kept tests in isolation --
+  the target's original suite is not present in that run at all, because
+  the original suite already kills most sites in these functions (that is
+  why they were never survivors), and a run that includes it would credit
+  the kept tests with kills that were never theirs to claim.
+- The original suite's own verdict on each fresh mutant, used only as a
+  reference column, is read from the already-committed
+  results/target_verification.json rather than re-executed -- that verdict
+  was already established deterministically (the 3x-serial determinism
+  check this file's Denominator section describes), and re-running it
+  would spend real time confirming something already known to the same
+  precision.
+- Serial execution throughout, per the same determinism requirement as
+  everywhere else in this project.
+- engine.py and runner.py are not touched by this design. If building the
+  fresh population turns out to need something engine.py does not already
+  expose, that is a fifth frozen-core reopening, to be announced and
+  decided before any such change is made, not folded quietly into this
+  entry.
+
 ### Assertion taxonomy
 
 The kill gate (pass on clean, fail on mutant) proves a test is sensitive to
