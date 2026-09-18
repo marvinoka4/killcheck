@@ -2528,8 +2528,12 @@ fifth reopening) -- all written into METHODOLOGY.md's new Design 3
 subsection and committed alone, containing no experiment code, so the
 prediction was on record before anything could have been shaped to match
 it. Four of this project's eleven instrument bugs were caught by exactly
-this discipline; it only works if the prediction predates the code that
-could produce a result.
+this discipline (eleven as of this commit, 93231a7, before bugs twelve
+and thirteen below existed -- left as eleven deliberately, not updated to
+thirteen, since this sentence describes what was true at the moment the
+prediction was written, not the count as of whenever this entry is read);
+it only works if the prediction predates the code that could produce a
+result.
 
 **The experiment** (`scripts/within_function_transfer.py`, commit e4655f2):
 froze the 44 kept tests, reconstructed from `results/generated_tests.jsonl`'s

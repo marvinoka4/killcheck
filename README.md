@@ -543,6 +543,17 @@ measuring an agent, write the checks that would fail if your instrument were
 lying to you — and note which direction each possible lie would push your
 result.
 
+A twelfth belongs in this summary, not only in its own detail below: found
+much later, while building an entirely different experiment, it would have
+reported a perfect **1.00** within-function transfer rate against a real
+0.6415 — the most extreme flattering bias in this whole catalogue, and the
+most quotable wrong number this project could have produced. Caught on a
+single-target dry run before the full run was trusted — the same
+predict-then-run habit that caught bug 5 above, and the same
+run-it-somewhere-new habit that caught the ninth bug below, catching
+something together this time. Full account in "The tenth and eleventh
+bugs, briefly, and the twelfth and thirteenth in full," further down.
+
 ### The ninth bug: the same lie, a door this section hadn't shipped yet
 
 This section was written, and believed complete, when killcheck was still
@@ -950,6 +961,20 @@ check that runs everywhere it needs to — and nothing forces you to notice the
 gap between those two claims until someone else's number comes back wrong.
 See "The ninth bug" above.
 
+Ten through thirteen follow the same shape, with one instructive
+exception. Twelve of this project's thirteen instrument bugs pushed
+toward a more flattering or more publishable result — a spurious
+concurrent failure read as a kill, a batch hiding its weak tests behind
+one strong one, a valid test discarded as a rejection, a denominator that
+would have reported a perfect 1.00 transfer rate instead of a real
+0.6415. The thirteenth pushed nowhere: it crashed loudly, a
+`PermissionError` on the very first run of the checks meant to catch it,
+rather than silently validating nothing. That ratio, not the raw count,
+is the actual evidence for the claim above — thirteen bugs found says the
+checking was thorough; twelve of them pointing the same direction says it
+needed to be, because the untested default is quiet and flattering, not
+loud and neutral.
+
 That last property is the one worth carrying forward. Evaluation bugs are not
 randomly signed, because attention is not randomly allocated: a result that
 disappoints you gets investigated and a result that pleases you gets written
@@ -984,5 +1009,8 @@ produced it, not assumed correct because the code looked right. The
 thirteen instrument bugs in CHANGELOG.md are what that verification
 actually found — three of them after publication, by readers who ran the
 tool against real code rather than read the write-up and trusted it.
+Twelve of the thirteen pushed toward a more flattering or more
+publishable result; the thirteenth pushed nowhere, because it crashed
+loudly rather than validating anything silently.
 
 Commit history is unmodified. Co-authorship trailers are intact.
