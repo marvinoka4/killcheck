@@ -102,3 +102,20 @@ def assert_no_duplicates(ids: list, context: str) -> None:
         seen.add(i)
     if dupes:
         raise AssertionError(f"[{context}] duplicate id(s) in work queue: {sorted(dupes)}")
+
+
+def assert_disjoint(a: set, b: set, context: str) -> None:
+    """Two id sets that a design depends on never overlapping must not
+    overlap. Added for METHODOLOGY.md's Design 3 (within-function
+    transfer): a "fresh" mutant population is only fresh -- provably never
+    shown to the agent -- if it shares zero ids with the original
+    53-survivor work queue. Silently including a handful of the original
+    survivors in the "fresh" set would inflate the transfer rate with
+    mutants that are not testing transfer at all, just re-measuring what
+    the kept tests were already known to kill."""
+    overlap = a & b
+    if overlap:
+        raise AssertionError(
+            f"[{context}] {len(overlap)} id(s) expected to be disjoint are shared: "
+            f"{sorted(overlap)[:10]}{'...' if len(overlap) > 10 else ''}"
+        )
