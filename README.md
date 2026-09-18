@@ -365,6 +365,81 @@ That is not a control and cannot be — no holdout survived. It is a weak probe,
 now measured over 44 kept tests instead of 9, pointing consistently in one
 direction.
 
+### Within-function transfer: true across functions, false within them
+
+The claim in the section above — that the 44 kept tests detect the edit
+they were shown and, functionally, nothing else — is true across function
+boundaries and false within them. A new holdout, suggested by a reader
+after both designs above failed on denominator (see METHODOLOGY.md's
+"Abandoned: holdout transfer control"), made it possible to check: the
+frozen 44 kept tests, run alone with the target's original suite absent
+entirely, against 92 fresh mutants on the same functions the agent never
+showed them. **34 of 53 reachable killed.**
+
+That number needs its caveat attached to it, not trailing after it: 92
+fresh mutants is below the 100 pre-registered as a floor in
+METHODOLOGY.md's Design 3, written before this experiment existed. The
+floor was not cleared. Two targets (`cachetools-func`, `shortuuid-main`)
+supply 30 of the 53 reachable mutants between them; one target
+(`natsort-ns-enum`) contributes nothing at all — its two kept mutants sit
+on enum-member lines with no enclosing function, so it has no function for
+a fresh population to be drawn from. Read the rate as a direction from a
+modest sample, not a precise measurement.
+
+The class result is sharper than the rate and is the first evidence in
+this project separating sensitivity from specification, even at this
+sample size: of the 34 kills, 28 are attributable to a `value`-class kept
+test and 4 to an `existence`-class one (2 more are unattributed — a
+timeout and a collection error, neither has a call phase to credit).
+Both T5 rows below are `value`-class. Limitations, below, states that
+nothing in this submission answers whether a kept test specifies
+behaviour independent of the mutation it was shown. That is now partially
+answered: within the function a test was written for, a `value`-class
+test generalises to unseen mutations at a real rate and an
+`existence`-class one essentially does not. Across function boundaries,
+the zero-collateral finding above still stands, unmoved by this.
+
+**T5 — three mutants a generated test caught that the library's own suite
+did not** — an existence proof, not a rate:
+
+| target | function | operator | line | killed by |
+| --- | --- | --- | --- | --- |
+| boltons-typeutils | `make_sentinel` | raise_removed | 101 | `test_sentinel_pickleable_from_invalid_module` |
+| toolz-dicttoolz | `get_in` | return_none | 335 | `test_get_in_default_no_default_is_false` |
+| toolz-dicttoolz | `get_in` | return_none | 339 | `test_get_in_default_no_default_is_false` |
+
+n=3. This says a generated test *can* catch something the library's own
+maintainers missed, not how often it does — three instances across 92
+fresh mutants is not a rate worth naming.
+
+**By operator family**, pooled reachable/killed: `binop` 1/0, `boolop`
+3/3, `compare` 13/9, `constant` 15/3, `raise_removed` 4/4, `return_none`
+14/13, `unary_not` 3/2. Most of these are single-digit denominators —
+`raise_removed`'s 4/4 and `boolop`'s 3/3 are four and three data points,
+not rates, and should not be read as "this operator family always
+transfers."
+
+**By kept test**, the full breadth distribution across all 44, no
+threshold cut: 22 killed zero fresh mutants, 9 killed exactly one, 10
+killed two, 1 killed three, 2 killed four. Half of the 44 kept tests are
+pure probes against unseen mutations in their own function; half
+generalise to at least one. That split is the honest summary, and it is a
+better result than either extreme would have been — all-probe would have
+meant the gate selects for nothing beyond the shown mutation even
+locally; all-generalise would have been implausibly strong for one retry
+with no specification pressure in the prompt at all.
+
+**The prediction missed, and it is reported as a miss.** METHODOLOGY.md
+pre-registered "within-function transfer will be low but non-zero, and
+concentrated in `value`-class kept tests rather than `existence`-class
+ones." The class half held cleanly. The magnitude half did not: 0.64 of
+reachable fresh mutants killed is not low by any plain reading of that
+word, denominator caveat included. A pre-registered prediction that turns
+out wrong in the direction that favours this project's own tool is
+exactly what pre-registration exists to catch. It is recorded here as a
+miss, not reframed after the fact into a prediction that would have been
+correct.
+
 ### Resource vector
 
 | arm | calls | tokens in | tokens out | tests emitted | wall clock |
@@ -709,19 +784,32 @@ are easy to conflate here:
 - *(b)* does the gate select on anything measurable — answered by the
   pre-registered mechanical features;
 - *(c)* do the kept tests specify behaviour independent of the mutation they
-  were shown — **not answered by anything in this submission.**
+  were shown — **partially answered, within a function only, below the
+  pre-registered denominator floor; unanswered across function boundaries.**
 
 Only (c) is anti-circularity. Two holdout designs were built and abandoned
 before any arm ran: by operator family, which had a pooled held-out
 reachable-survivor denominator of 1, and by position, which rounds to 0–1 per
-target at these population sizes. What remains are two weak probes: collateral
-kills on reachable mutants a test was not written for, reported split by
-whether the collateral mutant is in the same function as the target
-(same-function collateral is largely geometry, since survivors cluster densely;
-cross-function collateral is the only real transfer signal left), and breadth
-within the function. Neither is a control. An earlier draft of this file
-claimed anti-circularity rested on the assertion taxonomy. That claim was wrong
-and is corrected here.
+target at these population sizes. What remains from those two are two weak
+probes: collateral kills on reachable mutants a test was not written for,
+reported split by whether the collateral mutant is in the same function as the
+target, and breadth within the function. Neither is a control. An earlier
+draft of this file claimed anti-circularity rested on the assertion taxonomy.
+That claim was wrong and is corrected here.
+
+A third design, suggested by a reader after the first two failed on
+denominator, did produce a real control — see "Within-function transfer,"
+above, and METHODOLOGY.md's Design 3. It answers (c) for same-function
+transfer only, at n=92 (below the 100 pre-registered as a floor, so read as a
+direction, not a precise rate): 34 of 53 reachable fresh mutants — never shown
+to the agent, on the same functions the 44 kept tests target — are killed by
+those tests running alone, concentrated in `value`-class tests (28 of 34
+attributable kills) over `existence`-class ones (4 of 34). Across function
+boundaries the question is exactly as open as it was: the zero-cross-function-
+collateral finding above is not touched by this, since Design 3 was
+deliberately restricted to the same functions the kept tests were written
+for. (c) is therefore split, not closed: partially answered within a
+function, still fully open across one.
 
 **No per-test kill attribution for arms A and B.** Arm C targets one mutant per
 call, so one generated test maps to one kill outcome. Arms A and B are scored

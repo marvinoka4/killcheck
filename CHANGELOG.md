@@ -2493,3 +2493,121 @@ Documented in README's "Reproducing this" section, next to where
 `results/` and `trajectories/` are already described, so a reader who
 diffs their own reproduction against these files and sees a different
 path in the same spot knows that's expected, not a mismatch to chase.
+
+## Design 3: within-function transfer, a holdout that finally had a denominator
+
+Reported by joinwell52 (dev.to/joinwell52): both holdout designs in
+METHODOLOGY.md's "Abandoned: holdout transfer control" section died the
+same way -- an insufficient denominator, from partitioning the same fixed
+53 survivors two different ways and getting single digits either way. The
+suggestion that unstuck it: stop partitioning the 53 entirely. Generate a
+FRESH mutant population -- on the same functions the 44 kept tests
+target, excluding everything ever in the original work queue -- and score
+the frozen kept tests against that instead. Most sites in those functions
+were never survivors to begin with (already killed by the existing suite,
+or on a line it never reached), so a population built this way isn't
+capped by the eval set's own thinness the way partitioning the 53 always
+would be.
+
+**The transferable lesson, stated plainly because it generalizes beyond
+this one design:** when a holdout control fails for lack of denominator,
+the fix is not a cleverer way to split the same fixed population -- it is
+asking whether a genuinely new population can be generated instead of
+partitioned. Design 1 and Design 2 both tried to split 53 survivors more
+cleverly (by operator, by position) and both hit the same wall, because
+splitting a small number more cleverly still produces small numbers. A
+control that looked structurally impossible under the first framing
+turned out to be available under a different one.
+
+**Pre-registered first, before any of this code existed** (commit
+93231a7): the prediction ("within-function transfer will be low but
+non-zero, and concentrated in `value`-class kept tests rather than
+`existence`-class ones"), the primary metric, and the design constraints
+(zero model calls, serial execution, no frozen-core changes without a
+fifth reopening) -- all written into METHODOLOGY.md's new Design 3
+subsection and committed alone, containing no experiment code, so the
+prediction was on record before anything could have been shaped to match
+it. Four of this project's eleven instrument bugs were caught by exactly
+this discipline; it only works if the prediction predates the code that
+could produce a result.
+
+**The experiment** (`scripts/within_function_transfer.py`, commit e4655f2):
+froze the 44 kept tests, reconstructed from `results/generated_tests.jsonl`'s
+own recorded gate outcomes rather than read off `agent_arm_c.json`'s
+already-computed `kept` flags -- then cross-checked the two independently-
+populated records against each other (they agree, all 44). Generated a
+fresh mutant population restricted to the functions those 44 target,
+excluded via `assert_disjoint` (new in `killcheck/invariants.py`) anything
+ever in the original 53-survivor work queue, and scored the frozen kept
+tests alone -- the target's original suite entirely absent from that run
+-- against the fresh population, with per-test attribution via the same
+plugin-based mechanism `official_batch_rescore` already uses for this
+project's published kill counts. The original suite's own verdict on each
+fresh mutant was read from the already-committed `target_verification.json`
+rather than re-executed, since that verdict was already established to
+the project's own determinism standard and re-running it would have spent
+real time confirming something already known.
+
+One real bug found and fixed along the way, not in the main pipeline: the
+reachability measurement (`measure_reachable_lines_single_file`, a local
+adaptation of `killcheck/verify_core.py`'s `measure_reachable_lines`, not
+a change to it) initially returned `None` for every target, because
+`coverage json`'s own exit code was being trusted as a proxy for whether
+the JSON report was written. Scoping coverage down to a handful of kept
+tests running alone (instead of a target's normal full-suite scope) makes
+`coverage json` exit nonzero purely from a `fail_under` threshold sized
+for the full suite -- confirmed directly against slugify-special
+(`coverage json` exited 2, "total of 23 is less than fail-under=97",
+having already printed "Wrote JSON report to cov.json"). Fixed by
+checking whether `cov.json` actually exists instead of trusting the exit
+code; `measure_reachable_lines` itself is untouched, since every one of
+its other callers scores coverage over a target's normal full scope,
+where the exit-code assumption still holds.
+
+**CHECK A and CHECK B applied to this pipeline's own scoring code**
+(`scripts/test_within_function_transfer_checks.py`), per instruction and
+per this project's own standing rule that new scoring code gets the same
+treatment as everything else: known-outcome fixtures through the real
+`prepare_kept_only_project`/`score_fresh_mutant_kept_alone` functions,
+plus `assert_disjoint`'s own conservation check -- each with a meta-test
+proving it has teeth against a deliberately broken variant. Writing these
+surfaced one bug, in the meta-test's own fixture, not the pipeline: the
+path-swap helper (`_command_for_file`) used `project_root / arg`, and
+pathlib silently discards the left side of `/` when `arg` is absolute --
+so a fixture using `sys.executable` (rather than the bare `"python3"`
+every real `targets.json` test_command actually uses) got its command
+corrupted. Fixed in `within_function_transfer.py`; confirmed the real
+10-target run was never exposed to this (zero such warnings in its log,
+and every real test_command's interpreter argument is the literal string
+`"python3"`, never an absolute path).
+
+**Result, run twice for determinism (byte-identical pooled figures both
+times):** 92 fresh mutants generated, pooled -- below the 100
+pre-registered as a floor, so the denominator problem that killed the
+first two designs is smaller here, not gone; two targets
+(`cachetools-func`, `shortuuid-main`) supply 30 of 53 reachable between
+them, one (`natsort-ns-enum`) contributes nothing at all, since its two
+kept mutants sit on enum-member lines with no enclosing function. 53 of
+92 reachable under the kept-tests-alone suite; 34 of 53 killed. Full
+per-target, per-operator, and per-kept-test tables in README's "Within-
+function transfer" section; per-mutant detail in
+`results/within_function_transfer.json`.
+
+**The prediction was PARTIALLY supported, and the miss favors this
+project's own tool, which is exactly the shape a pre-registered
+prediction exists to catch.** The class half held: 28 of 34 kills
+attributable to a `value`-class kept test, 4 to `existence`. The
+magnitude half -- "low but non-zero" -- did not: 0.6415 of reachable
+fresh mutants killed is not low by any plain reading of that word. This
+is recorded as a miss, not narrowed after the fact into a definition of
+"low" wide enough to cover 0.64.
+
+### Credit
+
+Reported by joinwell52 (dev.to/joinwell52): the design itself -- generate
+a fresh population instead of partitioning the fixed one, on the same
+functions the kept tests target, excluding the original work queue. The
+two abandoned holdout designs this unstuck are recorded above in
+METHODOLOGY.md's "Abandoned: holdout transfer control" section; this is
+the third design tried against the same question, and the first to clear
+the reasoning, if not fully the denominator.

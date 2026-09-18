@@ -386,6 +386,37 @@ uses for this project's real, published kill counts.
   decided before any such change is made, not folded quietly into this
   entry.
 
+**Outcome, on the completed run: PARTIALLY supported, and the part that
+didn't hold is the part that would have flattered this project.** 92
+fresh mutants generated pooled (`results/within_function_transfer.json`),
+below the 100 floor set above -- said plainly, not glossed: the
+denominator problem that killed Design 1 and Design 2 is smaller here, not
+gone. 53 of those 92 are reachable under the frozen 44 kept tests running
+alone; 34 of the 53 are killed. Two targets (`cachetools-func`,
+`shortuuid-main`) supply 30 of the 53 reachable between them;
+`natsort-ns-enum` contributes 0 (its 2 kept mutants sit on enum-member
+lines with no enclosing function, so it has no function for a fresh
+population to be drawn from at all).
+
+The **class** half of the prediction held: of the 34 kills, 28 are
+attributable to a `value`-class kept test, 4 to `existence` (2
+unattributed -- a timeout and a collection error, neither has a call
+phase to credit to any one test). Both of the three mutants killed by a
+kept test but not by the target's own original suite are `value`-class.
+
+The **magnitude** half -- "low but non-zero" -- did not hold. 34 of 53 is
+0.6415; the raw rate including unreachable fresh mutants is 0.3696.
+Neither reads as "low" by any plain construction of that word, denominator
+caveat included. This is reported as a miss, not narrowed after the fact
+into a definition of "low" broad enough to cover 0.64 -- a prediction
+that turns out wrong in the direction that favours this project's own
+tool is exactly what pre-registration exists to catch, and burying that
+inside a partial-credit framing would defeat the reason this section was
+written before the experiment existed. Full tables (per-target, per
+operator family, the full 44-test breadth distribution) are in README's
+"Within-function transfer" section and CHANGELOG.md; per-mutant detail is
+in results/within_function_transfer.json.
+
 ### Assertion taxonomy
 
 The kill gate (pass on clean, fail on mutant) proves a test is sensitive to
