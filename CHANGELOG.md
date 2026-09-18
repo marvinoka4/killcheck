@@ -2548,10 +2548,10 @@ rather than re-executed, since that verdict was already established to
 the project's own determinism standard and re-running it would have spent
 real time confirming something already known.
 
-One real bug found and fixed along the way, not in the main pipeline: the
-reachability measurement (`measure_reachable_lines_single_file`, a local
-adaptation of `killcheck/verify_core.py`'s `measure_reachable_lines`, not
-a change to it) initially returned `None` for every target, because
+**Instrument bug twelve**, found and fixed along the way, not in the main
+pipeline: the reachability measurement (`measure_reachable_lines_single_file`,
+a local adaptation of `killcheck/verify_core.py`'s `measure_reachable_lines`,
+not a change to it) initially returned `None` for every target, because
 `coverage json`'s own exit code was being trusted as a proxy for whether
 the JSON report was written. Scoping coverage down to a handful of kept
 tests running alone (instead of a target's normal full-suite scope) makes
@@ -2564,6 +2564,23 @@ code; `measure_reachable_lines` itself is untouched, since every one of
 its other callers scores coverage over a target's normal full scope,
 where the exit-code assumption still holds.
 
+**Direction: this would have flattered the result, sharply.** With
+`reachable_lines` always `None`, every mutant's reachability reads
+`unknown`, not `True`/`False` -- `build_mutant_records`/
+`summarize_reachability` then have no mutant in the "reachable, survived"
+bucket at all, because that bucket requires `reachable is True`
+specifically. `reachable_under_kept` (killed + confirmed-reachable-
+survived) would have collapsed to just the killed count, since killed is
+trivially reachable by construction -- 34 over 34, a **perfect 1.00**
+transfer rate, not the real 0.6415. A brand-new anti-circularity control
+would have shipped reporting its own strongest possible result, on its
+first run, for a reason having nothing to do with test quality. Caught on
+the single-target dry run performed before trusting the full run at all:
+a `reachable_under_kept` of 5 out of 5 against an expected mixed bucket
+was suspicious enough to reproduce the coverage subprocess by hand, which
+surfaced both the exit code and the "Wrote JSON report" line in the same
+output.
+
 **CHECK A and CHECK B applied to this pipeline's own scoring code**
 (`scripts/test_within_function_transfer_checks.py`), per instruction and
 per this project's own standing rule that new scoring code gets the same
@@ -2571,15 +2588,23 @@ treatment as everything else: known-outcome fixtures through the real
 `prepare_kept_only_project`/`score_fresh_mutant_kept_alone` functions,
 plus `assert_disjoint`'s own conservation check -- each with a meta-test
 proving it has teeth against a deliberately broken variant. Writing these
-surfaced one bug, in the meta-test's own fixture, not the pipeline: the
-path-swap helper (`_command_for_file`) used `project_root / arg`, and
-pathlib silently discards the left side of `/` when `arg` is absolute --
-so a fixture using `sys.executable` (rather than the bare `"python3"`
-every real `targets.json` test_command actually uses) got its command
-corrupted. Fixed in `within_function_transfer.py`; confirmed the real
-10-target run was never exposed to this (zero such warnings in its log,
-and every real test_command's interpreter argument is the literal string
-`"python3"`, never an absolute path).
+surfaced **instrument bug thirteen**, in the meta-test's own fixture, not
+the pipeline: the path-swap helper (`_command_for_file`) used
+`project_root / arg`, and pathlib silently discards the left side of `/`
+when `arg` is absolute -- so a fixture using `sys.executable` (rather
+than the bare `"python3"` every real `targets.json` test_command actually
+uses) got its command corrupted. Fixed in `within_function_transfer.py`;
+confirmed the real 10-target run was never exposed to this (zero such
+warnings in its log, and every real test_command's interpreter argument
+is the literal string `"python3"`, never an absolute path).
+
+**Direction: none on any published number.** Bug thirteen never reached
+the real run -- only this experiment's own CHECK A/B meta-tests, which
+crashed outright (`PermissionError`) on their first run rather than
+silently validating nothing. Its risk was to the reliability of the
+CHECK A/B safety net itself, not to a result, and it announced itself
+loudly rather than quietly. Caught before either check was trusted or
+committed as passing.
 
 **Result, run twice for determinism (byte-identical pooled figures both
 times):** 92 fresh mutants generated, pooled -- below the 100

@@ -588,6 +588,66 @@ everywhere it needs to. Full mechanism, plus what a canary failure now
 tells a user to try, in CHANGELOG.md's "score and harden must not run
 without a canary" entry.
 
+### The tenth and eleventh bugs, briefly, and the twelfth and thirteenth in full
+
+The tenth (stale-bytecode execution — reported by a reader, confirmed
+real, confirmed not currently exploitable against any actual scored
+result, closed with a second canary) and eleventh (the scorer's own
+classification logic had never been checked, only the execution path had
+— found by CHECK A on its first real run) are recorded in full in
+CHANGELOG.md's "A reader-reported 'tenth instrument bug'" and "Instrument
+bug eleven" entries, not repeated here. The twelfth and thirteenth were
+found while building the within-function transfer experiment (see
+Results, above) — before its numbers were trusted, not after.
+
+**Twelfth: a reachability check trusted an exit code that meant something
+different at a narrower scope.** The new experiment's coverage-based
+reachability check was modeled on the main pipeline's own
+`measure_reachable_lines`, which treats a nonzero exit from `coverage
+json` as "measurement failed" — correct for every one of that function's
+other callers, all of which run coverage over a target's normal,
+full-suite scope. The new experiment runs coverage over a single file
+containing only a handful of kept tests, and that narrower scope can trip
+a `fail_under` threshold sized for the full suite even when `coverage
+json` finishes and writes a complete, correct report — confirmed directly
+against `slugify-special`: exit code 2, "total of 23 is less than
+fail-under=97," having already printed "Wrote JSON report to cov.json."
+**Direction: this would have reported the new control's transfer rate as
+a perfect 1.00, not the real 0.6415.** With every mutant's reachability
+read as unknown rather than measured, the "confirmed reachable but
+survived" bucket collapses to zero — every mutant not trivially reachable
+by having been killed simply disappears from the denominator, leaving
+killed (34) over killed (34). A brand-new anti-circularity control would
+have shipped reporting its own strongest possible result, on its first
+run, for a reason having nothing to do with test quality. **Caught on the
+single-target dry run performed before trusting the full run at all** — a
+reachable count of 5 out of 5 against an expected mixed bucket was
+suspicious enough to reproduce the coverage subprocess by hand, which
+surfaced both the exit code and the "Wrote JSON report" line in the same
+output.
+
+**Thirteenth: a test fixture, not the pipeline, caught the same way
+everything else here is.** The path-swap helper written for this
+experiment decides which argument in a test command to replace by
+checking whether `project_root / arg` resolves to a real file. Python's
+`pathlib` silently discards the left side of `/` when `arg` is itself an
+absolute path, so a fixture using `sys.executable` — not the bare
+`"python3"` every real target's test command actually uses — had its own
+interpreter argument treated as the path to replace, corrupting the
+command outright. **Direction: none on any published number.** It
+affected only this experiment's own checking code, never the real
+ten-target run (confirmed directly: zero such warnings anywhere in that
+run's log, and every real test command's interpreter argument is the
+literal string `"python3"`, never an absolute path). Its risk was to the
+reliability of the safety net checking the pipeline, not to a result —
+and it announced itself loudly, a crash on the very first run of those
+checks, rather than silently validating nothing. **Caught by the checks'
+own first run**, before either was trusted or committed as passing.
+
+Both are recorded in full, including the fix, in CHANGELOG.md's "Design
+3: within-function transfer, a holdout that finally had a denominator"
+entry.
+
 ---
 
 ## Negative controls: the real gap in the checking, not the results
@@ -920,9 +980,9 @@ gate has no exceptions, what got abandoned and why. METHODOLOGY.md is that
 record.
 
 Every number in this document was verified independently of the code that
-produced it, not assumed correct because the code looked right. The eleven
-instrument bugs in CHANGELOG.md are what that verification actually found —
-three of them after publication, by readers who ran the tool against real
-code rather than read the write-up and trusted it.
+produced it, not assumed correct because the code looked right. The
+thirteen instrument bugs in CHANGELOG.md are what that verification
+actually found — three of them after publication, by readers who ran the
+tool against real code rather than read the write-up and trusted it.
 
 Commit history is unmodified. Co-authorship trailers are intact.
